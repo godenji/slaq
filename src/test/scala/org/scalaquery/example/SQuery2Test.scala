@@ -36,7 +36,7 @@ object SQuery2Test {
     val q2 = for {
       u <- Users
       _ <- Query.orderBy(u.first asc) >> Query.orderBy(u.last desc)
-      o <- Orders where { o => (u.id is o.userID) && (u.first isNotNull) }
+      o <- Orders where { o => (u.id is o.userID) & (u.first isNotNull) }
     } yield u.first ~ u.last ~ o.orderID
 
     val q3 = for(u <- Users where(_.id is 42)) yield u.first ~ u.last
