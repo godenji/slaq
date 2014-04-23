@@ -18,15 +18,21 @@ trait ColumnOps[B1, P1] {
 
   def is[P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Is(leftOperand, Node(e)))
-  def === [P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
-    om(Is(leftOperand, Node(e)))
   def isNot[P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Not(Is(leftOperand, Node(e))))
-  @deprecated("Use =!= instead")
-  def != [P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+  
+  def =~ [P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+  	om(Is(leftOperand, Node(e)))
+  def =! [P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Not(Is(leftOperand, Node(e))))
+  
+  @deprecated("Use =~ instead", "since 0.10.1")
+  def === [P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+  	om(Is(leftOperand, Node(e)))
+  @deprecated("Use =! instead", "since 0.10.1")
   def =!= [P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Not(Is(leftOperand, Node(e))))
+    
   def < [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Relational("<", leftOperand, Node(e)))
   def <= [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
@@ -77,12 +83,19 @@ trait ColumnOps[B1, P1] {
     om(StdFunction[B1]("sum", leftOperand))
 
   // Boolean only
-  def &&[P2, R](b: ColumnBase[P2])(implicit om: Restr2[Boolean, Boolean, P2, R]) =
+  def &[P2, R](b: ColumnBase[P2])(implicit om: Restr2[Boolean, Boolean, P2, R]) =
     om(And(leftOperand, Node(b)))
-  def ||[P2, R](b: ColumnBase[P2])(implicit om: Restr2[Boolean, Boolean, P2, R]) =
+  def |[P2, R](b: ColumnBase[P2])(implicit om: Restr2[Boolean, Boolean, P2, R]) =
     om(Or(leftOperand, Node(b)))
   def unary_![R](implicit om: Restr1[Boolean, Boolean, R]) =
     om(Not(leftOperand))
+    
+  @deprecated("Use & instead", "since 0.10.1")
+  def &&[P2, R](b: ColumnBase[P2])(implicit om: Restr2[Boolean, Boolean, P2, R]) =
+    om(And(leftOperand, Node(b)))
+  @deprecated("Use | instead", "since 0.10.1")
+  def ||[P2, R](b: ColumnBase[P2])(implicit om: Restr2[Boolean, Boolean, P2, R]) =
+    om(Or(leftOperand, Node(b)))
 
   // String only
   def length[R](implicit om: Restr1[String, Int, R]) =
