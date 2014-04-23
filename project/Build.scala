@@ -1,24 +1,44 @@
 import sbt._
 import Keys._
+import com.typesafe.sbteclipse.core.EclipsePlugin.EclipseKeys
 
-object ScalaQueryBuild extends Build {
-
-  /* Custom Settings */
-  val useJDBC4 = SettingKey[Boolean]("use-jdbc4", "Use JDBC 4 (Java 1.6+) or JDBC 3 (Java 1.5)")
+object ScalaQueryBuild extends Build with Transformers with Settings {
   val repoKind = SettingKey[String]("repo-kind", "Maven repository kind (\"snapshots\" or \"releases\")")
 
-  /* Project Definition */
-  lazy val root = Project(id = "scalaquery", base = file("."),
-    settings = Project.defaultSettings ++ fmppSettings ++ Seq(
-      useJDBC4 := (
-        try { classOf[java.sql.DatabaseMetaData].getMethod("getClientInfoProperties"); true }
-        catch { case _:NoSuchMethodException => false } ),
+  lazy val superSettings = super.settings
+  lazy val root = Project(id = "scala-query", base = file("."), settings = _settings).settings(
+  	Project.defaultSettings ++ fmppSettings ++ Seq(
+    	name := "scala-query", version := "0.10.1",
+			organizationName := "ScalaQuery", organization := "org.scalaquery",
+			scalaVersion := "2.10.4",
+			scalacOptions ++= Seq(
+				"-language:implicitConversions", "-language:postfixOps", 
+				"-language:higherKinds", "-language:existentials",
+				"-feature", "-deprecation"
+			),
+			description := "A type-safe database API for Scala",
+			homepage := Some(url("http://scalaquery.org/")),
+			startYear := Some(2008),
+			licenses += ("Two-clause BSD-style license", url("http://github.com/szeiger/scala-query/blob/master/LICENSE.txt")),
+			testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v"),
+			libraryDependencies ++= Seq(
+			  "com.h2database" % "h2" % "1.3.148" % "test",
+			  "org.xerial" % "sqlite-jdbc" % "3.7.2" % "test",
+			  "org.apache.derby" % "derby" % "10.9.1.0" % "test",
+			  "org.hsqldb" % "hsqldb" % "2.3.2" % "test",
+			  "postgresql" % "postgresql" % "9.1-901.jdbc4" % "test",
+			  "mysql" % "mysql-connector-java" % "5.1.6" % "test",
+			  "net.sourceforge.jtds" % "jtds" % "1.3.0" % "test",
+			  "com.novocode" % "junit-interface" % "0.10" % "test"
+			),
       repoKind <<= (version)(v => if(v.trim.endsWith("SNAPSHOT")) "snapshots" else "releases"),
       scalacOptions in doc <++= (version).map(v => Seq("-doc-title", "ScalaQuery", "-doc-version", v)),
       parallelExecution in Test := false,
       logBuffered := false,
+      offline := true,
       makePomConfiguration ~= { _.copy(configurations = Some(Seq(Compile, Runtime))) }
-  ))
+  	):_*
+  )
 
   /* FMPP Task */
   lazy val fmpp = TaskKey[Seq[File]]("fmpp")
