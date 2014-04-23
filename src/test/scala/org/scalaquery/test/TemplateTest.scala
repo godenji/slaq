@@ -45,7 +45,7 @@ class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
       assertEquals(List("Apu"), q1.list)
 
       val userNameByID2 = for {
-        id <- Parameters[Int]
+        id <- Params[Int]
         u <- Users if u.id is id
       } yield u.first
       val q2 = userNameByID2(3)
@@ -54,7 +54,7 @@ class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
       assertEquals(List("Apu"), q2.list)
 
       val userNameByIDRange = for {
-        Projection(min, max) <- Parameters[Int, Int]
+        Projection(min, max) <- Params[Int, Int]
         u <- Users if u.id >= min & u.id <= max
       } yield u.first
       val q3 = userNameByIDRange(2,5)
@@ -63,7 +63,7 @@ class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
       assertEquals(List("Marge","Apu","Carl","Lenny"), q3.list)
 
       val userNameByIDRangeAndProduct = for {
-        min ~ max ~ product <- Parameters[Int, Int, String]
+        min ~ max ~ product <- Params[Int, Int, String]
         u <- Users if u.id >= min & u.id <= max & Orders.where(o => (u.id is o.userID) & (o.product is product)).exists
       } yield u.first
       val q4 = userNameByIDRangeAndProduct(2,5,"Product A")
