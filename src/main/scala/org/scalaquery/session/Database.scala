@@ -17,10 +17,7 @@ abstract class Database {
 
   /**
    * The DatabaseCapabilities, accessed through a Session and created by the
-   * first Session that needs them. Access does not need to be synchronized
-   * because, in the worst case, capabilities will be determined multiple
-   * times by different concurrent sessions but the result should always be
-   * the same.
+   * first Session that needs them.
    */
   @volatile
   protected[session] var capabilities: DatabaseCapabilities = null
