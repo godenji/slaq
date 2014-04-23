@@ -10,7 +10,7 @@ import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object TemplateTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, MSAccess, SQLServer)
+object TemplateTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
 
 class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
@@ -55,7 +55,7 @@ class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
 
       val userNameByIDRange = for {
         Projection(min, max) <- Parameters[Int, Int]
-        u <- Users if u.id >= min && u.id <= max
+        u <- Users if u.id >= min & u.id <= max
       } yield u.first
       val q3 = userNameByIDRange(2,5)
       println("q3: " + userNameByIDRange.selectStatement)
@@ -64,7 +64,7 @@ class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
 
       val userNameByIDRangeAndProduct = for {
         min ~ max ~ product <- Parameters[Int, Int, String]
-        u <- Users if u.id >= min && u.id <= max && Orders.where(o => (u.id is o.userID) && (o.product is product)).exists
+        u <- Users if u.id >= min & u.id <= max & Orders.where(o => (u.id is o.userID) & (o.product is product)).exists
       } yield u.first
       val q4 = userNameByIDRangeAndProduct(2,5,"Product A")
       println("q4: " + userNameByIDRangeAndProduct.selectStatement)

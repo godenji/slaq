@@ -10,7 +10,7 @@ import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object NestingTest extends DBTestObject(H2Mem /*, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, MSAccess, SQLServer*/)
+object NestingTest extends DBTestObject(H2Mem /*, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer*/)
 
 class NestingTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
@@ -73,14 +73,14 @@ class NestingTest(tdb: TestDB) extends DBTest(tdb) {
       val res2 = Set((1, "1", 8), (2, "2", 10))
 
       val q2a = for {
-        a ~ b ~ c <- T.where(_.a === 1).map(t => t.a ~ t.b ~ 4) unionAll T.where(_.a === 2).map(t => t.a ~ t.b ~ 5)
+        a ~ b ~ c <- T.where(_.a =~ 1).map(t => t.a ~ t.b ~ 4) unionAll T.where(_.a =~ 2).map(t => t.a ~ t.b ~ 5)
       } yield a ~ b ~ (c*2)
       //q2a.dump("q2a: ")
       println("q2a: "+q2a.selectStatement)
       assertEquals(res2, q2a.to[Set]())
 
       val q2b = for {
-        (a, b, c) <- T.where(_.a === 1).map(t => (t.a, t.b, ConstColumn(4))) unionAll T.where(_.a === 2).map(t => (t.a, t.b, ConstColumn(5)))
+        (a, b, c) <- T.where(_.a =~ 1).map(t => (t.a, t.b, ConstColumn(4))) unionAll T.where(_.a =~ 2).map(t => (t.a, t.b, ConstColumn(5)))
       } yield a ~ b ~ (c*2)
       q2b.dump("q2b: ")
       println("q2b: "+q2b.selectStatement)
@@ -88,7 +88,7 @@ class NestingTest(tdb: TestDB) extends DBTest(tdb) {
       assertEquals(res2, q2b.to[Set]())
 
       val q2c = for {
-        (a, b, c) <- T.where(_.a === 1).map(t => (t.a, t.b, 4)) unionAll T.where(_.a === 2).map(t => (t.a, t.b, 5))
+        (a, b, c) <- T.where(_.a =~ 1).map(t => (t.a, t.b, 4)) unionAll T.where(_.a =~ 2).map(t => (t.a, t.b, 5))
       } yield a ~ b ~ (c*2)
       q2c.dump("q2c: ")
       println("q2c: "+q2c.selectStatement)

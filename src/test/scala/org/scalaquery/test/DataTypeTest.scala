@@ -3,13 +3,12 @@ package org.scalaquery.test
 import org.junit.Test
 import org.junit.Assert._
 import org.scalaquery.ql._
-import org.scalaquery.ql.extended.AccessDriver
 import org.scalaquery.ql.basic.{BasicTable => Table}
 import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object DataTypeTest extends DBTestObject(H2Mem, SQLiteMem, HsqldbMem, MySQL, DerbyMem, Postgres, MSAccess, SQLServer)
+object DataTypeTest extends DBTestObject(H2Mem, SQLiteMem, HsqldbMem, MySQL, DerbyMem, Postgres, SQLServer)
 
 class DataTypeTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
@@ -61,11 +60,9 @@ class DataTypeTest(tdb: TestDB) extends DBTest(tdb) {
       (5, Int.MaxValue, 0L, Short.MaxValue, Byte.MaxValue)
     ))
 
-    if(tdb.driver != AccessDriver) { // No proper LONG type support in Access via JDBC
-      test(List(
-        (1, 0, Long.MinValue, 0, 0),
-        (5, 0, Long.MaxValue, 0, 0)
-      ))
-    }
+    test(List(
+      (1, 0, Long.MinValue, 0, 0),
+      (5, 0, Long.MaxValue, 0, 0)
+    ))
   }
 }

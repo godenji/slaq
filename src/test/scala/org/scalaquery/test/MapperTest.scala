@@ -10,7 +10,7 @@ import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object MapperTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, MSAccess, SQLServer)
+object MapperTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
 
 class MapperTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
@@ -41,7 +41,7 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
         User(None, "Lenny", "Leonard")
       )
 
-      val updateQ = Users.where(_.id === 2.bind).map(_.forInsert)
+      val updateQ = Users.where(_.id =~ 2.bind).map(_.forInsert)
       println("Update: "+updateQ.updateStatement)
       updateQ.update(User(None, "Marge", "Simpson"))
 
@@ -73,7 +73,7 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
       Ts.ddl.create
       Ts.insertAll(new Data(1, 2), new Data(3, 4), new Data(5, 6))
 
-      val updateQ = Ts.where(_.a === 1)
+      val updateQ = Ts.where(_.a =~ 1)
       updateQ.dump("updateQ: ")
       println("Update: "+updateQ.updateStatement)
       updateQ.update(Data(7, 8))
@@ -105,8 +105,8 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
       T.ddl.create
       T.b.insertAll(False, True)
       assertEquals(Query(T).list.toSet, Set((1, False), (2, True)))
-      assertEquals(T.where(_.b === (True:Bool)).list.toSet, Set((2, True)))
-      assertEquals(T.where(_.b === (False:Bool)).list.toSet, Set((1, False)))
+      assertEquals(T.where(_.b =~ (True:Bool)).list.toSet, Set((2, True)))
+      assertEquals(T.where(_.b =~ (False:Bool)).list.toSet, Set((1, False)))
     }
   }
 }

@@ -10,7 +10,7 @@ import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object MainTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, MSAccess, SQLServer)
+object MainTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
 
 class MainTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
@@ -85,7 +85,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
 
       //TODO verifyable non-random test
       for(u <- allUsers
-          if u.first != "Apu" && u.first != "Snowball"; i <- 1 to 2)
+          if u.first != "Apu" & u.first != "Snowball"; i <- 1 to 2)
         (Orders.userID ~ Orders.product ~ Orders.shipped ~ Orders.rebate).insert(
           u.id, "Gizmo "+((scala.math.random*10)+1).toInt, i == 2, Some(u.first == "Marge"))
 
@@ -102,7 +102,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
         u <- Users;
         o <- Orders
           if (o.orderID in (for { o2 <- Orders where(o.userID is _.userID) } yield o2.orderID.max))
-             && (o.userID is u.id)
+             & (o.userID is u.id)
       ) yield u.first ~ o.orderID
       println("q4: " + q4.selectStatement)
       println("Latest Order per User:")
@@ -149,10 +149,10 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
       println("Orders for Homer and Marge:")
       q4d.foreach(o => println("  "+o))
 
-      val b1 = Orders.where( o => o.shipped && o.shipped ).map( o => o.shipped && o.shipped )
-      val b2 = Orders.where( o => o.shipped && o.rebate ).map( o => o.shipped && o.rebate )
-      val b3 = Orders.where( o => o.rebate && o.shipped ).map( o => o.rebate && o.shipped )
-      val b4 = Orders.where( o => o.rebate && o.rebate ).map( o => o.rebate && o.rebate )
+      val b1 = Orders.where( o => o.shipped & o.shipped ).map( o => o.shipped & o.shipped )
+      val b2 = Orders.where( o => o.shipped & o.rebate ).map( o => o.shipped & o.rebate )
+      val b3 = Orders.where( o => o.rebate & o.shipped ).map( o => o.rebate & o.shipped )
+      val b4 = Orders.where( o => o.rebate & o.rebate ).map( o => o.rebate & o.rebate )
       val b5 = Orders.where( o => !o.shipped ).map( o => !o.shipped )
       val b6 = Orders.where( o => !o.rebate ).map( o => !o.rebate )
       val b7 = Orders.map( o => o.shipped is o.shipped )

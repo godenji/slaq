@@ -1,5 +1,6 @@
 package org.scalaquery.test
 
+import scala.language.reflectiveCalls
 import org.junit.After
 import org.junit.Test
 import org.junit.Assert._
@@ -12,7 +13,7 @@ import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object ForeignKeyTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, MSAccess, SQLServer)
+object ForeignKeyTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
 
 class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
@@ -31,7 +32,7 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
       def category = column[Int]("category", O Nullable)
       def * = id ~ title ~ category
       def categoryFK = foreignKey("category_fk", category, Categories)(_.id)
-      def categoryJoin = Categories.where(_.id === category)
+      def categoryJoin = Categories.where(_.id =~ category)
     }
 
     tdb.assertNotTablesExist("categories", "posts")

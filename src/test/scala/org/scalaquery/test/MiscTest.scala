@@ -3,7 +3,6 @@ package org.scalaquery.test
 import org.junit.Test
 import org.junit.Assert._
 import org.scalaquery.ql._
-import extended.AccessDriver
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.basic.{BasicTable => Table}
 import org.scalaquery.session._
@@ -11,7 +10,7 @@ import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object MiscTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, MSAccess, SQLServer)
+object MiscTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
 
 class MiscTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
@@ -28,22 +27,22 @@ class MiscTest(tdb: TestDB) extends DBTest(tdb) {
       T.ddl.create
       T.insertAll(("1", "a"), ("2", "a"), ("3", "b"))
 
-      val q1 = for(t <- T if t.a === "1" || t.a === "2") yield t
+      val q1 = for(t <- T if t.a =~ "1" | t.a =~ "2") yield t
       println("q1: "+q1.selectStatement)
       q1.foreach(println _)
       assertEquals(q1.to[Set](), Set(("1", "a"), ("2", "a")))
 
-      val q2 = for(t <- T if (t.a isNot "1") || (t.b isNot "a")) yield t
+      val q2 = for(t <- T if (t.a isNot "1") | (t.b isNot "a")) yield t
       println("q2: "+q2.selectStatement)
       q2.foreach(println _)
       assertEquals(q2.to[Set](), Set(("2", "a"), ("3", "b")))
 
-      val q3 = for(t <- T if (t.a != "1") || (t.b != "a")) yield t
+      val q3 = for(t <- T if (t.a != "1") | (t.b != "a")) yield t
       println("q3: "+q3.selectStatement) // Hah, not what you expect!
       q3.foreach(println _)
       assertEquals(q3.to[Set](), Set(("1", "a"), ("2", "a"), ("3", "b")))
 
-      val q4 = for(t <- T if t.a =!= "1" || t.b =!= "a") yield t
+      val q4 = for(t <- T if t.a =! "1" | t.b =! "a") yield t
       println("q4: "+q4.selectStatement)
       q4.foreach(println _)
       assertEquals(q4.to[Set](), Set(("2", "a"), ("3", "b")))
@@ -107,11 +106,9 @@ class MiscTest(tdb: TestDB) extends DBTest(tdb) {
       println("q2: " + q2.selectStatement)
       assertEquals(Set("foo", "foobar", "foo%"), q2.to[Set]())
 
-      if(tdb.driver != AccessDriver) { // Access does not support ESCAPE
-        val q3 = for { t1 <- T1 if t1.a.like("foo^%", '^') } yield t1.a
-        println("q3: " + q3.selectStatement)
-        assertEquals(Set("foo%"), q3.to[Set]())
-      }
+      val q3 = for { t1 <- T1 if t1.a.like("foo^%", '^') } yield t1.a
+      println("q3: " + q3.selectStatement)
+      assertEquals(Set("foo%"), q3.to[Set]())
     }
   }
 }

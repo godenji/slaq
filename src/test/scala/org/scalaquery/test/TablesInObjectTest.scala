@@ -25,7 +25,7 @@ object TablesInObjectTest {
   val Posts = new Table[Int]("posts") {
     def category = column[Int]("category")
     def * = category
-    def categoryJoin = Categories.where(_.id === category)
+    def categoryJoin = Categories.where(_.id =~ category)
   }
 }
 
@@ -34,7 +34,7 @@ class TablesInObjectTest {
 
   @Test def test1() = {
 
-    def categoryJoin(p: Posts.type) = Categories.where(_.id === p.category)
+    def categoryJoin(p: Posts.type) = Categories.where(_.id =~ p.category)
 
     val q1 = for {
       p <- Posts

@@ -11,7 +11,7 @@ import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object AggregateTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, MSAccess, SQLServer)
+object AggregateTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
 
 class AggregateTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
@@ -26,7 +26,7 @@ class AggregateTest(tdb: TestDB) extends DBTest(tdb) {
     T.insertAll((1, Some(1)), (1, Some(2)), (1, Some(3)))
     val q = for {
       i <- Parameters[Int]
-      t <- T if t.a === i
+      t <- T if t.a =~ i
     } yield (t.a.count, t.b.count, t.a.sum, t.b.sum, t.a.avg, t.b.avg)
     println("q: "+q.selectStatement)
     println(q.first(0))

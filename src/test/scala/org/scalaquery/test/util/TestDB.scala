@@ -2,7 +2,7 @@ package org.scalaquery.test.util
 
 import java.util.Properties
 import java.sql.SQLException
-import org.scalaquery.ql.extended.{ExtendedProfile, H2Driver, SQLiteDriver, PostgresDriver, MySQLDriver, DerbyDriver, HsqldbDriver, AccessDriver, SQLServerDriver}
+import org.scalaquery.ql.extended.{ExtendedProfile, H2Driver, SQLiteDriver, PostgresDriver, MySQLDriver, DerbyDriver, HsqldbDriver, SQLServerDriver}
 import org.scalaquery.ResultSetInvoker
 import org.scalaquery.session._
 import org.scalaquery.simple.{StaticQuery => Q}
@@ -158,31 +158,6 @@ class ExternalTestDB(confName: String, val driver: ExtendedProfile) extends Test
   }
 }
 
-class AccessDB(confName: String, val driver: ExtendedProfile) extends TestDB(confName) {
-  val jdbcDriver = TestDBOptions.get(confName, "driver").orNull
-  override def dbName = TestDBOptions.get(confName, "testDB").getOrElse(super.dbName)
-  val dir = new File(TestDBOptions.testDBDir)
-  val dbPath = dir.getAbsolutePath.replace("\\", "/")
-  lazy val emptyDBFile = TestDBOptions.get(confName, "emptyDBFile").get
-    .replace("[DB]", dbName).replace("[DBPATH]", dbPath)
-  lazy val testDBFile = TestDBOptions.get(confName, "testDBFile").get
-    .replace("[DB]", dbName).replace("[DBPATH]", dbPath)
-  lazy val url = TestDBOptions.get(confName, "url").getOrElse("")
-    .replace("[DB]", dbName).replace("[DBPATH]", dbPath)
-
-  override def isEnabled = TestDBOptions.isExternalEnabled(confName)
-  override def createDB() = Database.forURL(url, driver = jdbcDriver)
-  override def cleanUpBefore() {
-    cleanUpAfter()
-    copy(new File(emptyDBFile), new File(testDBFile))
-  }
-  override def cleanUpAfter() = deleteDBFiles(dbName)
-  /* Works in some situations but fails with "Optional feature not implemented" in others */
-  override def canGetLocalTables = false
-  override def getLocalTables(implicit session: Session) =
-    MTable.getTables.list.map(_.name.name).sorted
-}
-
 abstract class DerbyDB(confName: String) extends TestDB(confName) {
   System.setProperty("derby.stream.error.method", classOf[DerbyDB].getName + ".DEV_NULL")
   val jdbcDriver = "org.apache.derby.jdbc.EmbeddedDriver"
@@ -288,6 +263,4 @@ object TestDB {
       tables.list.map(_._3).sorted
     }
   }
-
-  def MSAccess(to: DBTestObject) = new AccessDB("access", AccessDriver)
 }

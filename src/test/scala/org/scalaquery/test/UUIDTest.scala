@@ -9,7 +9,7 @@ import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 import java.util.UUID
 
-object UUIDTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, MSAccess, SQLServer)
+object UUIDTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
 
 class UUIDTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
@@ -43,7 +43,7 @@ class UUIDTest(tdb: TestDB) extends DBTest(tdb) {
     T1 insert (2, u2)
     assertEquals(Set((1,u1), (2,u2)), Query(T1).to[Set]())
 
-    val q2 = for { t <- T2 if t.id === 1 } yield t.data
+    val q2 = for { t <- T2 if t.id =~ 1 } yield t.data
     q2.update(u5)
     assertEquals(Set((1,u5), (2,u4)), Query(T2).to[Set]())
   }

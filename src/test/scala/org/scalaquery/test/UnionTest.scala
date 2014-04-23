@@ -10,7 +10,7 @@ import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object UnionTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, MSAccess, SQLServer)
+object UnionTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
 
 class UnionTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
@@ -78,7 +78,7 @@ class UnionTest(tdb: TestDB) extends DBTest(tdb) {
       (3, "Steve", "IT")
     )
 
-    def f (s: String) = Managers where { _.name === s}
+    def f (s: String) = Managers where { _.name =~ s}
     val q = f("Peter") union f("Amy")
     q.dump("q: ")
     println(q.selectStatement)

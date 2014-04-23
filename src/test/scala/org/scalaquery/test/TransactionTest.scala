@@ -8,7 +8,7 @@ import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object TransactionTest extends DBTestObject(H2Disk, SQLiteDisk, Postgres, MySQL, DerbyDisk, HsqldbDisk, MSAccess, SQLServer)
+object TransactionTest extends DBTestObject(H2Disk, SQLiteDisk, Postgres, MySQL, DerbyDisk, HsqldbDisk, SQLServer)
 
 class TransactionTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._

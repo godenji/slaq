@@ -10,7 +10,7 @@ import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object MutateTest extends DBTestObject(H2Mem, Postgres, MySQL, DerbyMem, HsqldbMem, MSAccess, SQLServer)
+object MutateTest extends DBTestObject(H2Mem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
 
 class MutateTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
@@ -37,7 +37,7 @@ class MutateTest(tdb: TestDB) extends DBTest(tdb) {
       println("Before mutating:")
       Query(Users).foreach(u => println("  "+u))
 
-      val q1 = for(u <- Users if u.last === "Simpson" || u.last === "Bouvier") yield u
+      val q1 = for(u <- Users if u.last =~ "Simpson" | u.last =~ "Bouvier") yield u
       q1.mutate { m =>
         println("***** Row: "+m.row)
         if(m.row._3 == "Bouvier") m.row = m.row.copy(_3 = "Simpson")

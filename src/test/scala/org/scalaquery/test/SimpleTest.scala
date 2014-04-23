@@ -2,12 +2,12 @@ package org.scalaquery.test
 
 import org.junit.Test
 import org.junit.Assert._
-import org.scalaquery.simple.{GetResult, StaticQuery => Q, DynamicQuery}
+import org.scalaquery.simple.{GetResult, StaticQuery => Q}
 import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object SimpleTest extends DBTestObject(H2Mem, H2Disk, SQLiteMem, SQLiteDisk, Postgres, MySQL, DerbyMem, DerbyDisk, HsqldbMem, MSAccess, SQLServer)
+object SimpleTest extends DBTestObject(H2Mem, H2Disk, SQLiteMem, SQLiteDisk, Postgres, MySQL, DerbyMem, DerbyDisk, HsqldbMem, SQLServer)
 
 class SimpleTest(tdb: TestDB) extends DBTest(tdb) {
 
@@ -94,42 +94,6 @@ class SimpleTest(tdb: TestDB) extends DBTest(tdb) {
         assertEquals(List("users"), tdb.getLocalTables.map(_.toLowerCase))
       }
       tdb.assertUnquotedTablesExist("USERS")
-    }
-  }
-
-
-  @deprecated("DynamicQuery replaced by better StaticQuery", "0.10")
-  @Test def testDynamic() {
-    case class GetUsers(id: Option[Int]) extends DynamicQuery[User] {
-      select ~ "id, name from users"
-      id foreach { this ~ "where id =" ~? _ }
-    }
-
-    case class GetUsers2(id: Option[Int]) extends DynamicQuery[User] {
-      select ~ "id, name from users"
-      wrap("where id =", "") { id foreach(v => this ~? v) }
-    }
-
-    def InsertUser(id: Int, name: String) = DynamicQuery[Int] ~
-      "insert into USERS values (" ~? id ~ "," ~? name ~ ")"
-
-    val createTable = Q.updateNA("create table USERS(ID int not null primary key, NAME varchar(255))")
-    val populateUsers = List(InsertUser(1, "szeiger"), InsertUser(0, "admin"), InsertUser(2, "guest"), InsertUser(3, "foo"))
-
-    db withSession {
-      threadLocalSession.withTransaction {
-        println("Creating user table: "+createTable.first)
-        println("Inserting users:")
-        for(i <- populateUsers) println("  "+i.first)
-      }
-
-      println("All users with foreach:")
-      var s4 = Set[User]()
-      GetUsers(None) foreach { s =>
-        println("  "+s)
-        s4 += s
-      }
-      assertEquals(Set(User(1,"szeiger"), User(2,"guest"), User(0,"admin"), User(3,"foo")), s4)
     }
   }
 }
