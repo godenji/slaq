@@ -1,5 +1,4 @@
 /.idea/
-/.idea_modules
 target/
 /test-dbs/*-*
 /test-dbs/databases.properties
@@ -10,7 +9,3 @@ target/
 /\.project
 /\.classpath
 /\.settings/
-project/project
-project/target
-bin/
-*~
