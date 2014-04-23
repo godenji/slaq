@@ -1,6 +1,7 @@
 package org.scalaquery.ql
 
 import scala.reflect.Manifest
+import scala.reflect.ClassTag
 import org.scalaquery.SQueryException
 import org.scalaquery.util.{Node, WithOp}
 
@@ -45,11 +46,11 @@ class Query[+E, +U](val unpackable: Unpackable[_ <: E, _ <: U], val cond: List[C
 
   def exists = StdFunction[Boolean]("exists", map(_ => ConstColumn(1)))
 
-  def typedModifiers[T <: QueryModifier](implicit m: ClassManifest[T]) =
-    modifiers.filter(m.erasure.isInstance(_)).asInstanceOf[List[T]]
+  def typedModifiers[T <: QueryModifier](implicit m: ClassTag[T]) =
+    modifiers.filter(m.runtimeClass.isInstance(_)).asInstanceOf[List[T]]
 
   def createOrReplaceSingularModifier[T <: QueryModifier](f: Option[T] => T)(implicit m: Manifest[T]): Query[E, U] = {
-    val (xs, other) = modifiers.partition(m.erasure.isInstance(_))
+    val (xs, other) = modifiers.partition(m.runtimeClass.isInstance(_))
     val mod = xs match {
       case x :: _ => f(Some(x.asInstanceOf[T]))
       case _ => f(None)
