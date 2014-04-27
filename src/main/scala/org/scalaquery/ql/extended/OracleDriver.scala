@@ -34,13 +34,13 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
 
   override protected def innerBuildSelectNoRewrite(b: SQLBuilder, rename: Boolean) {
     query.typedModifiers[TakeDrop] match {
-      case TakeDrop(Some(t), None) :: _ =>
+      case TakeDrop(Some(t), None, _) :: _ =>
         b += "SELECT * FROM (SELECT "
         expr(query.reified, b, rename, true)
         fromSlot = b.createSlot
         appendClauses(b)
-        b += ") WHERE ROWNUM <= " += t
-      case TakeDrop(to, Some(d)) :: _ =>
+        appendColumnValue(b += ") WHERE ROWNUM <= ",t)
+      case TakeDrop(to, Some(d), _) :: _ =>
         b += "SELECT * FROM (SELECT t0.*, ROWNUM ROWNUM_O FROM (SELECT "
         expr(Node(query.reified), b, rename, true)
         b += ",ROWNUM ROWNUM_I"
@@ -49,9 +49,11 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
         b += ") t0) WHERE ROWNUM_O"
         to match {
           case Some(t) =>
-            b += " BETWEEN (1+" += d += ") AND (" += d += "+" += t += ")"
-          case None =>
-            b += ">" += d
+          	appendColumnValue(b+= " BETWEEN (1+",d)
+          	appendColumnValue(b+= ") AND (",d)
+          	appendColumnValue(b+= "+",t)
+          	b+= ")"
+          case None => appendColumnValue(b += ">",d)
         }
         b += " ORDER BY ROWNUM_I"
       case _ =>

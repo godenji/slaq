@@ -151,9 +151,11 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
   }
 
   override protected def appendLimitClause(b: SQLBuilder) = query.typedModifiers[TakeDrop].lastOption.foreach {
-    case TakeDrop(Some(t), Some(d)) => b += " LIMIT " += d += "," += t
-    case TakeDrop(Some(t), None) => b += " LIMIT " += t
-    case TakeDrop(None, Some(d)) => b += " LIMIT " += d += ",-1"
+    case TakeDrop(Some(t), Some(d), compareNode) => 
+    	appendColumnValue(b+=" LIMIT ", d); appendColumnValue(b+=",", t, compareNode)
+    	
+    case TakeDrop(Some(t), None, _) => appendColumnValue(b+=" LIMIT ",t)
+    case TakeDrop(None, Some(d), _) => appendColumnValue(b+=" LIMIT ",d); b+= ",-1"
     case _ =>
   }
 

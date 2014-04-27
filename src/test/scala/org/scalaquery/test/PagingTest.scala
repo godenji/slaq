@@ -10,7 +10,9 @@ import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object PagingTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
+object PagingTest extends DBTestObject(
+	H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer
+)
 
 class PagingTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
@@ -46,15 +48,19 @@ class PagingTest(tdb: TestDB) extends DBTest(tdb) {
       println("    "+q4.list)
       assertEquals(6 to 8 toList, q4.list)
 
-      val q5 = q1 take 5 drop 3
+      // test cacheable Params paginate 
+      val q5 = for{ fetch~offset <- Params[Int,Int]
+      	x <- q1 take fetch drop offset
+      } yield x
       println("q5: "+q5.selectStatement)
-      println("    "+q5.list)
-      assertEquals(4 to 5 toList, q5.list)
+      println("    "+q5(5,3).list)
+      assertEquals(4 to 5 toList, q5(5,3).list)
 
       val q6 = q1 take 0
       println("q6: "+q6.selectStatement)
       println("    "+q6.list)
       assertEquals(List(), q6.list)
+      
     }
   }
 }

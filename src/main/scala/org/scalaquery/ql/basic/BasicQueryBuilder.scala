@@ -94,7 +94,7 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
     }
     if(!mayLimit0) {
       query.typedModifiers[TakeDrop] match {
-        case TakeDrop(Some(0), _) :: _ => b += "SELECT * FROM ("; inner; b += ") t0 WHERE 1=0"
+        case TakeDrop(Some(ConstColumn(0)),_,_) :: _ => b += "SELECT * FROM ("; inner; b += ") t0 WHERE 1=0"
         case _ => inner
       }
     } else inner
@@ -130,11 +130,40 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
 
   protected def appendLimitClause(b: SQLBuilder): Unit = query.typedModifiers[TakeDrop].lastOption.foreach {
     /* SQL:2008 syntax */
-    case TakeDrop(Some(0), _) if(!mayLimit0) => // handled above in innerBuildSelectNoRewrite
-    case TakeDrop(Some(t), Some(d)) => b += " OFFSET " += d += " ROW FETCH NEXT " += t += " ROW ONLY"
-    case TakeDrop(Some(t), None) => b += " FETCH NEXT " += t += " ROW ONLY"
-    case TakeDrop(None, Some(d)) => b += " OFFSET " += d += " ROW"
+    case TakeDrop(Some(ConstColumn(0)),_,_) if(!mayLimit0) => // handled above in innerBuildSelectNoRewrite
+    case TakeDrop(Some(t), Some(d), compareNode) => 
+    	appendColumnValue(b+= " OFFSET ",d); appendColumnValue(b+= " ROW FETCH NEXT ", t, compareNode); b+= " ROW ONLY"
+    	
+    case TakeDrop(Some(t), None, _) => 
+    	appendColumnValue(b+= " FETCH NEXT ",t); b+= " ROW ONLY"
+    	
+    case TakeDrop(None, Some(d), _) => 
+    	appendColumnValue(b+= " OFFSET ",d); b+= " ROW"
     case _ =>
+  }
+  
+  /*
+   * appends a concrete value of type ConstColumn or bound Param to a QueryModifier clause
+   * @compareNode used to calculate `take x drop y` operation where take must be of value max(0, x-y)
+   */
+  protected def appendColumnValue(b: SQLBuilder, node: Column[Int], compareNode: Option[Column[Int]] = None): Unit = {
+  	(node,compareNode) match{
+  		case(x @ ConstColumn(nodeVal), None) => b+= nodeVal
+  		case(t @ ConstColumn(takeVal), d @ Some(ConstColumn(dropVal))) => b+= math.max(0, takeVal - dropVal)
+  		case(x @ ParameterColumn(idx), None) => b +?= {(p,param)=>
+  			val nodeVal = (if(idx == -1) param else param.asInstanceOf[Product].productElement(idx)).asInstanceOf[Int]
+  			x.typeMapper(profile).setValue(nodeVal, p)
+  		}
+  		case(takeCol @ ParameterColumn(tIdx), dropCol @ Some(ParameterColumn(dIdx))) => b +?= {(p,param)=>
+  			val takeVal = (if(tIdx == -1) param else param.asInstanceOf[Product].productElement(tIdx)).asInstanceOf[Int]
+  			val dropVal = (if(dIdx == -1) param else param.asInstanceOf[Product].productElement(dIdx)).asInstanceOf[Int]
+      	takeCol.typeMapper(profile).setValue(math.max(0, takeVal - dropVal), p)
+  		}
+  		case _=> throw new SQueryException(s"""
+				value(s) in a take + drop operation cannot be mixed; they must be either ConstColumn[Int] or Param[Int].
+				Supplied node $node and Optional compareNode $compareNode could not be converted to a literal value""")
+  	}
+  	()
   }
 
   def buildDelete = {

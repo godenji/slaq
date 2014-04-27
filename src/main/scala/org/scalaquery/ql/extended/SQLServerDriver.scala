@@ -96,7 +96,7 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
 
   val hasTakeDrop = !query.typedModifiers[TakeDrop].isEmpty
   val hasDropOnly = query.typedModifiers[TakeDrop] match {
-    case TakeDrop(None, Some(_)) :: _ => true
+    case TakeDrop(None, Some(_), _) :: _ => true
     case _ => false
   }
   val isCountAll = query.reified match {
@@ -113,35 +113,43 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
     insertAllFromClauses()
   }
 
+  private val orderByCor = """ ORDER BY "c0r" ASC"""
+	private type CCI = ConstColumn[Int]  
+	/*
+	 * literal value(s) required for sql server fetch/offset since it is not possible
+	 * 	to perform multiple calculations with Param based values.
+	 * 	@see BasicQueryBuilder `appendColumnValue`   
+	 */
   override protected def innerBuildSelectNoRewrite(b: SQLBuilder, rename: Boolean) {
     query.typedModifiers[TakeDrop] match {
-      case TakeDrop(Some(t), Some(d)) :: _ =>
-        b += "WITH T AS (SELECT TOP " += (t+d) += ' '
+      case TakeDrop(Some(t:CCI), Some(d:CCI), _) :: _ =>
+        b+= s"WITH T AS (SELECT TOP ${t.value + d.value} "
         expr(query.reified, b, rename, true)
         fromSlot = b.createSlot
         appendClauses(b)
-        b += ") SELECT "
+        b+= ") SELECT "
         addCopyColumns(b)
-        b += " FROM T WHERE \"c0r\" BETWEEN " += (d+1) += " AND " += (t+d)
-        if(!isCountAll) b += " ORDER BY \"c0r\" ASC"
-      case TakeDrop(Some(t), None) :: _ =>
-        b += "WITH T AS (SELECT TOP " += t += ' '
+        b+= s""" FROM T WHERE "c0r" BETWEEN ${d.value+1} AND ${t.value + d.value}"""
+        if(!isCountAll) b+= orderByCor
+      case TakeDrop(Some(t:CCI), None, _) :: _ =>
+        b+= s"WITH T AS (SELECT TOP ${t.value} "
         expr(query.reified, b, rename, true)
         fromSlot = b.createSlot
         appendClauses(b)
-        b += ") SELECT "
-        addCopyColumns(b)
-        b += " FROM T WHERE \"c0r\" BETWEEN 1 AND " += t
-        if(!isCountAll) b += " ORDER BY \"c0r\" ASC"
-      case TakeDrop(None, Some(d)) :: _ =>
-        b += "WITH T AS (SELECT "
+        b+= ") SELECT "; addCopyColumns(b); b+= s""" FROM T WHERE "c0r" BETWEEN 1 AND ${t.value}"""
+        if(!isCountAll) b+= orderByCor
+      case TakeDrop(None, Some(d:CCI), _) :: _ =>
+        b+= "WITH T AS (SELECT "
         expr(query.reified, b, rename, true)
         fromSlot = b.createSlot
         appendClauses(b)
-        b += ") SELECT "
-        addCopyColumns(b)
-        b += " FROM T WHERE \"c0r\" > " += d
-        if(!isCountAll) b += " ORDER BY \"c0r\" ASC"
+        b+= ") SELECT "; addCopyColumns(b); b+= s""" FROM T WHERE "c0r" > ${d.value}"""
+        if(!isCountAll) b+= orderByCor
+      case TakeDrop(t,d,_) :: _ => 
+      	throw new SQueryException(s"""
+					Only concrete (ConstColumn) values are allowed as params for SQL Server take/drop.
+					The supplied values were $t and $d
+				""")
       case _ =>
         super.innerBuildSelectNoRewrite(b, rename)
     }
