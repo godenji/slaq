@@ -107,7 +107,7 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
       case c: Column[_] =>
         b += "coalesce(cast("
         expr(l, b)
-        b += " as " += mapTypeName(c.typeMapper(profile)) += "),"
+        b += s" as ${mapTypeName(c.typeMapper(profile))}),"
         expr(r, b); b += ")"
       case _ => throw new SQueryException("Cannot determine type of right-hand side for ifNull")
     }
@@ -120,10 +120,10 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
       val tmd = c.typeMapper(profile)
       b += "cast("
       b +?= { (p, param) => tmd.setValue(v, p) }
-      b += " as " += mapTypeName(tmd) += ")"
+      b += s" as ${mapTypeName(tmd)})"
 
     /* I guess NEXTVAL was too short */
-    case Sequence.Nextval(seq) => b += "(next value for " += quoteIdentifier(seq.name) += ")"
+    case Sequence.Nextval(seq) => b += s"(next value for ${quoteIdentifier(seq.name)})"
 
     case Sequence.Currval(seq) => throw new SQueryException("Derby does not support CURRVAL")
 
@@ -141,7 +141,7 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
     case Subquery(Union(all, sqs), rename) =>
       b += "("
       b.sep(sqs, (if(all) " UNION ALL " else " UNION "))(sq => subQueryBuilderFor(sq).innerBuildSelect(b, rename))
-      b += ") " += quoteIdentifier(name)
+      b += s") ${quoteIdentifier(name)}"
     case _ => super.table(t, name, b)
   }
 }

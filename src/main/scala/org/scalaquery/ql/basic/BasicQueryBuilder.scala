@@ -247,13 +247,13 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
           if(pos != 0) b += ','
           pos += 1
           expr(c, b, false, true)
-          if(rename) b += " as " += quoteIdentifier("c" + pos.toString)
+          if(rename) b += s" as ${quoteIdentifier("c" + pos.toString)}"
         }
       }
       case _ => innerExpr(c, b)
     }
     if(rename && pos == 0) {
-      b += " as " += quoteIdentifier("c1")
+      b += s" as ${quoteIdentifier("c1")}"
       pos = 1
     }
     if(topLevel) this.maxColumnPos = pos
@@ -287,9 +287,9 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
     case ColumnOps.Like(l, r, esc) =>
       b += '('; expr(l, b); b += " like "; expr(r, b);
       esc.foreach { ch =>
-        if(ch == '\'' || ch == '%' || ch == '_') throw new SQueryException("Illegal escape character '"+ch+"' for LIKE expression")
+        if(ch == '\'' || ch == '%' || ch == '_') throw new SQueryException(s"Illegal escape character '$ch' for LIKE expression")
         // JDBC defines an {escape } syntax but the unescaped version is understood by more DBs/drivers
-        b += " escape '" += ch += "'"
+        b += s" escape '$ch'"
       }
       b += ')'
     case a @ ColumnOps.AsColumnOf(ch, name) =>
@@ -297,11 +297,11 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
       if(supportsCast) {
         b += "cast("
         expr(ch, b)
-        b += " as " += tn += ")"
+        b += s" as $tn)"
       } else {
         b += "{fn convert("
         expr(ch, b)
-        b += ',' += tn += ")}"
+        b += s", $tn)}"
       }
     case s: SimpleBinaryOperator => b += '('; expr(s.left, b); b += ' ' += s.name += ' '; expr(s.right, b); b += ')'
     case query:Query[_, _] => b += "("; subQueryBuilderFor(query).innerBuildSelect(b, false); b += ")"
@@ -342,7 +342,7 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
         b.sep(cols, " and "){ case (l,r) => expr(l, b); b += "="; expr(r, b) }
         b += ")"
       }
-    case _ => throw new SQueryException("Don't know what to do with node \""+c+"\" in an expression")
+    case _ => throw new SQueryException(s"Don't know what to do with node `$c` in an expression")
   }
 
   protected def appendConditions(b: SQLBuilder): Unit = query.cond match {
@@ -377,10 +377,10 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
   protected def table(t: Node, name: String, b: SQLBuilder): Unit = t match {
     case AbstractTable.Alias(base: AbstractTable[_]) =>
       base.schemaName.foreach(b += quoteIdentifier(_) += '.')
-      b += quoteIdentifier(base.tableName) += ' ' += quoteIdentifier(name)
+      b += s"${quoteIdentifier(base.tableName)} ${quoteIdentifier(name)}"
     case base: AbstractTable[_] =>
       base.schemaName.foreach(b += quoteIdentifier(_) += '.')
-      b += quoteIdentifier(base.tableName) += ' ' += quoteIdentifier(name)
+      b += s"${quoteIdentifier(base.tableName)} ${quoteIdentifier(name)}"
     case Subquery(sq: Query[_, _], rename) =>
       b += "("; subQueryBuilderFor(sq).innerBuildSelect(b, rename); b += ") " += quoteIdentifier(name)
     case Subquery(Union(all, sqs), rename) => {
@@ -405,7 +405,7 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
     val l = j.leftNode
     val r = j.rightNode
     table(l, nc.nameFor(l), b)
-    b += " " += j.joinType.sqlName += " join "
+    b += s" ${j.joinType.sqlName} join "
     r match {
       case rj: Join[_,_] => createJoin(rj, b)
       case _ => table(r, nc.nameFor(r), b)

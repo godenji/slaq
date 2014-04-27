@@ -34,8 +34,8 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
     new H2QueryBuilder(query, nc, Some(this), profile)
 
   override protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {
-    case Sequence.Nextval(seq) => b += "nextval(schema(), '" += seq.name += "')"
-    case Sequence.Currval(seq) => b += "currval(schema(), '" += seq.name += "')"
+    case Sequence.Nextval(seq) => b += s"nextval(schema(), '${seq.name}')"
+    case Sequence.Currval(seq) => b += s"currval(schema(), '${seq.name}')"
     case _ => super.innerExpr(c, b)
   }
 

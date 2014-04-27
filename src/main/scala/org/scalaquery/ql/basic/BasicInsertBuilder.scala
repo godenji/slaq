@@ -11,13 +11,13 @@ class BasicInsertBuilder(val column: Any, val profile: BasicProfile) {
 
   def buildInsert: String = {
     val (table, cols, vals) = buildParts
-    "INSERT INTO " + quoteIdentifier(table) + " (" + cols + ") VALUES (" + vals + ")"
+    s"INSERT INTO ${quoteIdentifier(table)} ($cols) VALUES ($vals)"
   }
 
   def buildInsert(query: Query[_, _]): SQLBuilder.Result = {
     val (table, cols, _) = buildParts
     val b = new SQLBuilder
-    b += "INSERT INTO " += quoteIdentifier(table) += " (" += cols.toString += ") "
+    b += s"INSERT INTO ${quoteIdentifier(table)} (${cols.toString}) "
     val qb = profile.createQueryBuilder(query, NamingContext())
     qb.buildSelect(b)
     b.build

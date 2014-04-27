@@ -107,7 +107,7 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
       }
 
     /* Hsqldb uses the SQL:2008 syntax for NEXTVAL */
-    case Sequence.Nextval(seq) => b += "(next value for " += quoteIdentifier(seq.name) += ")"
+    case Sequence.Nextval(seq) => b += s"(next value for ${quoteIdentifier(seq.name)})"
 
     case Sequence.Currval(seq) => throw new SQueryException("Hsqldb does not support CURRVAL")
 

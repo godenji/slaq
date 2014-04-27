@@ -158,7 +158,7 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
   def addCopyColumns(b: SQLBuilder) {
     if(isCountAll) b += "count(*)"
     else if(maxColumnPos == 0) b += "*"
-    else b.sep(1 to maxColumnPos, ",")(i => b += "\"c" += i += "\"")
+    else b.sep(1 to maxColumnPos, ",")(i => b += s""" "c$i" """.trim)
   }
 
   override protected def expr(c: Node, b: SQLBuilder, rename: Boolean, topLevel: Boolean): Unit = {
