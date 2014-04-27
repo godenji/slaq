@@ -1,15 +1,12 @@
 This is a port of Stephan Zeiger's excellent ScalaQuery, built against Scala
 2.10.4+
 
-Breaking changes are as follows:
-1) MS Access support has been removed
-2) The map/flatMap "Parameters" call has been renamed to "Params"
-3) Deprecated != conditional operator has been removed
-
-Additions to-date:
-1) =~, =!, &, and | replace now deprecated ===, =!=, &&, and || conditional
-operators
-
+Changes to-date:
+* take/drop queries are now cacheable
+* map/flatMap `Parameters` call has been renamed to `Params`
+* deprecated `!=` conditional operator has been removed
+* =~, =!, &, and | are now available as alternatives to ===, =!=, &&, and ||
+* MS Access support has been removed
 
 ScalaQuery is a type-safe database query API for Scala.
 
