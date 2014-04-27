@@ -4,7 +4,6 @@ import java.util.Properties
 import java.sql._
 import javax.sql.DataSource
 import javax.naming.InitialContext
-import scala.util.DynamicVariable
 import org.scalaquery.SQueryException
 
 /**
@@ -36,41 +35,15 @@ abstract class Database {
   }
 
   /**
-   * Run the supplied thunk with a new session and automatically close the session at the end.
-   * The session is stored in a thread-local variable which can be accessed with the implicit
-   * function in Database.Implicit.
-   */
-  def withSession[T](f: => T): T = withSession { s: Session => Database.dyn.withValue(s)(f) }
-
-  /**
    * Run the supplied function with a new session in a transaction and automatically close the session at the end.
    */
-  def withTransaction[T](f: Session => T): T = withSession { s => s.withTransaction(f(s)) }
-
-  /**
-   * Run the supplied thunk with a new session in a transaction and automatically close the session at the end.
-   * The session is stored in a thread-local variable which can be accessed with the implicit
-   * function in Database.Implicit.
-   */
-  def withTransaction[T](f: => T): T = withSession { Database.threadLocalSession.withTransaction(f) }
+  def withTransaction[T](f: Session => T): T = withSession {s=> s.withTransaction(f(s))}
 }
 
 /**
  * Factory methods for creating Database objects.
  */
 object Database {
-
-  private[session] val dyn = new DynamicVariable[Session](null)
-
-  /**
-   * An implicit function that returns the thread-local session in a withSession block
-   */
-  implicit def threadLocalSession: Session = {
-    val s = dyn.value
-    if(s eq null)
-      throw new SQLException("No implicit session available; threadLocalSession can only be used within a withSession block")
-    else s
-  }
 
   /**
    * Create a Database based on a DataSource.
@@ -84,7 +57,7 @@ object Database {
    */
   def forName(name: String) = new InitialContext().lookup(name) match {
     case ds: DataSource => forDataSource(ds)
-    case x => throw new SQueryException("Expected a DataSource for JNDI name "+name+", but got "+x)
+    case x => throw new SQueryException(s"Expected a DataSource for JNDI name $name, but got $x")
   }
 
   /**
@@ -107,8 +80,7 @@ object Database {
    */
   def forURL(url:String, prop: Map[String, String]): Database = {
     val p = new Properties
-    if(prop ne null)
-      for((k,v) <- prop) if(k.ne(null) && v.ne(null)) p.setProperty(k, v)
+    if(prop ne null) for((k,v) <- prop) if(k.ne(null) && v.ne(null)) p.setProperty(k, v)
     forURL(url, prop = p)
   }
 }

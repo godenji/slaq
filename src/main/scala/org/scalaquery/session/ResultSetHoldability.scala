@@ -4,7 +4,7 @@ import java.sql.ResultSet
 
 sealed abstract class ResultSetHoldability(val intValue: Int) { self =>
   def apply[T](base: Session)(f: Session => T): T = f(base.forParameters(rsHoldability = self))
-  def apply[T](f: => T)(implicit base: Session): T = apply(base)(Database.dyn.withValue(_)(f))
+  def apply[T](f: => T)(implicit base: Session): T = apply(base)(base => f)
   def withDefault(r: ResultSetHoldability) = this
 }
 
