@@ -4,9 +4,9 @@ import org.junit.Test
 import org.junit.Assert._
 import org.scalaquery.ql._
 import org.scalaquery.ql.basic.{BasicTable => Table}
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
+import org.scalaquery.session.Session
 
 object DataTypeTest extends DBTestObject(H2Mem, SQLiteMem, HsqldbMem, MySQL, DerbyMem, Postgres, SQLServer)
 
@@ -20,7 +20,7 @@ class DataTypeTest(tdb: TestDB) extends DBTest(tdb) {
       def * = id ~ data
     }
 
-    db withSession {
+    db withSession { implicit ss:Session=>
       T.ddl.createStatements foreach println
       T.ddl.create;
       T insert (1, Array[Byte](1,2,3))
@@ -29,7 +29,7 @@ class DataTypeTest(tdb: TestDB) extends DBTest(tdb) {
     }
   }
 
-  @Test def testNumeric() = db withSession {
+  @Test def testNumeric() = db withSession { implicit ss:Session=>
     object T extends Table[(Int, Int, Long, Short, Byte)]("test") {
       def id = column[Int]("id")
       def intData = column[Int]("int_data")

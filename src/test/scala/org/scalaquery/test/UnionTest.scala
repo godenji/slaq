@@ -6,7 +6,6 @@ import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.basic.{BasicTable => Table}
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
@@ -33,7 +32,7 @@ class UnionTest(tdb: TestDB) extends DBTest(tdb) {
   }
 
   @Test def test() {
-    db withSession {
+    db withSession { implicit ss:Session=>
 
       (Managers.ddl ++ Employees.ddl) create
 
@@ -69,7 +68,7 @@ class UnionTest(tdb: TestDB) extends DBTest(tdb) {
     }
   }
 
-  @Test def testUnionWithoutProjection() = db withSession {
+  @Test def testUnionWithoutProjection() = db withSession { implicit ss:Session=>
 
     Managers.ddl create;
     Managers.insertAll(

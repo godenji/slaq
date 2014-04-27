@@ -8,7 +8,6 @@ import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.extended.{ExtendedTable => Table, SQLiteDriver}
 import org.scalaquery.meta.MTable
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
@@ -30,7 +29,7 @@ class JoinTest(tdb: TestDB) extends DBTest(tdb) {
     def * = id ~ title ~ category
   }
 
-  @Test def test(): Unit = db withSession {
+  @Test def test(): Unit = db withSession { implicit ss:Session=>
 
     (Categories.ddl ++ Posts.ddl) create
 

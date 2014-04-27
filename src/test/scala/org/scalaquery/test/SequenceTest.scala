@@ -6,7 +6,6 @@ import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.extended.{ExtendedTable => Table, H2Driver, MySQLDriver, DerbyDriver}
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
@@ -15,7 +14,7 @@ object SequenceTest extends DBTestObject(H2Mem, Postgres, MySQL, DerbyMem, Hsqld
 class SequenceTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def test1(): Unit = db withSession {
+  @Test def test1(): Unit = db withSession { implicit ss:Session=>
     case class User(id: Int, first: String, last: String)
 
     object Users extends Table[Int]("users") {
@@ -35,7 +34,7 @@ class SequenceTest(tdb: TestDB) extends DBTest(tdb) {
     assertEquals(Set((200, 1), (210, 2), (220, 3)), q1.list.toSet)
   }
 
-  @Test def test2(): Unit = db withSession {
+  @Test def test2(): Unit = db withSession { implicit ss:Session=>
     val s1 = Sequence[Int]("s1")
     val s2 = Sequence[Int]("s2") start 3
     val s3 = Sequence[Int]("s3") start 3 inc 2

@@ -7,7 +7,6 @@ import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.basic.{BasicTable => Table}
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
@@ -16,7 +15,7 @@ object AggregateTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, Der
 class AggregateTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def testAggregates() = db withSession {
+  @Test def testAggregates() = db withSession { implicit ss: Session=>
     object T extends Table[(Int, Option[Int])]("t") {
       def a = column[Int]("a")
       def b = column[Option[Int]]("b")

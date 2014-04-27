@@ -6,7 +6,6 @@ import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.basic.{BasicTable => Table}
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
@@ -24,7 +23,7 @@ class NestingTest(tdb: TestDB) extends DBTest(tdb) {
       def * = a ~ b ~ c
     }
 
-    db withSession {
+    db withSession { implicit ss:Session=>
       T.ddl.create
       T.insertAll((1, "1", "a"), (2, "2", "b"), (3, "3", "c"))
 

@@ -9,7 +9,6 @@ import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.extended.{ExtendedTable => Table, SQLiteDriver}
 import org.scalaquery.meta.MTable
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
@@ -18,7 +17,7 @@ object ForeignKeyTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, De
 class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def test1(): Unit = db withSession {
+  @Test def test1(): Unit = db withSession { implicit ss:Session=>
 
     object Categories extends Table[(Int, String)]("categories") {
       def id = column[Int]("id", O PrimaryKey)
@@ -81,7 +80,7 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
     tdb.assertNotTablesExist("categories", "posts")
   }
 
-  @Test def test2(): Unit = db withSession {
+  @Test def test2(): Unit = db withSession { implicit ss:Session=>
 
     object A extends Table[(Int, Int, String)]("a") {
       def k1 = column[Int]("k1")
@@ -125,7 +124,7 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
     assertEquals(Set(("a12","b12"), ("a34","b34")), q1.list.toSet)
   }
 
-  @Test def testCombinedJoin(): Unit = db withSession {
+  @Test def testCombinedJoin(): Unit = db withSession { implicit ss:Session=>
 
     object A extends Table[(Int, String)]("a") {
       def id = column[Int]("id", O.PrimaryKey)

@@ -6,9 +6,9 @@ import org.junit.Test
 import org.junit.Assert._
 import org.scalaquery.ql._
 import org.scalaquery.ql.basic.{BasicTable => Table}
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
+import org.scalaquery.session.Session
 
 object BlobTest extends DBTestObject(H2Mem, /* SQLiteMem, Postgres, HsqldbMem, */ MySQL, DerbyMem, SQLServer)
 
@@ -23,7 +23,7 @@ class BlobTest(tdb: TestDB) extends DBTest(tdb) {
     }
 
     // A Blob result does not survive a commit on all DBMSs so we wrap everything in a transaction
-    db withTransaction {
+    db withTransaction { implicit ss:Session=>
       T.ddl.create;
       T insert (1, new SerialBlob(Array[Byte](1,2,3)))
       T insert (2, new SerialBlob(Array[Byte](4,5)))

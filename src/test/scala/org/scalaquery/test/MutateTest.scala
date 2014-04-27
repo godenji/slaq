@@ -6,7 +6,6 @@ import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.extended.{ExtendedTable => Table}
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
@@ -24,7 +23,7 @@ class MutateTest(tdb: TestDB) extends DBTest(tdb) {
       def * = id ~ first ~ last
     }
 
-    db withSession {
+    db withSession { implicit ss:Session=>
 
       Users.ddl.create
       Users insertAll(

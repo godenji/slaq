@@ -7,7 +7,6 @@ import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.extended.H2Driver.Implicit._
 import org.scalaquery.ql.extended.{ExtendedTable => Table}
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 
 object TablesInObjectTest {
   def main(args: Array[String]) { new TablesInObjectTest().test1() }

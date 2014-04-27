@@ -6,7 +6,6 @@ import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.extended.{ExtendedTable => Table}
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
@@ -23,7 +22,7 @@ class PagingTest(tdb: TestDB) extends DBTest(tdb) {
   }
 
   @Test def test() {
-    db withSession {
+    db withSession { implicit ss:Session=>
 
       IDs.ddl.create;
       IDs.insertAll((1 to 10):_*)

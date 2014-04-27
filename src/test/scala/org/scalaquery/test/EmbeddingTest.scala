@@ -2,15 +2,15 @@ package org.scalaquery.test
 
 import org.junit.Test
 import org.junit.Assert._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
+import org.scalaquery.session.Session
 
 object EmbeddingTest extends DBTestObject(H2Mem)
 
 class EmbeddingTest(tdb: TestDB) extends DBTest(tdb) {
 
-  @Test def testRaw(): Unit = db withSession {
+  @Test def testRaw(): Unit = db withSession { implicit ss:Session=>
     import org.scalaquery.simple.{StaticQuery => Q, GetResult}
 
     Q.u + "create table USERS(ID int not null primary key, NAME varchar(255))" execute;

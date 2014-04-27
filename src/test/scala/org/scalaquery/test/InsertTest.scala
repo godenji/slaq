@@ -8,7 +8,6 @@ import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.extended.{ExtendedTable => Table}
 import org.scalaquery.meta.MTable
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
@@ -27,7 +26,7 @@ class InsertTest(tdb: TestDB) extends DBTest(tdb) {
   object Dst1 extends TestTable("dst1")
   object Dst2 extends TestTable("dst2")
 
-  @Test def testSimple(): Unit = db withSession {
+  @Test def testSimple(): Unit = db withSession { implicit ss:Session=>
 
     (Src1.ddl ++ Dst1.ddl ++ Dst2.ddl) create
 

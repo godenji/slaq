@@ -4,10 +4,10 @@ import org.junit.Test
 import org.junit.Assert._
 import org.scalaquery.ql._
 import org.scalaquery.ql.extended.{ExtendedTable => Table}
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 import java.util.UUID
+import org.scalaquery.session.Session
 
 object UUIDTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
 
@@ -32,7 +32,7 @@ class UUIDTest(tdb: TestDB) extends DBTest(tdb) {
   val u4 = java.util.UUID.randomUUID()
   val u5 = java.util.UUID.randomUUID()
 
-  @Test def test() = db withSession {
+  @Test def test() = db withSession { implicit ss:Session=>
     (T1.ddl ++ T2.ddl).create;
 
     T2.insert (1, u3)

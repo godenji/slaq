@@ -6,7 +6,6 @@ import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.basic.{BasicTable => Table}
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
@@ -23,7 +22,7 @@ class MiscTest(tdb: TestDB) extends DBTest(tdb) {
       def * = a ~ b
     }
 
-    db withSession {
+    db withSession { implicit ss:Session=>
       T.ddl.create
       T.insertAll(("1", "a"), ("2", "a"), ("3", "b"))
 
@@ -71,7 +70,7 @@ class MiscTest(tdb: TestDB) extends DBTest(tdb) {
       def * = a
     }
 
-    db withSession {
+    db withSession { implicit ss:Session=>
       (T1.ddl ++ T2.ddl ++ T3.ddl ++ T4.ddl) create
 
       T1.insert("a")
@@ -94,7 +93,7 @@ class MiscTest(tdb: TestDB) extends DBTest(tdb) {
       def * = a
     }
 
-    db withSession {
+    db withSession { implicit ss:Session=>
       T1.ddl.create
       T1.insertAll("foo", "bar", "foobar", "foo%")
 

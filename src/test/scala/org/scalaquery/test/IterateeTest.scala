@@ -6,7 +6,6 @@ import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.extended.{ExtendedTable => Table}
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.iter._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
@@ -22,7 +21,7 @@ class IterateeTest(tdb: TestDB) extends DBTest(tdb) {
     def * = s ~ i
   }
 
-  @Test def test() = db withSession {
+  @Test def test() = db withSession { implicit ss:Session=>
     A.ddl.create
     A.insertAll(("a", 1), ("b", 2), ("c", 3), ("d", 4))
 

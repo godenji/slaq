@@ -4,9 +4,10 @@ import org.junit.Test
 import org.junit.Assert._
 import org.scalaquery.ql._
 import org.scalaquery.ql.extended.{ExtendedTable => Table}
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
+import org.scalaquery.session.Session
+import org.scalaquery.SQueryException
 
 object TransactionTest extends DBTestObject(H2Disk, SQLiteDisk, Postgres, MySQL, DerbyDisk, HsqldbDisk, SQLServer)
 
@@ -20,19 +21,39 @@ class TransactionTest(tdb: TestDB) extends DBTest(tdb) {
       def * = a
     }
 
-    db withSession {
+    db withSession { implicit ss:Session=>
       T.ddl.create
     }
 
     val q = Query(T)
 
-    db withSession {
-      threadLocalSession withTransaction {
-        T.insert(42)
-        assertEquals(Some(42), q.firstOption)
-        threadLocalSession.rollback()
-      }
-      assertEquals(None, q.firstOption)
+    db withTransaction { implicit ss:Session=>
+      T.insert(42)
+      assertEquals(Some(42), q.firstOption)
+      ss.rollback()
     }
+    assertEquals(None, db withSession { implicit ss:Session=> q.firstOption})
+    
+    def bInsert(implicit ss: Session) = {
+    	println("in session")
+    	println(ss.resultSetType)
+    	println(ss.resultSetConcurrency)
+    	println(ss.resultSetHoldability)
+    	T.insert(2) 
+    }
+    db.withTransaction{implicit ss:Session=>
+    	println("in transaction")
+    	println(ss.resultSetType)
+    	println(ss.resultSetConcurrency)
+    	println(ss.resultSetHoldability)
+	    val res = for{
+	    	a <- Right(T.insert(1)).right
+	    	b <- Right(bInsert).right
+	    } yield(a,b)
+	    assertEquals( (1,1), res.right.get )
+	    ss.rollback()
+    }
+    assertEquals(None, db withSession { implicit ss:Session=> q.firstOption})
+    throw new SQueryException("blah")
   }
 }

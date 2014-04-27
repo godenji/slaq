@@ -7,10 +7,10 @@ import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.basic.{BasicTable => Table}
 import org.scalaquery.ql.extended.{H2Driver, PostgresDriver}
 import org.scalaquery.meta._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.simple.{StaticQuery => Q}
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
+import org.scalaquery.session.Session
 
 object MetaTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
 
@@ -36,7 +36,7 @@ class MetaTest(tdb: TestDB) extends DBTest(tdb) {
 
   @Test def test() {
 
-    db withSession {
+    db withSession { implicit ss:Session=>
 
       val ddl = (Users.ddl ++ Orders.ddl)
       println("DDL used to create tables:")

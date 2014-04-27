@@ -6,7 +6,6 @@ import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.extended.{ExtendedTable => Table}
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
@@ -25,7 +24,7 @@ class ColumnDefaultTest(tdb: TestDB) extends DBTest(tdb) {
   }
 
   @Test def test() {
-    db withSession {
+    db withSession { implicit ss:Session=>
       A.ddl.createStatements foreach println
       A.ddl.create
       A.id insert 42

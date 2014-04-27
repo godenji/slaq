@@ -8,7 +8,6 @@ import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.extended.{ExtendedTable => Table, SQLiteDriver}
 import org.scalaquery.meta.MTable
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
@@ -17,7 +16,7 @@ object PrimaryKeyTest extends DBTestObject(H2Mem, Postgres, MySQL, DerbyMem, Hsq
 class PrimaryKeyTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def test1(): Unit = db withSession {
+  @Test def test1(): Unit = db withSession { implicit ss:Session=>
 
     object A extends Table[(Int, Int, String)]("a") {
       def k1 = column[Int]("k1")

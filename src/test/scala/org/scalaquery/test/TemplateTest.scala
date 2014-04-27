@@ -6,9 +6,9 @@ import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.extended.{ExtendedTable => Table}
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
+import org.scalaquery.SQueryException
 
 object TemplateTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
 
@@ -29,7 +29,7 @@ class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
   }
 
   @Test def test() {
-    db withSession {
+    db withSession { implicit ss:Session=>
 
       (Users.ddl ++ Orders.ddl).createStatements foreach println
       (Users.ddl ++ Orders.ddl) create
@@ -43,6 +43,35 @@ class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
       println("q1: " + q1.selectStatement)
       for(t <- q1) println("User: "+t)
       assertEquals(List("Apu"), q1.list)
+      
+//      val joins = for{
+//      	Join(u,o) <- Users leftJoin Orders on(_.id is _.userID)
+//      	Join(u1,o1) <- Users rightJoin Orders on(_.id is _.userID)
+//      } yield(u.*,o.*,u1.*,o1.*)
+//      println(joins.selectStatement)
+//      println(joins.list)
+//      throw new SQueryException("blah")
+      
+      val u1 = for{
+      	u <- Users if u.id is (_:Column[Int])
+      } yield u
+      val o1 = for{
+      	o <- Orders if o.userID is (_:Column[Int])
+      } yield o
+      val compiled = for{
+      	u <- Some(u1)
+      	o <- Some(o1)
+      } yield(u,o)
+      val compRun = compiled.map{case(a,b)=>
+      	for{
+      		fnu <- a(1)
+      		fno <- b(2) if fnu.id is fno.userID
+      	} yield(fnu,fno)
+      }.get
+      
+      val u2 = for{id <- Params[Int]
+      	u <- u1(id)
+      } yield u
 
       val userNameByID2 = for {
         id <- Params[Int]

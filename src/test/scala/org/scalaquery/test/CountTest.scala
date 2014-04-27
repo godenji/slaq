@@ -5,16 +5,16 @@ import org.junit.Assert._
 import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.extended.{ExtendedTable => Table}
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
+import org.scalaquery.session.Session
 
 object CountTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
 
 class CountTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def test() = db withSession {
+  @Test def test() = db withSession { implicit ss:Session=>
     object TestTable extends Table[Int]("TEST") {
       def id = column[Int]("ID")
       def * = id

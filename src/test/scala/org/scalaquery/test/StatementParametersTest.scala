@@ -31,14 +31,17 @@ class StatementParametersTest(tdb: TestDB) extends DBTest(tdb) {
 
   @Test def testImplicit() {
     println("*** Implicit ***")
-    import Database.threadLocalSession
-    db withSession {
+    db withSession { implicit session:Session=>
       pr("start")
       check(ResultSetType.Auto, ResultSetConcurrency.Auto, ResultSetHoldability.Auto)
-      ResultSetType.ScrollInsensitive {
+      /*
+       * need explicit reference to ResultSet*'s session to override above withSession implicit
+       * looks like in order to set custom ResultSet* attribs one *must* be explicit
+       */
+      ResultSetType.ScrollInsensitive {ss:Session=>
         pr("in ScrollInsensitive block")
         check(ResultSetType.ScrollInsensitive, ResultSetConcurrency.Auto, ResultSetHoldability.Auto)
-        ResultSetHoldability.HoldCursorsOverCommit {
+        ResultSetHoldability.HoldCursorsOverCommit {ss:Session=>
           pr("in HoldCursorsOverCommit block")
           check(ResultSetType.ScrollInsensitive, ResultSetConcurrency.Auto, ResultSetHoldability.HoldCursorsOverCommit)
         }
@@ -50,11 +53,13 @@ class StatementParametersTest(tdb: TestDB) extends DBTest(tdb) {
     }
   }
 
-  def pr(msg: String)(implicit s: Session) = println(msg + ": " + s.resultSetType + " " + s.resultSetConcurrency + " " + s.resultSetHoldability)
+  def pr(msg: String)(implicit ss: Session) = println(
+  	s"$msg: ${ss.resultSetType} ${ss.resultSetConcurrency} ${ss.resultSetHoldability}"
+  )
 
-  def check(t: ResultSetType, c: ResultSetConcurrency, h: ResultSetHoldability)(implicit s: Session) {
-    assertEquals(s.resultSetType, t)
-    assertEquals(s.resultSetConcurrency, c)
-    assertEquals(s.resultSetHoldability, h)
+  def check(t: ResultSetType, c: ResultSetConcurrency, h: ResultSetHoldability)(implicit ss: Session) {
+    assertEquals(ss.resultSetType, t)
+    assertEquals(ss.resultSetConcurrency, c)
+    assertEquals(ss.resultSetHoldability, h)
   }
 }

@@ -3,9 +3,9 @@ package org.scalaquery.test
 import org.junit.Test
 import org.junit.Assert._
 import org.scalaquery.simple.{GetResult, StaticQuery => Q}
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
+import org.scalaquery.session.Session
 
 object SimpleTest extends DBTestObject(H2Mem, H2Disk, SQLiteMem, SQLiteDisk, Postgres, MySQL, DerbyMem, DerbyDisk, HsqldbMem, SQLServer)
 
@@ -30,12 +30,10 @@ class SimpleTest(tdb: TestDB) extends DBTest(tdb) {
     val userForID = Q[Int, User] + "select id, name from users where id = ?"
     val userForIdAndName = Q[(Int, String), User] + "select id, name from users where id = ? and name = ?"
 
-    db withSession {
-      threadLocalSession.withTransaction {
-        println("Creating user table: "+createTable.first)
-        println("Inserting users:")
-        for(i <- populateUsers) println("  "+i.first)
-      }
+    db withTransaction { implicit ss:Session=>
+      println("Creating user table: "+createTable.first)
+      println("Inserting users:")
+      for(i <- populateUsers) println("  "+i.first)
 
       println("All IDs:")
       for(s <- allIDs.list) println("  "+s)

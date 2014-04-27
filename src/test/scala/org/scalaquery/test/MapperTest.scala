@@ -6,7 +6,6 @@ import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.extended.{ExtendedTable => Table}
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
@@ -29,7 +28,7 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
       val findByID = createFinderBy(_.id)
     }
 
-    db withSession {
+    db withSession { implicit ss:Session=>
 
       Users.ddl.create
       (Users.first ~ Users.last).insert("Homer", "Simpson")
@@ -69,7 +68,7 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
       def * = a ~ b <> (Data, Data.unapply _)
     }
 
-    db withSession {
+    db withSession { implicit ss:Session=>
       Ts.ddl.create
       Ts.insertAll(new Data(1, 2), new Data(3, 4), new Data(5, 6))
 
@@ -101,7 +100,7 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
       def * = id ~ b
     }
 
-    db withSession {
+    db withSession { implicit ss:Session=>
       T.ddl.create
       T.b.insertAll(False, True)
       assertEquals(Query(T).list.toSet, Set((1, False), (2, True)))

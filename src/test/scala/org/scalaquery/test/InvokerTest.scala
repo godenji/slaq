@@ -16,14 +16,13 @@ class InvokerTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
   @Test def testCollections() {
-    import org.scalaquery.session.Database.threadLocalSession
-
+    
     val T = new Table[Int]("t") {
       def a = column[Int]("a")
       def * = a
     }
 
-    db withSession {
+    db withSession { implicit ss:Session=>
       T.ddl.create
       T.insertAll(2, 3, 1, 5, 4)
 
@@ -59,15 +58,14 @@ class InvokerTest(tdb: TestDB) extends DBTest(tdb) {
   }
 
   @Test def testMap() {
-    import org.scalaquery.session.Database.threadLocalSession
-
+    
     val T = new Table[(Int, String)]("t") {
       def k = column[Int]("k")
       def v = column[String]("v")
       def * = k ~ v
     }
 
-    db withSession {
+    db withSession { implicit ss:Session=>
       T.ddl.create
       T.insertAll(2 -> "b", 3 -> "c", 1 -> "a")
 

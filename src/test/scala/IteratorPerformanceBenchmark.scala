@@ -1,7 +1,6 @@
 import collection.mutable.ArrayBuffer
 import org.scalaquery._
 import org.scalaquery.session._
-import org.scalaquery.session.Database.threadLocalSession
 import org.scalaquery.util._
 import org.scalaquery.ql._
 import org.scalaquery.ql.extended.{ExtendedTable => Table}
@@ -14,7 +13,7 @@ object IteratorPerformanceBenchmark {
       def value = column[String]("value")
       def * = key ~ value
     }
-    Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver") withSession {
+    Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver") withSession { implicit ss:Session=>
       Props.ddl.create
       val count = 10000
       val size = 1000
