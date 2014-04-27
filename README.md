@@ -4,6 +4,7 @@ This is a port of Stephan Zeiger's excellent ScalaQuery, built against Scala
 Changes to-date:
 * take/drop queries are now cacheable
 * map/flatMap `Parameters` call has been renamed to `Params`
+* threadLocalSession has been removed
 * deprecated `!=` conditional operator has been removed
 * =~, =!, &, and | are now available as alternatives to ===, =!=, &&, and ||
 * MS Access support has been removed
