@@ -17,8 +17,3 @@ object Unpackable {
   // Should be implicit for using Unpackable as a view bound, but SI-3346 prevents this use case
   def unpackableValueToUnpackable[T, U](value: T)(implicit unpack: Unpack[T, U]) = Unpackable(value, unpack)
 }
-
-// Work-around for SI-3346
-final class ToUnpackable[T](value: T) {
-  def toUnpackable[U](implicit unpack: Unpack[T, U]) = new Unpackable[T, U](value, unpack)
-}
