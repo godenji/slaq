@@ -139,7 +139,7 @@ trait Invoker[-P, +R] { self =>
    * and return the first row of the result set, or None if the result set is empty.
    */
   def firstFlatten[B](param: P)(implicit session: Session, ev: R <:< Option[B]): Option[B] =
-    firstOption(param)/*.map(ev.apply _)*/.getOrElse(None).asInstanceOf[Option[B]]
+    firstOption(param).map(ev.apply _).getOrElse(None)//.asInstanceOf[Option[B]]
 }
 
 /**
@@ -163,7 +163,7 @@ trait UnitInvoker[+R] extends Invoker[Unit, R] {
   final def enumerate[B, RR >: R](iter: IterV[RR,B])(implicit session: Session): IterV[RR, B] = delegate.enumerate(appliedParameter, iter)
 
   def firstFlatten[B](implicit session: Session, ev: R <:< Option[B]): Option[B] =
-    firstOption/*.map(ev.apply _)*/.getOrElse(None).asInstanceOf[Option[B]]
+    firstOption.map(ev.apply _).getOrElse(None)//.asInstanceOf[Option[B]]
   override def mapResult[U](f: (R => U)): UnitInvoker[U] = new MappedInvoker(this, f) with UnitInvokerMixin[U]
 }
 

@@ -85,7 +85,7 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
   }
 
   protected def innerBuildSelectNoRewrite(b: SQLBuilder, rename: Boolean) {
-    def inner {
+    def inner() {
       selectSlot = b.createSlot
       selectSlot += "SELECT "
       expr(query.reified, selectSlot, rename, true)
@@ -94,10 +94,10 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
     }
     if(!mayLimit0) {
       query.typedModifiers[TakeDrop] match {
-        case TakeDrop(Some(ConstColumn(0)),_,_) :: _ => b += "SELECT * FROM ("; inner; b += ") t0 WHERE 1=0"
-        case _ => inner
+        case TakeDrop(Some(ConstColumn(0)),_,_) :: _ => b += "SELECT * FROM ("; inner(); b += ") t0 WHERE 1=0"
+        case _ => inner()
       }
-    } else inner
+    } else inner()
   }
 
   protected def appendClauses(b: SQLBuilder) {
