@@ -31,7 +31,8 @@ trait BasicImplicitConversions[DriverType <: BasicProfile] {
   implicit def unpackableToInsertInvoker[T, U](u: Unpackable[T, U]) = new BasicInsertInvoker(u, scalaQueryDriver)
 
   implicit val scalaQueryDriver: DriverType
-
-  // Work-around for SI-3346
-  implicit def anyToToUnpackable[T](value: T) = new ToUnpackable[T](value)
+  
+  implicit class NodeLike2Unpackable[T <: AbstractTable[_]](t: T){
+  	def toUnpackable[U](implicit unpack: Unpack[T, U]) = new Unpackable[T, U](t, unpack)
+  }
 }
