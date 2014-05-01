@@ -27,12 +27,12 @@ trait BasicImplicitConversions[DriverType <: BasicProfile] {
   implicit def queryToDeleteInvoker[T](q: Query[BasicTable[T], T]): BasicDeleteInvoker[T] = new BasicDeleteInvoker(q, scalaQueryDriver)
   implicit def productQueryToUpdateInvoker[T](q: Query[ColumnBase[T], T]): BasicUpdateInvoker[T] = new BasicUpdateInvoker(q, scalaQueryDriver)
   implicit def namedColumnQueryToUpdateInvoker[T](q: Query[_ <: NamedColumn[T], T]): BasicUpdateInvoker[T] = new BasicUpdateInvoker(q, scalaQueryDriver)
-  implicit def columnBaseToInsertInvoker[T](c: ColumnBase[T]) = new BasicInsertInvoker(Unpackable.unpackableValueToUnpackable(c), scalaQueryDriver)
+  implicit def columnBaseToInsertInvoker[T](c: ColumnBase[T]) = new BasicInsertInvoker(c.toUnpackable, scalaQueryDriver)
   implicit def unpackableToInsertInvoker[T, U](u: Unpackable[T, U]) = new BasicInsertInvoker(u, scalaQueryDriver)
 
   implicit val scalaQueryDriver: DriverType
   
-  implicit class NodeLike2Unpackable[T <: AbstractTable[_]](t: T){
+  implicit class NodeLike2Unpackable[T <: ColumnBase[_]](t: T){
   	def toUnpackable[U](implicit unpack: Unpack[T, U]) = new Unpackable[T, U](t, unpack)
   }
 }

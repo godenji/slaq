@@ -12,8 +12,3 @@ case class Unpackable[T, U](value: T, unpack: Unpack[T, U]) {
   def linearizer = unpack.linearizer(value).asInstanceOf[ValueLinearizer[U]]
   def mapOp(f: Node => Node) = unpack.mapOp(value, f).asInstanceOf[T]
 }
-
-object Unpackable {
-  // Should be implicit for using Unpackable as a view bound, but SI-3346 prevents this use case
-  def unpackableValueToUnpackable[T, U](value: T)(implicit unpack: Unpack[T, U]) = Unpackable(value, unpack)
-}
