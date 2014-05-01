@@ -18,7 +18,12 @@ import org.scalaquery.util.{Node, ValueLinearizer, ProductLinearizer, WithOp}
  */
 @implicitNotFound(msg = "Don't know how to unpack ${r"${Packed_}"} (to ${r"${Unpacked_}"})")
 sealed trait Unpack[-Packed_, Unpacked_] {
-  type Packed = Packed_
+	/* 
+	 * scala 2.11 prevents `type Packed = Packed_` since Packed_ is contravariant
+	 * see SI-6566 https://issues.scala-lang.org/browse/SI-6566
+	 * workaround with @uncheckedVariance
+	 */
+  type Packed = (Packed_ @annotation.unchecked.uncheckedVariance)
   type Unpacked = Unpacked_
   def reify(from: Packed): Any = from // must return the reified type
   def reifiedUnpack: Unpack[_, Unpacked] = this // must return an Unpack for the reified type
