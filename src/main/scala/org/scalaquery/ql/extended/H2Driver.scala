@@ -22,7 +22,7 @@ class H2Driver extends ExtendedProfile { self =>
 object H2Driver extends H2Driver
 
 class H2QueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[BasicQueryBuilder], profile: H2Driver)
-extends BasicQueryBuilder(_query, _nc, parent, profile) {
+	extends BasicQueryBuilder(_query, _nc, parent, profile) {
 
   import ExtendedQueryOps._
 

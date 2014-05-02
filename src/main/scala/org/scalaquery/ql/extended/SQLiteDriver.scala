@@ -74,7 +74,8 @@ object SQLiteTypeMapperDelegates {
   }
 }
 
-class SQLiteDDLBuilder(table: AbstractBasicTable[_], profile: SQLiteDriver) extends BasicDDLBuilder(table, profile) {
+class SQLiteDDLBuilder(table: AbstractBasicTable[_], profile: SQLiteDriver) 
+	extends BasicDDLBuilder(table, profile) {
   import profile.sqlUtils._
 
   protected class SQLiteColumnDDLBuilder(column: NamedColumn[_]) extends BasicColumnDDLBuilder(column) {

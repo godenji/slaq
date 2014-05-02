@@ -4,17 +4,18 @@ import scala.collection.mutable.HashMap
 import java.io.PrintWriter
 import org.scalaquery.SQueryException
 import org.scalaquery.ql._
-import org.scalaquery.ql.extended.ExtendedColumnOption //TODO: Move AutoInc handling to extended profile
+import org.scalaquery.ql.extended.ExtendedColumn
 import org.scalaquery.util.Node
 
 class BasicDDLBuilder(val table: AbstractBasicTable[_], val profile: BasicProfile) {
   import profile.sqlUtils._
 
-  protected class BasicColumnDDLBuilder(protected val column: NamedColumn[_]) {
+  protected class BasicColumnDDLBuilder(protected val column: NamedColumn[_]) 
+  	extends ExtendedColumn {
+  	
     protected val tmDelegate = column.typeMapper(profile)
     protected var sqlType: String = null
     protected var notNull = !tmDelegate.nullable
-    protected var autoIncrement = false
     protected var primaryKey = false
     protected var defaultLiteral: String = null
     init()
@@ -24,13 +25,14 @@ class BasicDDLBuilder(val table: AbstractBasicTable[_], val profile: BasicProfil
       if(sqlType eq null) sqlType = mapTypeName(tmDelegate)
     }
 
-    protected def handleColumnOption(o: ColumnOption[_,_]): Unit = o match {
+    override protected def handleColumnOption(o: ColumnOption[_,_]): Unit = o match {
       case BasicColumnOption.DBType(s) => sqlType = s
       case BasicColumnOption.NotNull => notNull = true
       case BasicColumnOption.Nullable => notNull = false
-      case ExtendedColumnOption.AutoInc => autoIncrement = true
       case BasicColumnOption.PrimaryKey => primaryKey = true
-      case BasicColumnOption.Default(v) => defaultLiteral = column.asInstanceOf[NamedColumn[Any]].typeMapper(profile).valueToSQLLiteral(v)
+      case BasicColumnOption.Default(v) => defaultLiteral = 
+      	column.asInstanceOf[NamedColumn[Any]].typeMapper(profile).valueToSQLLiteral(v)
+      case _ => super.handleColumnOption(o)
     }
 
     def appendColumn(sb: StringBuilder) {
