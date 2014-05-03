@@ -14,7 +14,8 @@ class BasicQueryInvoker[Q, R](q: Query[Q, R], profile: BasicProfile)
   protected lazy val (built, lin) = 
   	profile.buildSelectStatement(q, NamingContext())
 
-  def selectStatement = getStatement
+  def selectStatement = // make statement readable
+  	getStatement.replaceAll("`", "").replaceAll("\"", "").split(",").mkString(", ")
 
   protected def getStatement = built.sql
 

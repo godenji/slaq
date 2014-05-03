@@ -10,7 +10,8 @@ class BasicQueryTemplate[P, R](query: Query[_, R], profile: BasicProfile) extend
 
   protected lazy val (built, lin) = profile.buildSelectStatement(query, NamingContext())
 
-  def selectStatement = getStatement
+  def selectStatement = // make statement readable
+  	getStatement.replaceAll("`", "").replaceAll("\"", "").split(",").mkString(", ")
 
   protected def getStatement = built.sql
 
