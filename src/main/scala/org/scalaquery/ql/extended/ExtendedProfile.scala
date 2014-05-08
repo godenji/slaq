@@ -27,36 +27,12 @@ abstract class ExtendedTable[T](_schemaName: Option[String], _tableName: String)
  */
 trait ExtendedImplicitConversions[DriverType <: ExtendedProfile] 
 	extends BasicImplicitConversions[DriverType] {
-	
-  implicit class QueryProvidesExtendedOps[E, U](q: Query[E, U]) {
-  	import ExtendedQueryOps._
-
-	  def take(num: Int): Query[E,U] = take(ConstColumn(num))
-	  def drop(num: Int): Query[E,U] = drop(ConstColumn(num))
-	  
-	  def take(node: Column[Int]): Query[E,U] = q.createOrReplaceSingularModifier[TakeDrop] {
-	    case Some(TakeDrop(None,d,_)) => TakeDrop(Some(node),d)
-	    case _ => TakeDrop(Some(node),None)
-	  }
-	  def drop(node: Column[Int]): Query[E,U] = q.createOrReplaceSingularModifier[TakeDrop] {
-	    case Some(TakeDrop(t,None,_)) => TakeDrop(t, Some(node), compareNode = Some(node))
-	    case _ => TakeDrop(None,Some(node))
-	  }
-	}
   
   @inline implicit def extendedQueryToDeleteInvoker[T](q: Query[ExtendedTable[T], T]): BasicDeleteInvoker[T] = 
   	new BasicDeleteInvoker(q, scalaQueryDriver)
 }
 
-object ExtendedQueryOps {
-	/*
-	 * @compareNode used to calculate `take x drop y` operation where take must be of value max(0, x-y)
-	 * @see BasicQueryBuilder `appendColumnValue`
-	 */
-  final case class TakeDrop(
-  	take: Option[Column[Int]], drop: Option[Column[Int]], compareNode: Option[Column[Int]] = None
-  ) extends QueryModifier with NullaryNode
-}
+object ExtendedQueryOps {}
 
 /*
  * DDL handling
