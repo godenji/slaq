@@ -45,7 +45,7 @@ object Unpack extends UnpackLowPriority {
   def unpackTableBase[T <: TableBase[_]]: Unpack[T, Nothing] = new Unpack[T, Nothing] {
     def linearizer(from: Packed): ValueLinearizer[_] = from match {
       case a: AbstractTable[_] => a.*
-      case j: Join[_, _] => j.left.*
+      case Join(l,r) => l.*
     }
     def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
   }
