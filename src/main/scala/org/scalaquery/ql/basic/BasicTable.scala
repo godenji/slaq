@@ -5,7 +5,8 @@ import org.scalaquery.SQueryException
 import org.scalaquery.session.{PositionedResult, PositionedParameters}
 import org.scalaquery.util.Node
 
-abstract class AbstractBasicTable[T](_schemaName: Option[String], _tableName: String) extends AbstractTable[T](_schemaName, _tableName) {
+abstract class AbstractBasicTable[T](_schemaName: Option[String], _tableName: String) 
+	extends AbstractTable[T](_schemaName, _tableName) {
 
   type ProfileType <: BasicProfile
 
@@ -17,11 +18,6 @@ abstract class AbstractBasicTable[T](_schemaName: Option[String], _tableName: St
     import profile.Implicit._
     Params[P](tm).flatMap(p => Query(this).where(t => ColumnOps.Is(f(t.asInstanceOf[AbstractBasicTable.this.type]), p)))(profile)
   }
-
-  def innerJoin[U <: TableBase[_]](other: U) = new JoinBase[this.type, U](this, other, Join.Inner)
-  def leftJoin[U <: TableBase[_]](other: U) = new JoinBase[this.type, U](this, other, Join.Left)
-  def rightJoin[U <: TableBase[_]](other: U) = new JoinBase[this.type, U](this, other, Join.Right)
-  def outerJoin[U <: TableBase[_]](other: U) = new JoinBase[this.type, U](this, other, Join.Outer)
 
   def ddl(implicit profile: ProfileType): DDL = profile.buildTableDDL(this)
 }
