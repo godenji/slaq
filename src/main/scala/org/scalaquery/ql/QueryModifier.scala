@@ -1,6 +1,6 @@
 package org.scalaquery.ql
 
-import org.scalaquery.util.Node
+import org.scalaquery.util.{Node,NullaryNode}
 
 trait QueryModifier extends Node
 
@@ -35,3 +35,11 @@ final case class Grouping(val by: Node) extends QueryModifier {
   def nodeChildren = by :: Nil
   override def toString = "Grouping"
 }
+
+/*
+ * @compareNode used to calculate `take x drop y` operation where take must be of value max(0, x-y)
+ * @see BasicQueryBuilder `appendColumnValue`
+ */
+final case class TakeDrop(
+	take: Option[Column[Int]], drop: Option[Column[Int]], compareNode: Option[Column[Int]] = None
+) extends QueryModifier with NullaryNode
