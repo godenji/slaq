@@ -22,16 +22,7 @@ object MFunctionColumn {
     catch { case _:NoSuchMethodException => null }
 
   def getFunctionColumns(functionPattern: MQName, columnNamePattern: String = "%") = {
-    /* Regular version, requires Java 1.6: 
-    ResultSetInvoker[MFunctionColumn](
-      _.metaData.getFunctionColumns(functionPattern.catalog_?, functionPattern.schema_?,
-                                    functionPattern.name, columnNamePattern)) { r =>
-      MFunctionColumn(MQName.from(r), r<<, r<<, r<<, r<<, r<<, r<<, r<<, r<<, r.nextShort match {
-          case DatabaseMetaData.functionNoNulls => Some(false)
-          case DatabaseMetaData.functionNullable => Some(true)
-          case _ => None
-        }, r<<, r<<, r<<, DatabaseMeta.yesNoOpt(r), r<<)
-    }*/
+    /* to support Java pre-1.6 use:
     if(m == null) UnitInvoker.empty
     else ResultSetInvoker[MFunctionColumn]( s =>
       DatabaseMeta.invokeForRS(m, s.metaData, functionPattern.catalog_?, functionPattern.schema_?,
@@ -39,6 +30,16 @@ object MFunctionColumn {
       MFunctionColumn(MQName.from(r), r<<, r<<, r<<, r<<, r<<, r<<, r<<, r<<, r.nextShort match {
           case 0 /*DatabaseMetaData.functionNoNulls*/ => Some(false)
           case 1 /*DatabaseMetaData.functionNullable*/ => Some(true)
+          case _ => None
+        }, r<<, r<<, r<<, DatabaseMeta.yesNoOpt(r), r<<)
+    } 
+    */
+  	ResultSetInvoker[MFunctionColumn](
+      _.metaData.getFunctionColumns(functionPattern.catalog_?, functionPattern.schema_?,
+                                    functionPattern.name, columnNamePattern)) { r =>
+      MFunctionColumn(MQName.from(r), r<<, r<<, r<<, r<<, r<<, r<<, r<<, r<<, r.nextShort match {
+          case DatabaseMetaData.functionNoNulls => Some(false)
+          case DatabaseMetaData.functionNullable => Some(true)
           case _ => None
         }, r<<, r<<, r<<, DatabaseMeta.yesNoOpt(r), r<<)
     }
