@@ -3,26 +3,26 @@ package org.scalaquery.ql.basic
 import scala.collection.mutable.{HashMap, HashSet}
 import org.scalaquery.SQueryException
 import org.scalaquery.ql._
-import extended.ExtendedQueryOps.TakeDrop
 import org.scalaquery.util._
 import org.scalaquery.session.{PositionedParameters, PositionedResult}
 
-class ConcreteBasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[BasicQueryBuilder], _profile: BasicProfile)
-extends BasicQueryBuilder(_query, _nc, parent, _profile) {
+class ConcreteBasicQueryBuilder(
+	_query: Query[_, _], _nc: NamingContext, parent: Option[BasicQueryBuilder], 
+	_profile: BasicProfile) 
+	extends BasicQueryBuilder(_query, _nc, parent, _profile) {
+	
   type Self = BasicQueryBuilder
 
   protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
     new ConcreteBasicQueryBuilder(query, nc, Some(this), profile)
 }
 
-abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[BasicQueryBuilder], _profile: BasicProfile) {
+abstract class BasicQueryBuilder(
+	_query: Query[_, _], _nc: NamingContext, parent: Option[BasicQueryBuilder], _profile: BasicProfile) {
   import _profile.sqlUtils._
 
   //TODO Pull tables out of subqueries where needed
-
   type Self <: BasicQueryBuilder
-
-  protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext): Self
 
   protected val profile = _profile
   protected val query: Query[_, _] = _query
@@ -40,15 +40,52 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
   protected val supportsCast = true
   protected val concatOperator: Option[String] = None
 
-  protected def localTableName(n: Node) = n match {
-    case Join.JoinPart(table, from) =>
-      // Special case for Joins: A join combines multiple tables but does not alias them
-      localTables(nc.nameFor(from)) = from
-      nc.nameFor(table)
+  protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext): Self
+
+  protected def localTableName(node: Node) = node match {
+    case Join.JoinPart(left,right) =>
+      localTables(nc.nameFor(right)) = right
+      nc.nameFor(left)
+    case x: AbstractTable.Alias=> // check for existing alias when node child is JoinPart
+    	val alias = nc.nameFor(node)
+    	
+//    	println(s"localTableName() >> ${x.child} with alias $alias of $x")
+//    	x.child match{
+//    		case Join.JoinPart(left,_) => 
+//    			left match{
+//    				case a: AbstractTable.Alias=>
+//    					//println(s"${a.child} of inner $a"); println(localTables)
+//    					val maybeAlias = localTables.find{
+//    						case(alias,tbl:AbstractTable.Alias)=> a.child == tbl.child
+//    						case _=> false
+//    					}.map(_._1)
+//    					maybeAlias.foreach{currAlias=>
+//    						println(s"${a.child} already has alias $currAlias, discarding new alias $alias\n")	
+//    					}
+//    				case _=>
+//    			}
+//    		case _=>
+//    	}
+    	
+    	// override alias when join table and previous alias already defined  
+    	val modAlias = x.child match{
+    		case Join.JoinPart(left,_) =>
+    			left match{
+    				case at: AbstractTable.Alias=>
+    					localTables.find{
+    						case(_,table:AbstractTable.Alias)=> at.child == table.child
+    						case _=> false
+    					}.map{case(firstAlias,_)=> firstAlias}.getOrElse(alias)
+    				case _ => alias
+    			}
+    		case _ => alias
+    	}
+    	localTables(modAlias) = node
+    	modAlias
     case _ =>
-      val name = nc.nameFor(n)
-      localTables(name) = n
-      name
+      val alias = nc.nameFor(node)
+      localTables(alias) = node
+      alias
   }
 
   protected def isDeclaredTable(name: String): Boolean =
@@ -57,25 +94,25 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
   protected def subQueryBuilderFor(q: Query[_, _]) =
     subQueryBuilders.getOrElseUpdate(RefId(q), createSubQueryBuilder(q, nc))
 
-  final def buildSelect: (SQLBuilder.Result, ValueLinearizer[_]) = {
-    val b = new SQLBuilder
-    buildSelect(b)
-    (b.build, query.linearizer)
-  }
-
-  def buildSelect(b: SQLBuilder) {
-    innerBuildSelect(b, false)
-    insertAllFromClauses()
-  }
-
-  protected def rewriteCountStarQuery(q: Query[_, _]) =
+  protected def rewriteCountStarQuery(q: Query[_, _]): Boolean =
     q.modifiers.isEmpty && (q.reified match {
       case AbstractTable.Alias(_: AbstractTable[_]) => true
       case _: AbstractTable[_] => true
       case _ => false
     })
 
-  protected def innerBuildSelect(b: SQLBuilder, rename: Boolean) {
+  @inline final def buildSelect: (SQLBuilder.Result, ValueLinearizer[_]) = {
+    val b = new SQLBuilder
+    buildSelect(b)
+    (b.build, query.linearizer)
+  }
+
+  def buildSelect(b: SQLBuilder): Unit = {
+    innerBuildSelect(b, false)
+    insertAllFromClauses()
+  }
+
+  protected def innerBuildSelect(b: SQLBuilder, rename: Boolean): Unit = {
     query.reified match {
       case ColumnOps.CountAll(Subquery(q: Query[_, _], false)) if rewriteCountStarQuery(q) =>
         val newQ = q.map(p => ColumnOps.CountAll(Node(p)))
@@ -84,7 +121,7 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
     }
   }
 
-  protected def innerBuildSelectNoRewrite(b: SQLBuilder, rename: Boolean) {
+  protected def innerBuildSelectNoRewrite(b: SQLBuilder, rename: Boolean): Unit = {
     def inner() {
       selectSlot = b.createSlot
       selectSlot += "SELECT "
@@ -108,17 +145,19 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
     appendLimitClause(b)
   }
 
-  protected def appendGroupClause(b: SQLBuilder): Unit = query.typedModifiers[Grouping] match {
-    case Nil =>
-    case xs => b += " GROUP BY "; b.sep(xs, ",")(x => expr(x.by, b, false, true))
-  }
+  protected def appendGroupClause(b: SQLBuilder): Unit = 
+  	query.typedModifiers[Grouping] match {
+    	case Nil =>
+    	case xs => b += " GROUP BY "; b.sep(xs, ",")(x => expr(x.by, b, false, true))
+  	}
 
-  protected def appendOrderClause(b: SQLBuilder): Unit = query.typedModifiers[Ordering] match {
-    case Nil =>
-    case xs => b += " ORDER BY "; b.sep(xs, ",")(appendOrdering(_,b))
-  }
+  protected def appendOrderClause(b: SQLBuilder): Unit = 
+  	query.typedModifiers[Ordering] match {
+    	case Nil =>
+    	case xs => b += " ORDER BY "; b.sep(xs, ",")(appendOrdering(_,b))
+  	}
 
-  protected def appendOrdering(o: Ordering, b: SQLBuilder) {
+  protected def appendOrdering(o: Ordering, b: SQLBuilder): Unit = {
     expr(o.by, b, false, true)
     if(o.isInstanceOf[Ordering.Desc]) b += " desc"
     o.nullOrdering match {
@@ -160,7 +199,7 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
       	takeCol.typeMapper(profile).setValue(math.max(0, takeVal - dropVal), p)
   		}
   		case _=> throw new SQueryException(s"""
-				value(s) in a take + drop operation cannot be mixed; they must be either ConstColumn[Int] or Param[Int].
+				values in a take + drop operation cannot be mixed; they must be either ConstColumn[Int] or Param[Int].
 				Supplied node $node and Optional compareNode $compareNode could not be converted to a literal value""")
   	}
   	()
@@ -171,44 +210,45 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
     val (delTable, delTableName) = query.reified match {
       case t @ AbstractTable.Alias(base:AbstractTable[_]) => (t, base.tableName)
       case t:AbstractTable[_] => (t, t.tableName)
-      case n => throw new SQueryException("Cannot create a DELETE statement from an \""+n+
-        "\" expression; An aliased or base table is required")
+      case n => throw new SQueryException(
+      	s"Cannot create a DELETE statement from an $n expression; An aliased or base table is required"
+      )
     }
     b += quoteIdentifier(delTableName)
     nc = nc.overrideName(delTable, delTableName) // Alias table to itself because DELETE does not support aliases
     appendConditions(b)
-    if(localTables.size > 1)
-      throw new SQueryException("Conditions of a DELETE statement must not reference other tables")
-    if(query.condHaving ne Nil)
-      throw new SQueryException("DELETE statement must contain a HAVING clause")
-    for(qb <- subQueryBuilders.valuesIterator)
-      qb.insertAllFromClauses()
+    if(localTables.size > 1) throw new SQueryException("Conditions of a DELETE statement must not reference other tables")
+    if(query.condHaving ne Nil) throw new SQueryException("DELETE statement must contain a HAVING clause")
+    for(qb <- subQueryBuilders.valuesIterator) qb.insertAllFromClauses()
     b.build
   }
 
   def buildUpdate = {
-    if(!query.condHaving.isEmpty || !query.modifiers.isEmpty)
-      throw new SQueryException("A query for an UPDATE statement must not have any modifiers other than WHERE restrictions")
+    if(!query.condHaving.isEmpty || !query.modifiers.isEmpty) throw new SQueryException(
+    	"A query for an UPDATE statement must not have any modifiers other than WHERE restrictions"
+    )
     val b = new SQLBuilder += "UPDATE "
     val tableNameSlot = b.createSlot
     b += " SET "
     var tableName: String = null
     var table: Node = null
-
+    
     def handleColumn(node: Node) {
       (node match {
         case nc @ NamedColumn(t @ AbstractTable(tn), n, _) => (tn, n, nc.typeMapper, t)
         case nc @ NamedColumn(t @ AbstractTable.Alias(AbstractTable(tn)), n, _) => (tn, n, nc.typeMapper, t)
-        case n => throw new SQueryException("Cannot create an UPDATE statement from a \""+n+
-          "\" expression; A single named column or a projection of named columns from the same aliased or base table is required")
+        case n => throw new SQueryException(s"""
+        	Cannot create an UPDATE statement from a $n expression; 
+					A single named column or a projection of named columns from the same aliased or base table is required
+				""")
       }) match { case (tn, n, tm, t) =>
         if(tableName eq null) { tableName = tn; table = t; }
-        else if(tableName != tn)
-          throw new SQueryException("All columns for an UPDATE statement must be from the same table")
+        else if(tableName != tn) throw new SQueryException(
+        	"All columns for an UPDATE statement must be from the same table"
+        )
         b += quoteIdentifier(n) += "=?"
       }
     }
-
     def handleColumns(node: Node) {
       node match {
         case p: Projection[_] =>
@@ -232,8 +272,9 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
     nc = nc.overrideName(table, tableName) // Alias table to itself because UPDATE does not support aliases
     tableNameSlot += quoteIdentifier(tableName)
     appendConditions(b)
-    if(localTables.size > 1)
-      throw new SQueryException("An UPDATE statement must not use more than one table at the top level")
+    if(localTables.size > 1) throw new SQueryException(
+    	"An UPDATE statement must not use more than one table at the top level"
+    )
     b.build
   }
 
@@ -264,7 +305,7 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
     case ColumnOps.Not(ColumnOps.Is(l, ConstColumn(null))) => b += '('; expr(l, b); b += " is not null)"
     case ColumnOps.Not(e) => b += "(not "; expr(e, b); b+= ')'
     case ColumnOps.InSet(e, seq, tm, bind) => if(seq.isEmpty) expr(ConstColumn(false), b) else {
-      b += '('; expr(e, b); b += " in ("
+      b += '('; expr(e, b); b += " IN ("
       if(bind) b.sep(seq, ",")(x => b +?= { (p, param) => tm(profile).setValue(x, p) })
       else b += seq.map(tm(profile).valueToSQLLiteral).mkString(",")
       b += "))"
@@ -275,17 +316,15 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
       b += '('; expr(l, b); b += concatOperator.get; expr(r, b); b += ')'
     case s: SimpleFunction =>
       if(s.scalar) b += "{fn "
-      b += s.name += '('
-      b.sep(s.nodeChildren, ",")(expr(_, b))
-      b += ')'
+      b += s.name += '('; b.sep(s.nodeChildren, ",")(expr(_, b)); b += ')'
       if(s.scalar) b += '}'
     case SimpleLiteral(w) => b += w
     case s: SimpleExpression => s.toSQL(b, this)
-    case ColumnOps.Between(left, start, end) => expr(left, b); b += " between "; expr(start, b); b += " and "; expr(end, b)
-    case ColumnOps.CountAll(q) => b += "count(*)"; localTableName(q)
-    case ColumnOps.CountDistinct(e) => b += "count(distinct "; expr(e, b); b += ')'
+    case ColumnOps.Between(left, start, end) => expr(left, b); b += " BETWEEN "; expr(start, b); b += " AND "; expr(end, b)
+    case ColumnOps.CountAll(q) => b += "COUNT(*)"; localTableName(q)
+    case ColumnOps.CountDistinct(e) => b += "COUNT(DISTINCT "; expr(e, b); b += ')'
     case ColumnOps.Like(l, r, esc) =>
-      b += '('; expr(l, b); b += " like "; expr(r, b);
+      b += '('; expr(l, b); b += " LIKE "; expr(r, b);
       esc.foreach { ch =>
         if(ch == '\'' || ch == '%' || ch == '_') throw new SQueryException(s"Illegal escape character '$ch' for LIKE expression")
         // JDBC defines an {escape } syntax but the unescaped version is understood by more DBs/drivers
@@ -294,15 +333,10 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
       b += ')'
     case a @ ColumnOps.AsColumnOf(ch, name) =>
       val tn = name.getOrElse(mapTypeName(a.typeMapper(profile)))
-      if(supportsCast) {
-        b += "cast("
-        expr(ch, b)
-        b += s" as $tn)"
-      } else {
-        b += "{fn convert("
-        expr(ch, b)
-        b += s", $tn)}"
-      }
+      if(supportsCast)
+      	{b += "CAST("; expr(ch, b); b += s" as $tn)"} 
+      else
+      	{b += "{fn convert("; expr(ch, b); b += s", $tn)}"}
     case s: SimpleBinaryOperator => b += '('; expr(s.left, b); b += ' ' += s.name += ' '; expr(s.right, b); b += ')'
     case query:Query[_, _] => b += "("; subQueryBuilderFor(query).innerBuildSelect(b, false); b += ")"
     //case Union.UnionPart(_) => "*"
@@ -313,18 +347,13 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
       pc.typeMapper(profile).setValue(v, p)
     }
     case c: Case.CaseColumn[_] =>
-      b += "(case"
+      b += "(CASE"
       c.clauses.foldRight(()) { (w,_) =>
-        b += " when "
-        expr(w.left, b)
-        b += " then "
-        expr(w.right, b)
+        b += " WHEN "; expr(w.left, b); b += " THEN "; expr(w.right, b)
       }
       c.elseClause match {
         case ConstColumn(null) =>
-        case n =>
-          b += " else "
-          expr(n, b)
+        case n => b += " ELSE "; expr(n, b)
       }
       b += " end)"
     case n: NamedColumn[_] => b += quoteIdentifier(localTableName(n.table)) += '.' += quoteIdentifier(n.name)
@@ -339,10 +368,15 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
       } else {
         val cols = fk.linearizedSourceColumns zip fk.linearizedTargetColumns
         b += "("
-        b.sep(cols, " and "){ case (l,r) => expr(l, b); b += "="; expr(r, b) }
+        b.sep(cols, " AND "){ case (l,r) => expr(l, b); b += "="; expr(r, b) }
         b += ")"
       }
-    case _ => throw new SQueryException(s"Don't know what to do with node `$c` in an expression")
+    case Join.JoinPart(left,right) => //left.dump("left-dump", nc); right.dump("right-dump", nc)
+    	throw new SQueryException(
+    		s"Join queries require yield clause to reference a table's star projection or single column"
+    	)
+    case _ =>
+    	throw new SQueryException(s"Don't know what to do with node `$c` in an expression")
   }
 
   protected def appendConditions(b: SQLBuilder): Unit = query.cond match {
@@ -357,8 +391,7 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
 
   protected def insertAllFromClauses() {
     if(fromSlot ne null) insertFromClauses()
-    for(qb <- subQueryBuilders.valuesIterator)
-      qb.insertAllFromClauses()
+    for(qb <- subQueryBuilders.valuesIterator) qb.insertAllFromClauses()
   }
 
   protected def insertFromClauses() {
@@ -366,7 +399,13 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
     for((name, t) <- new HashMap ++= localTables) {
       if(!parent.map(_.isDeclaredTable(name)).getOrElse(false)) {
         if(first) { fromSlot += " FROM "; first = false }
-        else fromSlot += ','
+        else {
+        	t match{
+        		case j:Join[_,_] => // don't comma delimit join clauses 
+        			//println(s"insertFromClauses() >> Join, omitting comma; $name has tables ${j.left} ${j.right}")
+        		case _ => fromSlot += ','
+        	}
+        }
         table(t, name, fromSlot)
         declaredTables += name
       }
@@ -375,42 +414,43 @@ abstract class BasicQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent
   }
 
   protected def table(t: Node, name: String, b: SQLBuilder): Unit = t match {
-    case AbstractTable.Alias(base: AbstractTable[_]) =>
-      base.schemaName.foreach(b += quoteIdentifier(_) += '.')
-      b += s"${quoteIdentifier(base.tableName)} ${quoteIdentifier(name)}"
-    case base: AbstractTable[_] =>
-      base.schemaName.foreach(b += quoteIdentifier(_) += '.')
-      b += s"${quoteIdentifier(base.tableName)} ${quoteIdentifier(name)}"
-    case Subquery(sq: Query[_, _], rename) =>
-      b += "("; subQueryBuilderFor(sq).innerBuildSelect(b, rename); b += ") " += quoteIdentifier(name)
-    case Subquery(Union(all, sqs), rename) => {
-      b += "("
-      var first = true
-      for(sq <- sqs) {
-        if(!first) b += (if(all) " UNION ALL " else " UNION ")
-        subQueryBuilderFor(sq).innerBuildSelect(b, first && rename)
-        first = false
-      }
-      b += ") " += quoteIdentifier(name)
-    }
-    case j: Join[_,_] =>
-      /* There is no way to write all nested joins (if they are supported at all) properly in a
-       * database-independent way because the {oj...} escape syntax does not support inner joins.
-       * We let the first join determine the syntax and hope for the best. */
-      if(j.joinType == Join.Inner) createJoin(j, b)
-      else { b += "{oj "; createJoin(j, b); b += "}" }
+    case 
+    	AbstractTable.Alias(base: AbstractTable[_]) =>
+      	base.schemaName.foreach(b += quoteIdentifier(_) += '.')
+      	b += s"${quoteIdentifier(base.tableName)} ${quoteIdentifier(name)}"
+    case 
+    	base: AbstractTable[_] =>
+      	base.schemaName.foreach(b += quoteIdentifier(_) += '.')
+      	b += s"${quoteIdentifier(base.tableName)} ${quoteIdentifier(name)}"
+    case 
+    	Subquery(sq: Query[_, _], rename) =>
+      	b += "("; subQueryBuilderFor(sq).innerBuildSelect(b, rename); b += ") " += quoteIdentifier(name)
+    case 
+    	Subquery(Union(all, sqs), rename) => {
+	      b += "("
+	      var first = true
+	      for(sq <- sqs) {
+	        if(!first) b += (if(all) " UNION ALL " else " UNION ")
+	        subQueryBuilderFor(sq).innerBuildSelect(b, first && rename)
+	        first = false
+	      }
+	      b += ") " += quoteIdentifier(name)
+	    }
+    case j: Join[_,_] => createJoin(j, b)
+    case _ =>  //println(s"table() >> could not match node $t")
   }
 
   protected def createJoin(j: Join[_,_], b: SQLBuilder) {
     val l = j.leftNode
     val r = j.rightNode
     table(l, nc.nameFor(l), b)
-    b += s" ${j.joinType.sqlName} join "
+    b += s" ${j.joinType.sqlName} JOIN "
     r match {
       case rj: Join[_,_] => createJoin(rj, b)
-      case _ => table(r, nc.nameFor(r), b)
+      case _ => 
+      	table(r, nc.nameFor(r), b)
     }
-    b += " on "
+    b += " ON "
     expr(j.on, b)
   }
 }
