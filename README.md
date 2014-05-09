@@ -2,6 +2,7 @@ This is a port of Stephan Zeiger's excellent ScalaQuery, built against Scala
 2.10.4+
 
 Changes to-date:
+* added support for multiple table (outer) joins
 * take/drop queries are now cacheable
 * map/flatMap `Parameters` call has been renamed to `Params`
 * threadLocalSession has been removed
