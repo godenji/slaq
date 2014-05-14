@@ -10,7 +10,7 @@ object ScalaQueryBuild extends Build with Transformers with Settings {
   	Project.defaultSettings ++ fmppSettings ++ Seq(
     	name := "scala-query", version := "0.10.1",
 			organizationName := "ScalaQuery", organization := "org.scalaquery",
-			scalaVersion := "2.10.4",
+			scalaVersion := "2.11.0", //"2.10.4",
 			scalacOptions ++= Seq(
 				"-language:implicitConversions", "-language:postfixOps", 
 				"-language:higherKinds", "-language:existentials",
@@ -71,3 +71,4 @@ object ScalaQueryBuild extends Build with Transformers with Settings {
       cachedFun(inFiles).toSeq
     }
 }
+
