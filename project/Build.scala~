@@ -2,8 +2,7 @@ import sbt._
 import Keys._
 import com.typesafe.sbteclipse.core.EclipsePlugin.EclipseKeys
 
-object ScalaQueryBuild 
-	extends Build with Transformers with Settings {
+object ScalaQueryBuild extends Transformers with Settings {
 
   val repoKind = SettingKey[String]("repo-kind", "Maven repository kind (\"snapshots\" or \"releases\")")
 

@@ -10,10 +10,11 @@ import scala.xml.{Node,Elem}
 /*
  * sbt eclipse transformer factories (e.g. override compile target classpath)
  */
-trait Transformers extends Properties {
+trait Transformers {
   
   val f = java.io.File.separator
   val src_main = f + "src_managed" + f + "main"
+  val tmpfs = "TARGET_TMPFS" // linked resource, expands to abs path /tmp/sbt in eclipse  
   lazy val addSourcesManaged = { 
     new EclipseTransformerFactory[RewriteRule] {
       override def createTransformer(ref: ProjectRef, state: State): Validation[RewriteRule] = {

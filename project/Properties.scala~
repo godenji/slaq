@@ -1,0 +1,19 @@
+trait Properties {
+	val appName         = "ushr-multi"
+  val appVersion      = "0.2.3"
+	val scalaRelease		= "2.11.0"
+	val tmpDir 					= "/tmp/sbt" // sbt compile target
+	val tmpfs = 
+		"TARGET_TMPFS" // linked resource, expands to abs path /tmp/sbt in eclipse
+  
+	// appends "-" + name for sub projects 
+  def getProjectName(name: String): String = {
+  	if(name != appName) 
+  		appName+"-"+name.replaceAll("_","-") // sub project, append base name
+  	else 
+  		name.replaceAll("_","-") // root project
+  }
+	  
+  def playSrcPath =
+    System.getProperty("user.home") + "/bin/playframework/framework/src/play/" 
+}

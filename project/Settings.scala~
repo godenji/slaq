@@ -5,7 +5,7 @@ import com.typesafe.sbteclipse.core.EclipsePlugin.{
 }
 
 trait Settings {
-  self: Transformers =>
+  self: Transformers with Properties =>
   
   def superSettings: Seq[Setting[_]]
   protected def _settings: Seq[Setting[_]] = { 
