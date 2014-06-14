@@ -35,17 +35,9 @@ class TransactionTest(tdb: TestDB) extends DBTest(tdb) {
     assertEquals(None, db withSession { implicit ss:Session=> q.firstOption})
     
     def bInsert(implicit ss: Session) = {
-    	println("in session")
-    	println(ss.resultSetType)
-    	println(ss.resultSetConcurrency)
-    	println(ss.resultSetHoldability)
     	T.insert(2) 
     }
     db.withTransaction{implicit ss:Session=>
-    	println("in transaction")
-    	println(ss.resultSetType)
-    	println(ss.resultSetConcurrency)
-    	println(ss.resultSetHoldability)
 	    val res = for{
 	    	a <- Right(T.insert(1)).right
 	    	b <- Right(bInsert).right
@@ -54,6 +46,5 @@ class TransactionTest(tdb: TestDB) extends DBTest(tdb) {
 	    ss.rollback()
     }
     assertEquals(None, db withSession { implicit ss:Session=> q.firstOption})
-    throw new SQueryException("blah")
   }
 }
