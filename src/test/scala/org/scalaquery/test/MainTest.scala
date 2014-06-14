@@ -171,7 +171,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
       val q5 = Users where { _.id notIn Orders.map(_.userID) }
       println("q5: " + q5.selectStatement)
       println("Users without Orders:")
-      q5.foreach(o => println("  "+o))
+      q5.foreach{o:(Int, String, Option[String]) => println("  "+o)}
       assertEquals(List((3,"Apu",Some("Nahasapeemapetilon")), (7,"Snowball",None)), q5.list)
 
       println("q5: " + q5.deleteStatement)
