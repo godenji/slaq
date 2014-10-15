@@ -89,14 +89,34 @@ object AbstractTable {
 }
 
 final class JoinBase[+E1,E2](left: E1, right: E2, joinType: Join.JoinType) {
-	def on[T <: Column[_]](pred: (E1, E2) => T)
-		(implicit unpack: Unpack[Join[(E1 @unVary),E2], ((E1 @unVary),E2)]): Query[Join[E1,E2], (E1,E2)] = {
-  	new QueryWrap[Join[E1,E2], (E1,E2)](
+	//private type UPack[+E1,E2] = Unpack[Join[(E1 @unVary),E2], ((E1 @unVary),E2)]
+	private def qWrap(node:Node)(implicit unpack: Unpack[Join[(E1 @unVary),E2], ((E1 @unVary),E2)]) = { 
+		new QueryWrap[Join[E1,E2], (E1,E2)](
   		Unpackable(
-  			new Join(left, right, joinType, Node(pred(left,right))), unpack 
+  			new Join(left, right, joinType, node), unpack 
   		), Nil, Nil, Nil	
   	)
 	}
+	def on[T <: Column[_]](pred: (E1, E2) => T)(implicit unpack: Unpack[Join[(E1 @unVary),E2], ((E1 @unVary),E2)]): 
+		Query[Join[E1,E2], (E1,E2)] = qWrap(Node(pred(left,right)))
+//  	new QueryWrap[Join[E1,E2], (E1,E2)](
+//  		Unpackable(
+//  			new Join(left, right, joinType, Node(pred(left,right))), unpack 
+//  		), Nil, Nil, Nil	
+//  	)
+	/*
+	 * left & right on helpers
+	 * with more than 1 join clause we need to throw away either the
+	 * left or right table alias. Why? Preceding clause won't be joined
+	 * to the current table; a new table alias tX will be generated instead,
+	 * which is not how sql joins work: 
+	 * 	from A a join B b on(a.id = b.aId) join C on(b.id = c.bId), etc.
+	 */
+	def left[T <: Column[_]](f: E1 => T)(implicit unpack: Unpack[Join[(E1 @unVary),E2], ((E1 @unVary),E2)]): 
+		Query[Join[E1,E2], (E1,E2)] = qWrap( Node(f(left)) )
+	
+	def right[T <: Column[_]](f: E2 => T)(implicit unpack: Unpack[Join[(E1 @unVary),E2], ((E1 @unVary),E2)]): 
+		Query[Join[E1,E2], (E1,E2)] = qWrap( Node(f(right)) )
 }
 final class Join[+E1,E2]
 	(lnode: E1, rnode: E2, val joinType: Join.JoinType, val on: Node) extends TableBase[Nothing] {

@@ -101,7 +101,7 @@ abstract class BasicQueryBuilder(
       case _ => false
     })
 
-  @inline final def buildSelect: (SQLBuilder.Result, ValueLinearizer[_]) = {
+  final def buildSelect: (SQLBuilder.Result, ValueLinearizer[_]) = {
     val b = new SQLBuilder
     buildSelect(b)
     (b.build, query.linearizer)
@@ -395,18 +395,20 @@ abstract class BasicQueryBuilder(
   }
 
   protected def insertFromClauses() {
-    var first = true
+    var(isFirst,isJoin) = (true,false)
     for((name, t) <- new HashMap ++= localTables) {
       if(!parent.map(_.isDeclaredTable(name)).getOrElse(false)) {
-        if(first) { fromSlot += " FROM "; first = false }
+        if(isFirst) { fromSlot += " FROM "; isFirst = false }
         else {
         	t match{
-        		case j:Join[_,_] => // don't comma delimit join clauses 
+        		case j:Join[_,_] => // don't comma delimit join clauses
+        			isJoin = true
+        			createJoin(j, fromSlot, isFirst = false)
         			//println(s"insertFromClauses() >> Join, omitting comma; $name has tables ${j.left} ${j.right}")
         		case _ => fromSlot += ','
         	}
         }
-        table(t, name, fromSlot)
+        if(!isJoin) table(t, name, fromSlot)
         declaredTables += name
       }
     }
@@ -437,18 +439,23 @@ abstract class BasicQueryBuilder(
 	      b += ") " += quoteIdentifier(name)
 	    }
     case j: Join[_,_] => createJoin(j, b)
-    case _ =>  //println(s"table() >> could not match node $t")
+    case _ => //println(s"table() >> could not match node $t")
   }
 
-  protected def createJoin(j: Join[_,_], b: SQLBuilder) {
-    val l = j.leftNode
-    val r = j.rightNode
-    table(l, nc.nameFor(l), b)
+  protected def createJoin(j: Join[_,_], b: SQLBuilder, isFirst: Boolean = true) {
+    val(l,r) = (j.leftNode, j.rightNode)
+    val(lname, rname) = (nc.nameFor(l), nc.nameFor(r))
+    //println(s"left = ${j.left}; right = ${j.right}")
+    
+    // left join table precedes join clause when FROM table
+    if(isFirst) table(l, lname, b)
     b += s" ${j.joinType.sqlName} JOIN "
+    // else left table comes after join clause
+    if(!isFirst) table(l, lname, b)
+    
     r match {
-      case rj: Join[_,_] => createJoin(rj, b)
-      case _ => 
-      	table(r, nc.nameFor(r), b)
+      case rj: Join[_,_] => createJoin(rj, b, isFirst = false)
+      case _=> table(r, rname, b)
     }
     b += " ON "
     expr(j.on, b)
