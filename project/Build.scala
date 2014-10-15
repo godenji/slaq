@@ -16,7 +16,7 @@ object ScalaQueryBuild
 			scalacOptions ++= Seq(
 				"-language:implicitConversions", "-language:postfixOps", 
 				"-language:higherKinds", "-language:existentials",
-				"-feature", "-deprecation"
+				"-feature", "-deprecation", "-optimise", "-Yinline-warnings"
 			),
 			description := "A type-safe database API for Scala",
 			homepage := Some(url("http://scalaquery.org/")),
