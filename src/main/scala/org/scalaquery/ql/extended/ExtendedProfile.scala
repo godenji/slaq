@@ -28,7 +28,7 @@ abstract class ExtendedTable[T](_schemaName: Option[String], _tableName: String)
 trait ExtendedImplicitConversions[DriverType <: ExtendedProfile] 
 	extends BasicImplicitConversions[DriverType] {
   
-  @inline implicit def extendedQueryToDeleteInvoker[T](q: Query[ExtendedTable[T], T]): BasicDeleteInvoker[T] = 
+  @inline implicit final def extendedQueryToDeleteInvoker[T](q: Query[ExtendedTable[T], T]): BasicDeleteInvoker[T] = 
   	new BasicDeleteInvoker(q, scalaQueryDriver)
 }
 

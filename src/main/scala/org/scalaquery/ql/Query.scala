@@ -147,13 +147,13 @@ trait CanBeQueryCondition[-T] {
 
 object CanBeQueryCondition {
   implicit object BooleanColumnCanBeQueryCondition extends CanBeQueryCondition[Column[Boolean]] {
-    def apply(value: Column[Boolean], l: List[Column[_]]): List[Column[_]] = value :: l
+    @inline def apply(value: Column[Boolean], l: List[Column[_]]): List[Column[_]] = value :: l
   }
   implicit object BooleanOptionColumnCanBeQueryCondition extends CanBeQueryCondition[Column[Option[Boolean]]] {
-    def apply(value: Column[Option[Boolean]], l: List[Column[_]]): List[Column[_]] = value :: l
+    @inline def apply(value: Column[Option[Boolean]], l: List[Column[_]]): List[Column[_]] = value :: l
   }
   implicit object BooleanCanBeQueryCondition extends CanBeQueryCondition[Boolean] {
-    def apply(value: Boolean, l: List[Column[_]]): List[Column[_]] =
+    @inline def apply(value: Boolean, l: List[Column[_]]): List[Column[_]] =
       if(value) l else new ConstColumn(false)(TypeMapper.BooleanTypeMapper) :: Nil
   }
 }

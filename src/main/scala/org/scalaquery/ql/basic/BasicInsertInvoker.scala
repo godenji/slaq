@@ -76,13 +76,13 @@ trait PackedUnpackedUnion[P, U, T] {
 }
 
 object PackedUnpackedUnion extends PackedUnpackedUnionLowPriority {
-  implicit def packedUnpackedUnionTypeU[P, U, T <: U] = new PackedUnpackedUnion[P, U, T] {
+  @inline implicit final def packedUnpackedUnionTypeU[P, U, T <: U] = new PackedUnpackedUnion[P, U, T] {
     def fold[R](f: U => R, g: (P, Unpack[P, U]) => R)(v: T): R = f(v)
   }
 }
 
 class PackedUnpackedUnionLowPriority {
-  implicit def packedUnpackedUnionTypeP[P, U, T <: P](implicit ev: Unpack[P, U]) = new PackedUnpackedUnion[P, U, T] {
+  @inline implicit final def packedUnpackedUnionTypeP[P, U, T <: P](implicit ev: Unpack[P, U]) = new PackedUnpackedUnion[P, U, T] {
     def fold[R](f: U => R, g: (P, Unpack[P, U]) => R)(v: T): R = g(v, ev)
   }
 }

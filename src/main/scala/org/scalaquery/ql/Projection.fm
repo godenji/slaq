@@ -26,7 +26,7 @@ sealed trait Projection[T <: Product] extends ColumnBase[T] with ProductNode wit
   def getLinearizedNodes: IndexedSeq[Node] =
     (0 until productArity).map(i => Node(productElement(i).asInstanceOf[Column[Any]]))(collection.breakOut)
 
-  def <>[R](f: (T => R), g: (R => Option[T])): MappedProjection[R,T] = new MappedProjection(this, f, g)
+  @inline final def <>[R](f: (T => R), g: (R => Option[T])): MappedProjection[R,T] = new MappedProjection(this, f, g)
 
   override def toString = "Projection" + productArity
 }
@@ -73,7 +73,7 @@ extends Tuple${i}(<#list 1..i as j>_${j}<#if i != j>,</#if></#list>) with Projec
 <#list 1..i as j>
     _${j}.mapOp(f)<#if i != j>,</#if>
 </#list>  ).asInstanceOf[this.type]
-  def <>[R](f: ((<#list 1..i as j>T${j}<#if i != j>,</#if></#list>) => R), g: (R => Option[V])): MappedProjection[R,V] =
+  @inline final def <>[R](f: ((<#list 1..i as j>T${j}<#if i != j>,</#if></#list>) => R), g: (R => Option[V])): MappedProjection[R,V] =
     <>(t => f(<#list 1..i as j>t._${j}<#if i != j>,</#if></#list>), g)
 }
 
