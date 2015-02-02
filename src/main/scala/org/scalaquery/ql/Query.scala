@@ -4,6 +4,15 @@ import scala.reflect.ClassTag
 import org.scalaquery.SQueryException
 import org.scalaquery.util.{Node, WithOp, ValueLinearizer}
 
+class QueryWrap[+P,+U](
+	val unpackable: Unpackable[_ <: P, _ <: U], 
+	val cond: List[Column[_]],  
+	val condHaving: List[Column[_]],
+	val modifiers: List[QueryModifier] ) extends Query[P,U] {
+	
+	override lazy val reified = unpackable.reifiedNode
+  override lazy val linearizer = unpackable.linearizer
+}
 /**
  * A query monad which contains the AST for a query's projection and the accumulated
  * restrictions and other modifiers.
@@ -41,17 +50,17 @@ sealed abstract class Query[+P,+U] extends Node {
   // append operation (e.g. orderBy chaining)
   def >>[P2,U2](q: Query[P2,U2]): Query[P2,U2] = flatMap(_ => q)
 
-  def filter[T](f: P => T)(implicit wt: CanBeQueryCondition[T]): Query[P,U] =
+  def filter[T](f: P => T)(implicit qc: Queryable[T]): Query[P,U] =
     new QueryWrap[P,U](
-    	unpackable, wt(f(unpackable.value), cond), condHaving, modifiers
+    	unpackable, qc(f(unpackable.value), cond), condHaving, modifiers
     )
 
-  def withFilter[T](f: P => T)(implicit wt: CanBeQueryCondition[T]): Query[P,U] = 
-  	filter(f)(wt)
+  def withFilter[T](f: P => T)(implicit qc: Queryable[T]): Query[P,U] = 
+  	filter(f)(qc)
 
-  def having[T <: Column[_]](f: P => T)(implicit wt: CanBeQueryCondition[T]): Query[P,U] =
+  def having[T <: Column[_]](f: P => T)(implicit qc: Queryable[T]): Query[P,U] =
     new QueryWrap[P,U](
-    	unpackable, cond, wt(f(unpackable.value), condHaving), modifiers
+    	unpackable, cond, qc(f(unpackable.value), condHaving), modifiers
     )
 
   def groupBy(by: Column[_]*) =
@@ -105,9 +114,6 @@ sealed abstract class Query[+P,+U] extends Node {
   def unionAll[O >: P, T >: U, R](other: Query[O, T]*)(implicit reify: Reify[O, R]) = 
   	wrap(Union(true, this :: other.toList))
 
-  def count = 
-  	ColumnOps.CountAll(Subquery(this, false))
-
   def sub[UU >: U, R](implicit reify: Reify[P, R]) = wrap(this)
 
   private def wrap[R](base: Node)(implicit reify: Reify[P, R]): Query[R, U] = {
@@ -147,42 +153,6 @@ object Query
   	
   def apply[P,U](unpackable: Unpackable[_ <: P, _ <: U]): Query[P,U] = 
   	new QueryWrap[P,U](unpackable, Nil, Nil, Nil)
-}
-
-class QueryWrap[+P,+U](
-	val unpackable: Unpackable[_ <: P, _ <: U], 
-	val cond: List[Column[_]],  
-	val condHaving: List[Column[_]],
-	val modifiers: List[QueryModifier]
-) extends Query[P,U] {
-	
-	override lazy val reified = unpackable.reifiedNode
-  override lazy val linearizer = unpackable.linearizer
-}
-
-trait CanBeQueryCondition[-T] {
-  def apply(value: T, l: List[Column[_]]): List[Column[_]]
-}
-
-object CanBeQueryCondition {
-  implicit object BooleanColumnCanBeQueryCondition 
-  	extends CanBeQueryCondition[Column[Boolean]] {
-    @inline def apply(
-    	value: Column[Boolean], l: List[Column[_]]
-    ): List[Column[_]] = value :: l
-  }
-  implicit object BooleanOptionColumnCanBeQueryCondition 
-  	extends CanBeQueryCondition[Column[Option[Boolean]]] {
-    @inline def apply(
-    	value: Column[Option[Boolean]], l: List[Column[_]]
-    ): List[Column[_]] = value :: l
-  }
-  implicit object BooleanCanBeQueryCondition 
-  	extends CanBeQueryCondition[Boolean] {
-    @inline def apply(value: Boolean, l: List[Column[_]]): List[Column[_]] =
-      if(value) l 
-      else new ConstColumn(false)(TypeMapper.BooleanTypeMapper) :: Nil
-  }
 }
 
 case class Subquery(query: Node, rename: Boolean) extends Node {
