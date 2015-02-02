@@ -49,9 +49,6 @@ sealed abstract class Query[+P,+U] extends Node {
   def withFilter[T](f: P => T)(implicit wt: CanBeQueryCondition[T]): Query[P,U] = 
   	filter(f)(wt)
 
-  def where[T <: Column[_]](f: P => T)(implicit wt: CanBeQueryCondition[T]): Query[P,U] = 
-  	filter(f)(wt)
-
   def having[T <: Column[_]](f: P => T)(implicit wt: CanBeQueryCondition[T]): Query[P,U] =
     new QueryWrap[P,U](
     	unpackable, cond, wt(f(unpackable.value), condHaving), modifiers
