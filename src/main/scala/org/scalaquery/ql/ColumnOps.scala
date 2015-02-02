@@ -25,13 +25,6 @@ trait ColumnOps[B1, P1] {
   	om(Is(leftOperand, Node(e)))
   def =! [P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Not(Is(leftOperand, Node(e))))
-  
-  @deprecated("Use =~ instead", "since 0.10.1")
-  def === [P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
-  	om(Is(leftOperand, Node(e)))
-  @deprecated("Use =! instead", "since 0.10.1")
-  def =!= [P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
-    om(Not(Is(leftOperand, Node(e))))
     
   def < [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Relational("<", leftOperand, Node(e)))
