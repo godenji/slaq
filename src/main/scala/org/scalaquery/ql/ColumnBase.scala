@@ -29,6 +29,7 @@ abstract class Column[T : TypeMapper] extends ColumnBase[T] {
   def getOr[U](n: => U)(implicit ev: Option[U] =:= T): Column[U] = new WrappedColumn[U](this)(typeMapper.getBaseTypeMapper) {
     override def getResult(profile: BasicProfile, rs: PositionedResult): U = typeMapper(profile).nextValueOrElse(n, rs)
   }
+  def get[U](implicit ev: Option[U] =:= T): Column[U] = getOr[U] { throw new SQueryException("Read NULL value for column "+this) }
   final def ~[U](b: Column[U]) = new Projection2[T, U](this, b)
 	def ? : Column[Option[T]] = new WrappedColumn(this)(typeMapper.createOptionTypeMapper)
 
