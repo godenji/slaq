@@ -117,7 +117,6 @@ trait ColumnOps[B1, P1] {
 
 object ColumnOps {
   case class In(left: Node, right: Node) extends OperatorColumn[Boolean] with SimpleBinaryOperator { val name = "in" }
-  case class CountAll(child: Node) extends OperatorColumn[Int] with UnaryNode
 
   case class Relational(name: String, left: Node, right: Node) extends OperatorColumn[Boolean] with SimpleBinaryOperator
   case class Arith[T : TypeMapper](name: String, left: Node, right: Node) extends OperatorColumn[T] with SimpleBinaryOperator

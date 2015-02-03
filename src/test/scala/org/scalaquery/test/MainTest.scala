@@ -22,7 +22,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
     def last = column[Option[String]]("last")
     def * = id ~ first ~ last
 
-    def orders = Orders where { _.userID is id }
+    def orders = Orders filter { _.userID is id }
   }
 
   object Orders extends Table[(Int, Int, String, Boolean, Option[Boolean])]("orders") {
@@ -100,7 +100,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
       val q4 = for (
         u <- Users;
         o <- Orders
-          if (o.orderID in (for { o2 <- Orders where(o.userID is _.userID) } yield o2.orderID.max))
+          if (o.orderID in (for { o2 <- Orders filter(o.userID is _.userID) } yield o2.orderID.max))
              & (o.userID is u.id)
       ) yield u.first ~ o.orderID
       println("q4: " + q4.selectStatement)
@@ -112,7 +112,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
 
       def maxOfPer[T <: TableBase[_]]
         (c: T, m: (T => Column[Int]), p: (T => Column[Int])) =
-        c where { o => m(o) in (for { o2 <- c if p(o) is p(o2) } yield m(o2).max) }
+        c filter { o => m(o) in (for { o2 <- c if p(o) is p(o2) } yield m(o2).max) }
 
       val q4b = for (
         u <- Users;
@@ -148,12 +148,12 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
       println("Orders for Homer and Marge:")
       q4d.foreach(o => println("  "+o))
 
-      val b1 = Orders.where( o => o.shipped & o.shipped ).map( o => o.shipped & o.shipped )
-      val b2 = Orders.where( o => o.shipped & o.rebate ).map( o => o.shipped & o.rebate )
-      val b3 = Orders.where( o => o.rebate & o.shipped ).map( o => o.rebate & o.shipped )
-      val b4 = Orders.where( o => o.rebate & o.rebate ).map( o => o.rebate & o.rebate )
-      val b5 = Orders.where( o => !o.shipped ).map( o => !o.shipped )
-      val b6 = Orders.where( o => !o.rebate ).map( o => !o.rebate )
+      val b1 = Orders.filter( o => o.shipped & o.shipped ).map( o => o.shipped & o.shipped )
+      val b2 = Orders.filter( o => o.shipped & o.rebate ).map( o => o.shipped & o.rebate )
+      val b3 = Orders.filter( o => o.rebate & o.shipped ).map( o => o.rebate & o.shipped )
+      val b4 = Orders.filter( o => o.rebate & o.rebate ).map( o => o.rebate & o.rebate )
+      val b5 = Orders.filter( o => !o.shipped ).map( o => !o.shipped )
+      val b6 = Orders.filter( o => !o.rebate ).map( o => !o.rebate )
       val b7 = Orders.map( o => o.shipped is o.shipped )
       val b8 = Orders.map( o => o.rebate is o.shipped )
       val b9 = Orders.map( o => o.shipped is o.rebate )
@@ -168,7 +168,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
       println("b7: " + b7.selectStatement)
       println("b8: " + b8.selectStatement)
 
-      val q5 = Users where { _.id notIn Orders.map(_.userID) }
+      val q5 = Users filter { _.id notIn Orders.map(_.userID) }
       println("q5: " + q5.selectStatement)
       println("Users without Orders:")
       q5.foreach{o:(Int, String, Option[String]) => println("  "+o)}
@@ -180,12 +180,12 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
       println("Deleted "+deleted+" rows")
       assertEquals(2, deleted)
 
-      val q6 = Query(q5.count)
+      val q6 = q5.map(_.id.count)
       println("q6: " + q6.selectStatement)
       println("Users without Orders left: " + q6.first)
       assertEquals(0, q6.first)
 
-      val q7 = Users.where(_.first is "Homer".bind).map(_.first)
+      val q7 = Users.filter(_.first is "Homer".bind).map(_.first)
       println("q7: " + q7.updateStatement)
       val updated1 = q7.update("Homer Jay")
       println("Updated "+updated1+" row(s)")

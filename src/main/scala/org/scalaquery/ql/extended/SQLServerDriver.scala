@@ -99,10 +99,6 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
     case TakeDrop(None, Some(_), _) :: _ => true
     case _ => false
   }
-  val isCountAll = query.reified match {
-    case ColumnOps.CountAll(_) => true
-    case _ => false
-  }
 
   protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
     new SQLServerQueryBuilder(query, nc, Some(this), profile)
@@ -120,7 +116,7 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
 	 * 	to perform multiple calculations with Param based values.
 	 * 	@see BasicQueryBuilder `appendColumnValue`   
 	 */
-  override protected def innerBuildSelectNoRewrite(b: SQLBuilder, rename: Boolean) {
+  override protected def innerBuildSelect(b: SQLBuilder, rename: Boolean) {
     query.typedModifiers[TakeDrop] match {
       case TakeDrop(Some(t:CCI), Some(d:CCI), _) :: _ =>
         b+= s"WITH T AS (SELECT TOP ${t.value + d.value} "
@@ -130,34 +126,33 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
         b+= ") SELECT "
         addCopyColumns(b)
         b+= s""" FROM T WHERE "c0r" BETWEEN ${d.value+1} AND ${t.value + d.value}"""
-        if(!isCountAll) b+= orderByCor
+        b+= orderByCor
       case TakeDrop(Some(t:CCI), None, _) :: _ =>
         b+= s"WITH T AS (SELECT TOP ${t.value} "
         expr(query.reified, b, rename, true)
         fromSlot = b.createSlot
         appendClauses(b)
         b+= ") SELECT "; addCopyColumns(b); b+= s""" FROM T WHERE "c0r" BETWEEN 1 AND ${t.value}"""
-        if(!isCountAll) b+= orderByCor
+        b+= orderByCor
       case TakeDrop(None, Some(d:CCI), _) :: _ =>
         b+= "WITH T AS (SELECT "
         expr(query.reified, b, rename, true)
         fromSlot = b.createSlot
         appendClauses(b)
         b+= ") SELECT "; addCopyColumns(b); b+= s""" FROM T WHERE "c0r" > ${d.value}"""
-        if(!isCountAll) b+= orderByCor
+        b+= orderByCor
       case TakeDrop(t,d,_) :: _ => 
       	throw new SQueryException(s"""
 					Only concrete (ConstColumn) values are allowed as params for SQL Server take/drop.
 					The supplied values were $t and $d
 				""")
       case _ =>
-        super.innerBuildSelectNoRewrite(b, rename)
+        super.innerBuildSelect(b, rename)
     }
   }
 
   def addCopyColumns(b: SQLBuilder) {
-    if(isCountAll) b += "count(*)"
-    else if(maxColumnPos == 0) b += "*"
+    if(maxColumnPos == 0) b += "*"
     else b.sep(1 to maxColumnPos, ",")(i => b += s""" "c$i" """.trim)
   }
 
@@ -189,8 +184,6 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
       b += "("; super.innerExpr(c, b); b += " != 0)"
     case c @ SubqueryColumn(pos, sq, tm) if tm(profile) == profile.typeMapperDelegates.booleanTypeMapperDelegate =>
       b += "("; super.innerExpr(c, b); b += " != 0)"
-
-    case ColumnOps.CountAll(q) if(hasTakeDrop) => b += "*"; localTableName(q)
     case _ => super.innerExpr(c, b)
   }
 
@@ -215,10 +208,6 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
     expr(o.by, b)
     if(desc) b += " desc"
   }
-
-  /* Move COUNT(*) into subqueries even if they have TakeDrop modifiers.
-   * It will be treated specially there to make it work. */
-  override protected def rewriteCountStarQuery(q: Query[_, _]) = true
 }
 
 class SQLServerDDLBuilder(table: AbstractBasicTable[_], profile: SQLServerDriver) extends BasicDDLBuilder(table, profile) {

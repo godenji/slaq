@@ -94,13 +94,6 @@ abstract class BasicQueryBuilder(
   protected def subQueryBuilderFor(q: Query[_, _]) =
     subQueryBuilders.getOrElseUpdate(RefId(q), createSubQueryBuilder(q, nc))
 
-  protected def rewriteCountStarQuery(q: Query[_, _]): Boolean =
-    q.modifiers.isEmpty && (q.reified match {
-      case AbstractTable.Alias(_: AbstractTable[_]) => true
-      case _: AbstractTable[_] => true
-      case _ => false
-    })
-
   final def buildSelect: (SQLBuilder.Result, ValueLinearizer[_]) = {
     val b = new SQLBuilder
     buildSelect(b)
@@ -113,15 +106,6 @@ abstract class BasicQueryBuilder(
   }
 
   protected def innerBuildSelect(b: SQLBuilder, rename: Boolean): Unit = {
-    query.reified match {
-      case ColumnOps.CountAll(Subquery(q: Query[_, _], false)) if rewriteCountStarQuery(q) =>
-        val newQ = q.map(p => ColumnOps.CountAll(Node(p)))
-        subQueryBuilderFor(newQ).innerBuildSelect(b, rename)
-      case _ => innerBuildSelectNoRewrite(b, rename)
-    }
-  }
-
-  protected def innerBuildSelectNoRewrite(b: SQLBuilder, rename: Boolean): Unit = {
     def inner() {
       selectSlot = b.createSlot
       selectSlot += "SELECT "
@@ -169,7 +153,7 @@ abstract class BasicQueryBuilder(
 
   protected def appendLimitClause(b: SQLBuilder): Unit = query.typedModifiers[TakeDrop].lastOption.foreach {
     /* SQL:2008 syntax */
-    case TakeDrop(Some(ConstColumn(0)),_,_) if(!mayLimit0) => // handled above in innerBuildSelectNoRewrite
+    case TakeDrop(Some(ConstColumn(0)),_,_) if(!mayLimit0) => // handled above in innerBuildSelect
     case TakeDrop(Some(t), Some(d), compareNode) => 
     	appendColumnValue(b+= " OFFSET ",d); appendColumnValue(b+= " ROW FETCH NEXT ", t, compareNode); b+= " ROW ONLY"
     	
@@ -321,7 +305,6 @@ abstract class BasicQueryBuilder(
     case SimpleLiteral(w) => b += w
     case s: SimpleExpression => s.toSQL(b, this)
     case ColumnOps.Between(left, start, end) => expr(left, b); b += " BETWEEN "; expr(start, b); b += " AND "; expr(end, b)
-    case ColumnOps.CountAll(q) => b += "COUNT(*)"; localTableName(q)
     case ColumnOps.CountDistinct(e) => b += "COUNT(DISTINCT "; expr(e, b); b += ')'
     case ColumnOps.Like(l, r, esc) =>
       b += '('; expr(l, b); b += " LIKE "; expr(r, b);
@@ -339,7 +322,6 @@ abstract class BasicQueryBuilder(
       	{b += "{fn convert("; expr(ch, b); b += s", $tn)}"}
     case s: SimpleBinaryOperator => b += '('; expr(s.left, b); b += ' ' += s.name += ' '; expr(s.right, b); b += ')'
     case query:Query[_, _] => b += "("; subQueryBuilderFor(query).innerBuildSelect(b, false); b += ")"
-    //case Union.UnionPart(_) => "*"
     case c @ ConstColumn(v) => b += c.typeMapper(profile).valueToSQLLiteral(v)
     case c @ BindColumn(v) => b +?= { (p, param) => c.typeMapper(profile).setValue(v, p) }
     case pc @ ParameterColumn(idx) => b +?= { (p, param) =>

@@ -32,7 +32,7 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
   protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
     new OracleQueryBuilder(query, nc, Some(this), profile)
 
-  override protected def innerBuildSelectNoRewrite(b: SQLBuilder, rename: Boolean) {
+  override protected def innerBuildSelect(b: SQLBuilder, rename: Boolean) {
     query.typedModifiers[TakeDrop] match {
       case TakeDrop(Some(t), None, _) :: _ =>
         b += "SELECT * FROM (SELECT "
