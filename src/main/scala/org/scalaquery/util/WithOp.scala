@@ -10,7 +10,3 @@ trait WithOp extends Cloneable {self:Node=>
   final def op: Node = _op
   override def clone(): this.type = super.clone.asInstanceOf[this.type]
 }
-
-object WithOp {
-  def unapply(w: WithOp) = if(w.op == null) None else Some(w.op)
-}
