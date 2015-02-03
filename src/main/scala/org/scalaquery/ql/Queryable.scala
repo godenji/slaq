@@ -2,7 +2,6 @@ package org.scalaquery.ql
 
 /**
  * a type class that restricts Query monad filter operations
- * to Columnar values; i.e. query condition must be between Column[_]
  */
 trait Queryable[-T] {
   def apply(value: T, l: List[Column[_]]): List[Column[_]]
