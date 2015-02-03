@@ -41,7 +41,7 @@ trait ColumnOps[B1, P1] {
   def between[P2, P3, R](start: Column[P2], end: Column[P3])(implicit om: OM3[B1, B1, Boolean, P2, P3, R]) =
     om(Between(leftOperand, start, end))
   def ifNull[B2, P2, R](e: Column[P2])(implicit om: OM2[B2, Boolean, P2, R]): Column[P2] =
-    e.mapOp(c => EscFunction[P2]("ifnull", leftOperand, Node(c))(e.typeMapper))
+    EscFunction[P2]("ifnull", leftOperand, Node(e))(e.typeMapper)
   def min(implicit om: ToOption, tm: BaseTM) =
     om(StdFunction[B1]("min", leftOperand))
   def max(implicit om: ToOption, tm: BaseTM) =
