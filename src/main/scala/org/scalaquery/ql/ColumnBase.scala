@@ -25,16 +25,12 @@ abstract class Column[T : TypeMapper] extends ColumnBase[T] {
   }
   def updateResult(profile: BasicProfile, rs: PositionedResult, value: T) = typeMapper(profile).updateValue(value, rs)
   final def setParameter(profile: BasicProfile, ps: PositionedParameters, value: Option[T]): Unit = typeMapper(profile).setOption(value, ps)
-  def orElse(n: =>T): Column[T] = new WrappedColumn[T](this) {
-    override def getResult(profile: BasicProfile, rs: PositionedResult): T = typeMapper(profile).nextValueOrElse(n, rs)
-  }
-  final def orFail = orElse { throw new SQueryException("Read NULL value for column "+this) }
-  def ? : Column[Option[T]] = new WrappedColumn(this)(typeMapper.createOptionTypeMapper)
 
   def getOr[U](n: => U)(implicit ev: Option[U] =:= T): Column[U] = new WrappedColumn[U](this)(typeMapper.getBaseTypeMapper) {
     override def getResult(profile: BasicProfile, rs: PositionedResult): U = typeMapper(profile).nextValueOrElse(n, rs)
   }
   final def ~[U](b: Column[U]) = new Projection2[T, U](this, b)
+	def ? : Column[Option[T]] = new WrappedColumn(this)(typeMapper.createOptionTypeMapper)
 
   // Functions which don't need an OptionMapper
   def in(e: Query[Column[_], _]) = ColumnOps.In(Node(this), Node(e))
