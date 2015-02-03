@@ -28,7 +28,7 @@ class UnionTest(tdb: TestDB) extends DBTest(tdb) {
     def * = id ~ name ~ manager
 
     // A convenience method for selecting employees by department
-    def departmentIs(dept: String) = manager in Managers.where(_.department is dept).map(_.id)
+    def departmentIs(dept: String) = manager in Managers.filter(_.department is dept).map(_.id)
   }
 
   @Test def test() {
@@ -50,11 +50,11 @@ class UnionTest(tdb: TestDB) extends DBTest(tdb) {
         (8, "Greg", 3)
       )
 
-      val q1 = for(m <- Managers where { _.department is "IT" }) yield (m.id, m.name)
+      val q1 = for(m <- Managers filter { _.department is "IT" }) yield (m.id, m.name)
       println("Managers in IT: "+ q1.selectStatement)
       q1.foreach(o => println("  "+o))
 
-      val q2 = for(e <- Employees where { _.departmentIs("IT") }) yield (e.id, e.name)
+      val q2 = for(e <- Employees filter { _.departmentIs("IT") }) yield (e.id, e.name)
       println("Employees in IT: " + q2.selectStatement)
       q2.foreach(o => println("  "+o))
 
@@ -77,7 +77,7 @@ class UnionTest(tdb: TestDB) extends DBTest(tdb) {
       (3, "Steve", "IT")
     )
 
-    def f (s: String) = Managers where { _.name =~ s}
+    def f (s: String) = Managers filter { _.name =~ s}
     val q = f("Peter") union f("Amy")
     q.dump("q: ")
     println(q.selectStatement)

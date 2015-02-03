@@ -36,10 +36,10 @@ object SQuery2Test {
     val q2 = for {
       u <- Users
       _ <- Query.orderBy(u.first asc) >> Query.orderBy(u.last desc)
-      o <- Orders where { o => (u.id is o.userID) & (u.first isNotNull) }
+      o <- Orders filter { o => (u.id is o.userID) & (u.first isNotNull) }
     } yield u.first ~ u.last ~ o.orderID
 
-    val q3 = for(u <- Users where(_.id is 42)) yield u.first ~ u.last
+    val q3 = for(u <- Users filter(_.id is 42)) yield u.first ~ u.last
 
     val q4 = for {
       <|(u, o) <- Users join Orders on (_.id is _.userID)
@@ -110,8 +110,8 @@ object SQuery2Test {
     println("Insert1: " + BasicDriver.buildInsertStatement(Users))
     println("Insert2: " + BasicDriver.buildInsertStatement(Users.first ~ Users.last))
 
-    val d1 = Users.where(_.id is 42)
-    val d2 = for(u <- Users where( _.id notIn Orders.map(_.userID) )) yield u
+    val d1 = Users.filter(_.id is 42)
+    val d2 = for(u <- Users filter( _.id notIn Orders.map(_.userID) )) yield u
     println("d0: " + BasicDriver.buildDeleteStatement(Users, NamingContext()))
     println("d1: " + BasicDriver.buildDeleteStatement(d1, NamingContext()))
     println("d2: " + BasicDriver.buildDeleteStatement(d2, NamingContext()))

@@ -38,9 +38,9 @@ object Benchmark {
     val q1 = for(u <- Users) yield u
     val q2 = for {
       u <- Users
-      o <- Orders where { o => (u.id is o.userID) & (u.first isNotNull) }
+      o <- Orders filter { o => (u.id is o.userID) & (u.first isNotNull) }
     } yield u.first ~ u.last ~ o.orderID
-    val q3 = for(u <- Users where(_.id is 42)) yield u.first ~ u.last
+    val q3 = for(u <- Users filter(_.id is 42)) yield u.first ~ u.last
     val q4 = for {
       uo <- Users join Orders on (_.id is _.userID)
       <|(u,o) = uo
@@ -48,7 +48,7 @@ object Benchmark {
     } yield u.first ~ o.orderID
     val q5 = for (
       o <- Orders
-        where { o => o.orderID is (for { o2 <- Orders where(o.userID is _.userID) } yield o2.orderID.max).asColumn }
+        filter { o => o.orderID is (for { o2 <- Orders filter(o.userID is _.userID) } yield o2.orderID.max).asColumn }
     ) yield o.orderID
 
     val s1 = BasicDriver.buildSelectStatement(q1, NamingContext())

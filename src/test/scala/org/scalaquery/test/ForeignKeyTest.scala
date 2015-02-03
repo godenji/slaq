@@ -31,7 +31,7 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
       def category = column[Int]("category", O Nullable)
       def * = id ~ title ~ category
       def categoryFK = foreignKey("category_fk", category, Categories)(_.id)
-      def categoryJoin = Categories.where(_.id =~ category)
+      def categoryJoin = Categories.filter(_.id =~ category)
     }
 
     tdb.assertNotTablesExist("categories", "posts")
