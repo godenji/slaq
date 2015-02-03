@@ -82,13 +82,6 @@ trait ColumnOps[B1, P1] {
     om(Or(leftOperand, Node(b)))
   def unary_![R](implicit om: Restr1[Boolean, Boolean, R]) =
     om(Not(leftOperand))
-    
-  @deprecated("Use & instead", "since 0.10.1")
-  def &&[P2, R](b: ColumnBase[P2])(implicit om: Restr2[Boolean, Boolean, P2, R]) =
-    om(And(leftOperand, Node(b)))
-  @deprecated("Use | instead", "since 0.10.1")
-  def ||[P2, R](b: ColumnBase[P2])(implicit om: Restr2[Boolean, Boolean, P2, R]) =
-    om(Or(leftOperand, Node(b)))
 
   // String only
   def length[R](implicit om: Restr1[String, Int, R]) =
