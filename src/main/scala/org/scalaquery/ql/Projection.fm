@@ -31,11 +31,11 @@ sealed trait Projection[T <: Product] extends ColumnBase[T] with ProductNode wit
   override def toString = "Projection" + productArity
 }
 
-object Projection {
+/*object Projection {
 <#list 2..22 as i>
   def unapply[<#list 1..i as j>T${j}<#if i != j>,</#if></#list>](p: Projection${i}[<#list 1..i as j>T${j}<#if i != j>,</#if></#list>]) = Some(p)
 </#list>
-}
+}*/
 
 class MappedProjection[T, P <: Product](val child: Projection[P], f: (P => T), g: (T => Option[P])) extends ColumnBase[T] with UnaryNode {
   override def toString = "MappedProjection"
