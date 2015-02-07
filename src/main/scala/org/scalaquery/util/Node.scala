@@ -12,7 +12,8 @@ trait Node {
   def nodeDelegate: Node = this
   def isNamedTable = false
 
-  def nodeNamedChildren: Seq[(Node, String)] = nodeChildren.toStream.zip(Stream.from(0).map(_.toString))
+  def nodeNamedChildren: Seq[(Node, String)] = 
+  	nodeChildren.toStream.zip(Stream.from(0).map(_.toString))
 
   def dump(dc: Node.DumpContext, prefix: String, name: String) {
     val (tname, details) = if(isNamedTable) {
@@ -37,7 +38,9 @@ object Node {
     case null => ConstColumn.NULL
     case n:Node => n.nodeDelegate
     case p:Product => new ProductNode { val product = p }
-    case r:AnyRef => throw new SQueryException("Cannot narrow "+o+" of type "+SimpleTypeName.forVal(r)+" to a Node")
+    case r:AnyRef => throw new SQueryException(
+    	"Cannot narrow "+o+" of type "+SimpleTypeName.forVal(r)+" to a Node"
+    )
     case _ => throw new SQueryException("Cannot narrow "+o+" to a Node")
   }
 
