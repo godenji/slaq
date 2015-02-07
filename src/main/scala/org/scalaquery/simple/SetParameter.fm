@@ -4,7 +4,7 @@ import java.sql.{SQLException, Date, Time, Timestamp}
 import org.scalaquery.session.PositionedParameters
 
 /**
- * Basic conversions for setting parameters in PositionedParameters.
+ * conversions for setting parameters in PositionedParameters.
  */
 trait SetParameter[-T] extends ((T, PositionedParameters) => Unit)
 
