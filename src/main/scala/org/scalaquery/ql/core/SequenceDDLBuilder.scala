@@ -1,12 +1,14 @@
-package org.scalaquery.ql.basic
+package org.scalaquery.ql.core
 
 import org.scalaquery.ql._
 
-class BasicSequenceDDLBuilder(seq: Sequence[_], val profile: BasicProfile) {
+class SequenceDDLBuilder(seq: Sequence[_], val profile: Profile) {
   import profile.sqlUtils._
 
   def buildDDL: DDL = {
-    val b = new StringBuilder append "CREATE SEQUENCE " append quoteIdentifier(seq.name)
+    val b = new StringBuilder append
+    	"CREATE SEQUENCE " append quote(seq.name)
+    
     seq._increment.foreach { b append " INCREMENT " append _ }
     seq._minValue.foreach { b append " MINVALUE " append _ }
     seq._maxValue.foreach { b append " MAXVALUE " append _ }
@@ -16,7 +18,9 @@ class BasicSequenceDDLBuilder(seq: Sequence[_], val profile: BasicProfile) {
       val createPhase1 = Iterable(b.toString)
       val createPhase2 = Nil
       val dropPhase1 = Nil
-      val dropPhase2 = Iterable("DROP SEQUENCE " + quoteIdentifier(seq.name))
+      val dropPhase2 = Iterable(
+      	"DROP SEQUENCE " + quote(seq.name)
+      )
     }
   }
 }

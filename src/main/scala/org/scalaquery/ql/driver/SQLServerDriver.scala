@@ -1,7 +1,7 @@
-package org.scalaquery.ql.extended
+package org.scalaquery.ql.driver
 
 import org.scalaquery.ql._
-import org.scalaquery.ql.basic._
+import org.scalaquery.ql.core._
 import org.scalaquery.util._
 import org.scalaquery.SQueryException
 import java.sql.{Timestamp, Time, Date}
@@ -10,7 +10,7 @@ import org.scalaquery.session.{PositionedParameters, PositionedResult, ResultSet
 /**
  * ScalaQuery driver for Microsoft SQL Server.
  *
- * <p>This driver implements the ExtendedProfile with the following
+ * <p>This driver implements the Profile with the following
  * limitations:</p>
  *
  * <ul>
@@ -24,31 +24,31 @@ import org.scalaquery.session.{PositionedParameters, PositionedResult, ResultSet
  *
  * @author szeiger
  */
-class SQLServerDriver extends ExtendedProfile { self =>
+class SQLServerDriver extends Profile { self =>
 
-  type ImplicitT = ExtendedImplicitConversions[SQLServerDriver]
-  type TypeMapperDelegatesT = BasicTypeMapperDelegates
+  type ImplicitT = ImplicitConversions[SQLServerDriver]
+  type TypeMapperDelegatesT = TypeMapperDelegates
 
-  val Implicit = new ExtendedImplicitConversions[SQLServerDriver] {
+  val Implicit = new ImplicitConversions[SQLServerDriver] {
     implicit val scalaQueryDriver = self
   }
 
   val typeMapperDelegates = new SQLServerTypeMapperDelegates
   override val sqlUtils = new SQLServerSQLUtils
 
-  override def buildTableDDL(table: AbstractBasicTable[_]): DDL = new SQLServerDDLBuilder(table, this).buildDDL
+  override def buildTableDDL(table: Table[_]): DDL = new SQLServerDDLBuilder(table, this).buildDDL
   override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new SQLServerQueryBuilder(query, nc, None, this)
 }
 
 object SQLServerDriver extends SQLServerDriver
 
-class SQLServerTypeMapperDelegates extends BasicTypeMapperDelegates {
+class SQLServerTypeMapperDelegates extends TypeMapperDelegates {
   import SQLServerTypeMapperDelegates._
   override val booleanTypeMapperDelegate = new BooleanTypeMapperDelegate
   override val byteTypeMapperDelegate = new ByteTypeMapperDelegate
   override val dateTypeMapperDelegate = new DateTypeMapperDelegate
   override val timestampTypeMapperDelegate = new TimestampTypeMapperDelegate
-  override val uuidTypeMapperDelegate = new BasicTypeMapperDelegates.UUIDTypeMapperDelegate {
+  override val uuidTypeMapperDelegate = new TypeMapperDelegates.UUIDTypeMapperDelegate {
     override def sqlTypeName = "UNIQUEIDENTIFIER"
   }
 }
@@ -56,17 +56,17 @@ class SQLServerTypeMapperDelegates extends BasicTypeMapperDelegates {
 object SQLServerTypeMapperDelegates {
   /* SQL Server does not have a proper BOOLEAN type. The suggested workaround is
    * BIT with constants 1 and 0 for TRUE and FALSE. */
-  class BooleanTypeMapperDelegate extends BasicTypeMapperDelegates.BooleanTypeMapperDelegate {
+  class BooleanTypeMapperDelegate extends TypeMapperDelegates.BooleanTypeMapperDelegate {
     override def valueToSQLLiteral(value: Boolean) = if(value) "1" else "0"
   }
   /* Selecting a straight Date or Timestamp literal fails with a NPE (probably
    * because the type information gets lost along the way), so we cast all Date
    * and Timestamp values to the proper type. This work-around does not seem to
    * be required for Time values. */
-  class DateTypeMapperDelegate extends BasicTypeMapperDelegates.DateTypeMapperDelegate {
+  class DateTypeMapperDelegate extends TypeMapperDelegates.DateTypeMapperDelegate {
     override def valueToSQLLiteral(value: Date) = "{fn convert({d '" + value + "'}, DATE)}"
   }
-  class TimestampTypeMapperDelegate extends BasicTypeMapperDelegates.TimestampTypeMapperDelegate {
+  class TimestampTypeMapperDelegate extends TypeMapperDelegates.TimestampTypeMapperDelegate {
     /* TIMESTAMP in SQL Server is a data type for sequence numbers. What we
      * want here is DATETIME. */
     override def sqlTypeName = "DATETIME"
@@ -75,7 +75,7 @@ object SQLServerTypeMapperDelegates {
   /* SQL Server's TINYINT is unsigned, so we use SMALLINT instead to store a signed byte value.
    * The JDBC driver also does not treat signed values correctly when reading bytes from result
    * sets, so we read as Short and then convert to Byte. */
-  class ByteTypeMapperDelegate extends BasicTypeMapperDelegates.ByteTypeMapperDelegate {
+  class ByteTypeMapperDelegate extends TypeMapperDelegates.ByteTypeMapperDelegate {
     override def sqlTypeName = "SMALLINT"
     //def setValue(v: Byte, p: PositionedParameters) = p.setByte(v)
     //def setOption(v: Option[Byte], p: PositionedParameters) = p.setByteOption(v)
@@ -84,11 +84,10 @@ object SQLServerTypeMapperDelegates {
   }
 }
 
-class SQLServerQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[BasicQueryBuilder], profile: SQLServerDriver)
-extends BasicQueryBuilder(_query, _nc, parent, profile) {
+class SQLServerQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: SQLServerDriver)
+extends QueryBuilder(_query, _nc, parent, profile) {
 
   import profile.sqlUtils._
-  import ExtendedQueryOps._
 
   override type Self = SQLServerQueryBuilder
   override protected val supportsTuples = false
@@ -114,7 +113,7 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
 	/*
 	 * literal value(s) required for sql server fetch/offset since it is not possible
 	 * 	to perform multiple calculations with Param based values.
-	 * 	@see BasicQueryBuilder `appendColumnValue`   
+	 * 	@seeQueryBuilder `appendColumnValue`   
 	 */
   override protected def innerBuildSelect(b: SQLBuilder, rename: Boolean) {
     query.typedModifiers[TakeDrop] match {
@@ -210,10 +209,10 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
   }
 }
 
-class SQLServerDDLBuilder(table: AbstractBasicTable[_], profile: SQLServerDriver) extends BasicDDLBuilder(table, profile) {
+class SQLServerDDLBuilder(table: Table[_], profile: SQLServerDriver) extends DDLBuilder(table, profile) {
   import profile.sqlUtils._
 
-  protected class SQLServerColumnDDLBuilder(column: NamedColumn[_]) extends BasicColumnDDLBuilder(column) {
+  protected class SQLServerColumnDDLBuilder(column: NamedColumn[_]) extends ColumnDDLBuilder(column) {
     override protected def appendOptions(sb: StringBuilder) {
       if(defaultLiteral ne null) sb append " DEFAULT " append defaultLiteral
       if(notNull) sb append " NOT NULL"
@@ -225,7 +224,7 @@ class SQLServerDDLBuilder(table: AbstractBasicTable[_], profile: SQLServerDriver
   override protected def createColumnDDLBuilder(c: NamedColumn[_]) = new SQLServerColumnDDLBuilder(c)
 }
 
-class SQLServerSQLUtils extends BasicSQLUtils {
+class SQLServerSQLUtils extends SQLUtils {
   override def mapTypeName(tmd: TypeMapperDelegate[_]): String = tmd.sqlType match {
     case java.sql.Types.BOOLEAN => "BIT"
     case java.sql.Types.BLOB => "IMAGE"

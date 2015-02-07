@@ -1,29 +1,28 @@
-package org.scalaquery.ql.extended
+package org.scalaquery.ql.driver
 
 import org.scalaquery.ql._
-import org.scalaquery.ql.basic._
+import org.scalaquery.ql.core._
 import org.scalaquery.util._
 
-class OracleDriver extends ExtendedProfile { self =>
+class OracleDriver extends Profile { self =>
 
-  type ImplicitT = ExtendedImplicitConversions[OracleDriver]
-  type TypeMapperDelegatesT = BasicTypeMapperDelegates
+  type ImplicitT = ImplicitConversions[OracleDriver]
+  type TypeMapperDelegatesT = TypeMapperDelegates
 
-  val Implicit = new ExtendedImplicitConversions[OracleDriver] {
+  val Implicit = new ImplicitConversions[OracleDriver] {
     implicit val scalaQueryDriver = self
   }
 
-  val typeMapperDelegates = new BasicTypeMapperDelegates {}
+  val typeMapperDelegates = new TypeMapperDelegates {}
 
   override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new OracleQueryBuilder(query, nc, None, this)
 }
 
 object OracleDriver extends OracleDriver
 
-class OracleQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[BasicQueryBuilder], profile: OracleDriver)
-extends BasicQueryBuilder(_query, _nc, parent, profile) {
+class OracleQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: OracleDriver)
+extends QueryBuilder(_query, _nc, parent, profile) {
 
-  import ExtendedQueryOps._
 
   override type Self = OracleQueryBuilder
   override protected val scalarFrom = Some("DUAL")

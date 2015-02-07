@@ -1,4 +1,4 @@
-package org.scalaquery.ql.basic
+package org.scalaquery.ql.core
 
 import scala.collection.mutable.HashMap
 import java.io.PrintWriter
@@ -6,18 +6,18 @@ import org.scalaquery.SQueryException
 import org.scalaquery.ql._
 import org.scalaquery.util._
 
-class BasicInsertBuilder(val column: Any, val profile: BasicProfile) {
+class InsertBuilder(val column: Any, val profile: Profile) {
   import profile.sqlUtils._
 
   def buildInsert: String = {
     val (table, cols, vals) = buildParts
-    s"INSERT INTO ${quoteIdentifier(table)} ($cols) VALUES ($vals)"
+    s"INSERT INTO ${quote(table)} ($cols) VALUES ($vals)"
   }
 
-  def buildInsert(query: Query[_, _]): SQLBuilder.Result = {
+  def buildInsert(query: Query[_,_]): SQLBuilder.Result = {
     val (table, cols, _) = buildParts
     val b = new SQLBuilder
-    b += s"INSERT INTO ${quoteIdentifier(table)} (${cols.toString}) "
+    b += s"INSERT INTO ${quote(table)} (${cols.toString}) "
     val qb = profile.createQueryBuilder(query, NamingContext())
     qb.buildSelect(b)
     b.build
@@ -31,24 +31,31 @@ class BasicInsertBuilder(val column: Any, val profile: BasicProfile) {
       case p:Projection[_] =>
         for(i <- 0 until p.productArity)
           f(Node(p.productElement(i)))
-      case t:AbstractTable[_] => f(Node(t.*))
+      case t:Table[_] => f(Node(t.*))
       case n:NamedColumn[_] =>
-        if(table eq null) table = n.table.asInstanceOf[AbstractTable[_]].tableName
-        else if(table != n.table.asInstanceOf[AbstractTable[_]].tableName) throw new SQueryException("Inserts must all be to the same table")
+      	val tmpTable = n.table.asInstanceOf[Table[_]].tableName
+        if(table eq null) table = tmpTable
+        else if(table != tmpTable) throw new SQueryException(
+        	"Inserts must all be to the same table"
+        )
         appendNamedColumn(n, cols, vals)
-      case _ => throw new SQueryException("Cannot use column "+c+" in INSERT statement")
+      case _ => throw new SQueryException(
+      	"Cannot use column "+c+" in INSERT statement"
+      )
     }
     f(Node(column))
     if(table eq null) throw new SQueryException("No table to insert into")
     (table, cols, vals)
   }
 
-  protected def appendNamedColumn(n: NamedColumn[_], cols: StringBuilder, vals: StringBuilder) {
+  protected def appendNamedColumn(
+  	n: NamedColumn[_], cols: StringBuilder, vals: StringBuilder) {
+  	
     if(!cols.isEmpty) {
       cols append ","
       vals append ","
     }
-    cols append quoteIdentifier(n.name)
+    cols append quote(n.name)
     vals append '?'
   }
 }

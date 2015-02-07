@@ -1,8 +1,8 @@
-package org.scalaquery.ql.extended
+package org.scalaquery.ql.driver
 
 import org.scalaquery.SQueryException
 import org.scalaquery.ql._
-import org.scalaquery.ql.basic._
+import org.scalaquery.ql.core._
 import org.scalaquery.util._
 import org.scalaquery.util.SQLBuilder._
 import java.sql.{Timestamp, Time, Date}
@@ -11,7 +11,7 @@ import java.util.UUID
 /**
  * ScalaQuery driver for SQLite.
  *
- * <p>This driver implements the ExtendedProfile with the following
+ * <p>This driver implements the Profile with the following
  * limitations:</p>
  * <ul>
  *   <li>Sequences are not supported because SQLite does not have them.</li>
@@ -24,24 +24,24 @@ import java.util.UUID
  *     both.</li>
  * </ul>
  */
-class SQLiteDriver extends ExtendedProfile { self =>
+class SQLiteDriver extends Profile { self =>
 
-  type ImplicitT = ExtendedImplicitConversions[SQLiteDriver]
-  type TypeMapperDelegatesT = BasicTypeMapperDelegates
+  type ImplicitT = ImplicitConversions[SQLiteDriver]
+  type TypeMapperDelegatesT = TypeMapperDelegates
 
-  val Implicit = new ExtendedImplicitConversions[SQLiteDriver] {
+  val Implicit = new ImplicitConversions[SQLiteDriver] {
     implicit val scalaQueryDriver = self
   }
 
   val typeMapperDelegates = new SQLiteTypeMapperDelegates
 
   override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new SQLiteQueryBuilder(query, nc, None, this)
-  override def buildTableDDL(table: AbstractBasicTable[_]): DDL = new SQLiteDDLBuilder(table, this).buildDDL
+  override def buildTableDDL(table: Table[_]): DDL = new SQLiteDDLBuilder(table, this).buildDDL
 }
 
 object SQLiteDriver extends SQLiteDriver
 
-class SQLiteTypeMapperDelegates extends BasicTypeMapperDelegates {
+class SQLiteTypeMapperDelegates extends TypeMapperDelegates {
   import SQLiteTypeMapperDelegates._
   override val booleanTypeMapperDelegate = new BooleanTypeMapperDelegate
   override val dateTypeMapperDelegate = new DateTypeMapperDelegate
@@ -53,32 +53,32 @@ class SQLiteTypeMapperDelegates extends BasicTypeMapperDelegates {
 object SQLiteTypeMapperDelegates {
   /* SQLite does not have a proper BOOLEAN type. The suggested workaround is
    * INTEGER with constants 1 and 0 for TRUE and FALSE. */
-  class BooleanTypeMapperDelegate extends BasicTypeMapperDelegates.BooleanTypeMapperDelegate {
+  class BooleanTypeMapperDelegate extends TypeMapperDelegates.BooleanTypeMapperDelegate {
     override def sqlTypeName = "INTEGER"
     override def valueToSQLLiteral(value: Boolean) = if(value) "1" else "0"
   }
   /* The SQLite JDBC driver does not support the JDBC escape syntax for
    * date/time/timestamp literals. SQLite expects these values as milliseconds
    * since epoch. */
-  class DateTypeMapperDelegate extends BasicTypeMapperDelegates.DateTypeMapperDelegate {
+  class DateTypeMapperDelegate extends TypeMapperDelegates.DateTypeMapperDelegate {
     override def valueToSQLLiteral(value: Date) = value.getTime.toString
   }
-  class TimeTypeMapperDelegate extends BasicTypeMapperDelegates.TimeTypeMapperDelegate {
+  class TimeTypeMapperDelegate extends TypeMapperDelegates.TimeTypeMapperDelegate {
     override def valueToSQLLiteral(value: Time) = value.getTime.toString
   }
-  class TimestampTypeMapperDelegate extends BasicTypeMapperDelegates.TimestampTypeMapperDelegate {
+  class TimestampTypeMapperDelegate extends TypeMapperDelegates.TimestampTypeMapperDelegate {
     override def valueToSQLLiteral(value: Timestamp) = value.getTime.toString
   }
-  class UUIDTypeMapperDelegate extends BasicTypeMapperDelegates.UUIDTypeMapperDelegate {
+  class UUIDTypeMapperDelegate extends TypeMapperDelegates.UUIDTypeMapperDelegate {
     override def sqlType = java.sql.Types.BLOB
   }
 }
 
-class SQLiteDDLBuilder(table: AbstractBasicTable[_], profile: SQLiteDriver) 
-	extends BasicDDLBuilder(table, profile) {
+class SQLiteDDLBuilder(table: Table[_], profile: SQLiteDriver) 
+	extends DDLBuilder(table, profile) {
   import profile.sqlUtils._
 
-  protected class SQLiteColumnDDLBuilder(column: NamedColumn[_]) extends BasicColumnDDLBuilder(column) {
+  protected class SQLiteColumnDDLBuilder(column: NamedColumn[_]) extends ColumnDDLBuilder(column) {
     override protected def appendOptions(sb: StringBuilder) {
       if(defaultLiteral ne null) sb append " DEFAULT " append defaultLiteral
       if(autoIncrement) sb append " PRIMARY KEY AUTOINCREMENT"
@@ -118,10 +118,9 @@ class SQLiteDDLBuilder(table: AbstractBasicTable[_], profile: SQLiteDriver)
   }
 }
 
-class SQLiteQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[BasicQueryBuilder], profile: SQLiteDriver)
-extends BasicQueryBuilder(_query, _nc, parent, profile) {
+class SQLiteQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: SQLiteDriver)
+extends QueryBuilder(_query, _nc, parent, profile) {
 
-  import ExtendedQueryOps._
   import profile.sqlUtils._
 
   override type Self = SQLiteQueryBuilder

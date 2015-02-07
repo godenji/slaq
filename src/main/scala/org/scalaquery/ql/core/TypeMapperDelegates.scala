@@ -1,4 +1,4 @@
-package org.scalaquery.ql.basic
+package org.scalaquery.ql.core
 
 import java.sql.{Blob, Clob, Date, Time, Timestamp}
 import org.scalaquery.SQueryException
@@ -6,8 +6,8 @@ import org.scalaquery.ql.TypeMapperDelegate
 import org.scalaquery.session.{PositionedParameters, PositionedResult}
 import java.util.UUID
 
-trait BasicTypeMapperDelegates {
-  import BasicTypeMapperDelegates._
+trait TypeMapperDelegates {
+  import TypeMapperDelegates._
   val booleanTypeMapperDelegate = new BooleanTypeMapperDelegate
   val blobTypeMapperDelegate = new BlobTypeMapperDelegate
   val byteTypeMapperDelegate = new ByteTypeMapperDelegate
@@ -28,7 +28,7 @@ trait BasicTypeMapperDelegates {
   val nullTypeMapperDelegate = new NullTypeMapperDelegate
 }
 
-object BasicTypeMapperDelegates {
+object TypeMapperDelegates {
   class BooleanTypeMapperDelegate extends TypeMapperDelegate[Boolean] {
     def zero = false
     def sqlType = java.sql.Types.BOOLEAN
@@ -46,7 +46,9 @@ object BasicTypeMapperDelegates {
     def nextValue(r: PositionedResult) = r.nextBlob
     def updateValue(v: Blob, r: PositionedResult) = r.updateBlob(v)
     override def valueToSQLLiteral(value: Blob) =
-      throw new SQueryException("Blob does not have a literal representation")
+      throw new SQueryException(
+      	"Blob does not have a literal representation"
+      )
   }
 
   class ByteTypeMapperDelegate extends TypeMapperDelegate[Byte] {
@@ -66,7 +68,9 @@ object BasicTypeMapperDelegates {
     def nextValue(r: PositionedResult) = r.nextBytes
     def updateValue(v: Array[Byte], r: PositionedResult) = r.updateBytes(v)
     override def valueToSQLLiteral(value: Array[Byte]) =
-      throw new SQueryException("Array[Byte] does not have a literal representation")
+      throw new SQueryException(
+      	"Array[Byte] does not have a literal representation"
+      )
   }
 
   class ClobTypeMapperDelegate extends TypeMapperDelegate[Clob] {
@@ -192,7 +196,9 @@ object BasicTypeMapperDelegates {
     def nextValue(r: PositionedResult) = fromBytes(r.nextBytes())
     def updateValue(v: UUID, r: PositionedResult) = r.updateBytes(toBytes(v))
     override def valueToSQLLiteral(value: UUID): String =
-      throw new SQueryException("UUID does not support a literal representation")
+      throw new SQueryException(
+      	"UUID does not support a literal representation"
+      )
     def toBytes(uuid: UUID) = if(uuid eq null) null else {
       val msb = uuid.getMostSignificantBits
       val lsb = uuid.getLeastSignificantBits

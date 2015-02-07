@@ -1,14 +1,14 @@
-package org.scalaquery.ql.extended
+package org.scalaquery.ql.driver
 
 import org.scalaquery.SQueryException
 import org.scalaquery.ql._
-import org.scalaquery.ql.basic._
+import org.scalaquery.ql.core._
 import org.scalaquery.util._
 
 /**
  * ScalaQuery driver for Derby/JavaDB.
  *
- * <p>This driver implements the ExtendedProfile with the following
+ * <p>This driver implements the Profile with the following
  * limitations:</p>
  * <ul>
  *   <li><code>Functions.database</code> is not available in Derby. ScalaQuery
@@ -23,29 +23,29 @@ import org.scalaquery.util._
  *
  * @author szeiger
  */
-class DerbyDriver extends ExtendedProfile { self =>
+class DerbyDriver extends Profile { self =>
 
-  type ImplicitT = ExtendedImplicitConversions[DerbyDriver]
-  type TypeMapperDelegatesT = BasicTypeMapperDelegates
+  type ImplicitT = ImplicitConversions[DerbyDriver]
+  type TypeMapperDelegatesT = TypeMapperDelegates
 
-  val Implicit = new ExtendedImplicitConversions[DerbyDriver] {
+  val Implicit = new ImplicitConversions[DerbyDriver] {
     implicit val scalaQueryDriver = self
   }
 
   val typeMapperDelegates = new DerbyTypeMapperDelegates
 
   override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new DerbyQueryBuilder(query, nc, None, this)
-  override def buildTableDDL(table: AbstractBasicTable[_]): DDL = new DerbyDDLBuilder(table, this).buildDDL
+  override def buildTableDDL(table: Table[_]): DDL = new DerbyDDLBuilder(table, this).buildDDL
   override def buildSequenceDDL(seq: Sequence[_]): DDL = new DerbySequenceDDLBuilder(seq, this).buildDDL
 }
 
 object DerbyDriver extends DerbyDriver
 
-class DerbyTypeMapperDelegates extends BasicTypeMapperDelegates {
+class DerbyTypeMapperDelegates extends TypeMapperDelegates {
   import DerbyTypeMapperDelegates._
   override val booleanTypeMapperDelegate = new BooleanTypeMapperDelegate
   override val byteTypeMapperDelegate = new ByteTypeMapperDelegate
-  override val uuidTypeMapperDelegate = new BasicTypeMapperDelegates.UUIDTypeMapperDelegate {
+  override val uuidTypeMapperDelegate = new TypeMapperDelegates.UUIDTypeMapperDelegate {
     override def sqlType = java.sql.Types.BINARY
     override def sqlTypeName = "CHAR(16) FOR BIT DATA"
   }
@@ -54,20 +54,19 @@ class DerbyTypeMapperDelegates extends BasicTypeMapperDelegates {
 object DerbyTypeMapperDelegates {
   /* Derby does not have a proper BOOLEAN type. The suggested workaround is
    * SMALLINT with constants 1 and 0 for TRUE and FALSE. */
-  class BooleanTypeMapperDelegate extends BasicTypeMapperDelegates.BooleanTypeMapperDelegate {
+  class BooleanTypeMapperDelegate extends TypeMapperDelegates.BooleanTypeMapperDelegate {
     override def sqlTypeName = "SMALLINT"
     override def valueToSQLLiteral(value: Boolean) = if(value) "1" else "0"
   }
   /* Derby does not have a TINYINT type, so we use SMALLINT instead. */
-  class ByteTypeMapperDelegate extends BasicTypeMapperDelegates.ByteTypeMapperDelegate {
+  class ByteTypeMapperDelegate extends TypeMapperDelegates.ByteTypeMapperDelegate {
     override def sqlTypeName = "SMALLINT"
   }
 }
 
-class DerbyQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[BasicQueryBuilder], profile: DerbyDriver)
-extends BasicQueryBuilder(_query, _nc, parent, profile) {
+class DerbyQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: DerbyDriver)
+extends QueryBuilder(_query, _nc, parent, profile) {
 
-  import ExtendedQueryOps._
   import profile.sqlUtils._
 
   override type Self = DerbyQueryBuilder
@@ -123,7 +122,7 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
       b += s" as ${mapTypeName(tmd)})"
 
     /* I guess NEXTVAL was too short */
-    case Sequence.Nextval(seq) => b += s"(next value for ${quoteIdentifier(seq.name)})"
+    case Sequence.Nextval(seq) => b += s"(next value for ${quote(seq.name)})"
 
     case Sequence.Currval(seq) => throw new SQueryException("Derby does not support CURRVAL")
 
@@ -141,15 +140,15 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
     case Subquery(Union(all, sqs), rename) =>
       b += "("
       b.sep(sqs, (if(all) " UNION ALL " else " UNION "))(sq => subQueryBuilderFor(sq).innerBuildSelect(b, rename))
-      b += s") ${quoteIdentifier(name)}"
+      b += s") ${quote(name)}"
     case _ => super.table(t, name, b)
   }
 }
 
-class DerbyDDLBuilder(table: AbstractBasicTable[_], profile: DerbyDriver) extends BasicDDLBuilder(table, profile) {
+class DerbyDDLBuilder(table: Table[_], profile: DerbyDriver) extends DDLBuilder(table, profile) {
   import profile.sqlUtils._
 
-  protected class DerbyColumnDDLBuilder(column: NamedColumn[_]) extends BasicColumnDDLBuilder(column) {
+  protected class DerbyColumnDDLBuilder(column: NamedColumn[_]) extends ColumnDDLBuilder(column) {
     override protected def appendOptions(sb: StringBuilder) {
       if(defaultLiteral ne null) sb append " DEFAULT " append defaultLiteral
       if(notNull) sb append " NOT NULL"
@@ -166,8 +165,8 @@ class DerbyDDLBuilder(table: AbstractBasicTable[_], profile: DerbyDriver) extend
        * index) because Derby does not allow a FOREIGN KEY CONSTRAINT to
        * reference columns which have a UNIQUE INDEX but not a nominal UNIQUE
        * CONSTRAINT. */
-      val sb = new StringBuilder append "ALTER TABLE " append quoteIdentifier(table.tableName) append " ADD "
-      sb append "CONSTRAINT " append quoteIdentifier(idx.name) append " UNIQUE("
+      val sb = new StringBuilder append "ALTER TABLE " append quote(table.tableName) append " ADD "
+      sb append "CONSTRAINT " append quote(idx.name) append " UNIQUE("
       addIndexColumnList(idx.on, sb, idx.table.tableName)
       sb append ")"
       sb.toString
@@ -175,14 +174,14 @@ class DerbyDDLBuilder(table: AbstractBasicTable[_], profile: DerbyDriver) extend
   }
 }
 
-class DerbySequenceDDLBuilder[T](seq: Sequence[T], profile: DerbyDriver) extends BasicSequenceDDLBuilder(seq, profile) {
+class DerbySequenceDDLBuilder[T](seq: Sequence[T], profile: DerbyDriver) extends SequenceDDLBuilder(seq, profile) {
   import profile.sqlUtils._
 
   override def buildDDL: DDL = {
     import seq.integral._
     val increment = seq._increment.getOrElse(one)
     val desc = increment < zero
-    val b = new StringBuilder append "CREATE SEQUENCE " append quoteIdentifier(seq.name)
+    val b = new StringBuilder append "CREATE SEQUENCE " append quote(seq.name)
     /* Set the START value explicitly because it defaults to the data type's
      * min/max value instead of the more conventional 1/-1. */
     b append " START WITH " append seq._start.getOrElse(if(desc) -1 else 1)
@@ -197,7 +196,7 @@ class DerbySequenceDDLBuilder[T](seq: Sequence[T], profile: DerbyDriver) extends
       val createPhase1 = Iterable(b.toString)
       val createPhase2 = Nil
       val dropPhase1 = Nil
-      val dropPhase2 = Iterable("DROP SEQUENCE " + quoteIdentifier(seq.name))
+      val dropPhase2 = Iterable("DROP SEQUENCE " + quote(seq.name))
     }
   }
 }

@@ -1,16 +1,16 @@
-package org.scalaquery.ql.extended
+package org.scalaquery.ql.driver
 
 import org.scalaquery.SQueryException
 import org.scalaquery.ql._
-import org.scalaquery.ql.basic._
+import org.scalaquery.ql.core._
 import org.scalaquery.util._
 
-class MySQLDriver extends ExtendedProfile { self =>
+class MySQLDriver extends Profile { self =>
 
-  type ImplicitT = ExtendedImplicitConversions[MySQLDriver]
+  type ImplicitT = ImplicitConversions[MySQLDriver]
   type TypeMapperDelegatesT = MySQLTypeMapperDelegates
 
-  val Implicit = new ExtendedImplicitConversions[MySQLDriver] {
+  val Implicit = new ImplicitConversions[MySQLDriver] {
     implicit val scalaQueryDriver = self
   }
 
@@ -18,14 +18,14 @@ class MySQLDriver extends ExtendedProfile { self =>
   override val sqlUtils = new MySQLSQLUtils
 
   override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new MySQLQueryBuilder(query, nc, None, this)
-  override def buildTableDDL(table: AbstractBasicTable[_]): DDL = new MySQLDDLBuilder(table, this).buildDDL
+  override def buildTableDDL(table: Table[_]): DDL = new MySQLDDLBuilder(table, this).buildDDL
   override def buildSequenceDDL(seq: Sequence[_]): DDL = new MySQLSequenceDDLBuilder(seq, this).buildDDL
 }
 
 object MySQLDriver extends MySQLDriver
 
-class MySQLTypeMapperDelegates extends BasicTypeMapperDelegates {
-  override val stringTypeMapperDelegate = new BasicTypeMapperDelegates.StringTypeMapperDelegate {
+class MySQLTypeMapperDelegates extends TypeMapperDelegates {
+  override val stringTypeMapperDelegate = new TypeMapperDelegates.StringTypeMapperDelegate {
     override def valueToSQLLiteral(value: String) = if(value eq null) "NULL" else {
       val sb = new StringBuilder
       sb append '\''
@@ -46,16 +46,15 @@ class MySQLTypeMapperDelegates extends BasicTypeMapperDelegates {
     }
   }
 
-  override val uuidTypeMapperDelegate = new BasicTypeMapperDelegates.UUIDTypeMapperDelegate {
+  override val uuidTypeMapperDelegate = new TypeMapperDelegates.UUIDTypeMapperDelegate {
     override def sqlType = java.sql.Types.BINARY
     override def sqlTypeName = "BINARY(16)"
   }
 }
 
-class MySQLQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[BasicQueryBuilder], profile: MySQLDriver)
-extends BasicQueryBuilder(_query, _nc, parent, profile) {
+class MySQLQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: MySQLDriver)
+extends QueryBuilder(_query, _nc, parent, profile) {
 
-  import ExtendedQueryOps._
   import profile.sqlUtils._
 
   override type Self = MySQLQueryBuilder
@@ -67,8 +66,8 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
 
   override protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {
     case EscFunction("concat", l, r) => b += "concat("; expr(l, b); b += ','; expr(r, b); b += ')'
-    case Sequence.Nextval(seq) => b += s"${quoteIdentifier(seq.name + "_nextval")}()"
-    case Sequence.Currval(seq) => b += s"${quoteIdentifier(seq.name + "_currval")}()"
+    case Sequence.Nextval(seq) => b += s"${quote(seq.name + "_nextval")}()"
+    case Sequence.Currval(seq) => b += s"${quote(seq.name + "_currval")}()"
     case _ => super.innerExpr(c, b)
   }
   
@@ -97,13 +96,13 @@ extends BasicQueryBuilder(_query, _nc, parent, profile) {
   }
 }
 
-class MySQLDDLBuilder(table: AbstractBasicTable[_], profile: MySQLDriver) extends BasicDDLBuilder(table, profile) {
-  override protected def dropForeignKey(fk: ForeignKey[_ <: AbstractTable[_], _]) = {
+class MySQLDDLBuilder(table: Table[_], profile: MySQLDriver) extends DDLBuilder(table, profile) {
+  override protected def dropForeignKey(fk: ForeignKey[_ <: Table[_], _]) = {
     "ALTER TABLE " + table.tableName + " DROP FOREIGN KEY " + fk.name
   }
 }
 
-class MySQLSequenceDDLBuilder[T](seq: Sequence[T], profile: MySQLDriver) extends BasicSequenceDDLBuilder(seq, profile) {
+class MySQLSequenceDDLBuilder[T](seq: Sequence[T], profile: MySQLDriver) extends SequenceDDLBuilder(seq, profile) {
   import profile.sqlUtils._
 
   override def buildDDL: DDL = {
@@ -127,19 +126,19 @@ class MySQLSequenceDDLBuilder[T](seq: Sequence[T], profile: MySQLDriver) extends
     //TODO Implement currval function
     new DDL {
       val createPhase1 = Iterable(
-        "create table " + quoteIdentifier(seq.name + "_seq") + " (id " + t + ")",
-        "insert into " + quoteIdentifier(seq.name + "_seq") + " values (" + beforeStart + ")",
-        "create function " + quoteIdentifier(seq.name + "_nextval") + "() returns " + sqlType + " begin update " +
-          quoteIdentifier(seq.name + "_seq") + " set id=last_insert_id(" + incExpr + "); return last_insert_id(); end")
+        "create table " + quote(seq.name + "_seq") + " (id " + t + ")",
+        "insert into " + quote(seq.name + "_seq") + " values (" + beforeStart + ")",
+        "create function " + quote(seq.name + "_nextval") + "() returns " + sqlType + " begin update " +
+          quote(seq.name + "_seq") + " set id=last_insert_id(" + incExpr + "); return last_insert_id(); end")
       val createPhase2 = Nil
       val dropPhase1 = Nil
       val dropPhase2 = Iterable(
-        "drop function " + quoteIdentifier(seq.name + "_nextval"),
-        "drop table " + quoteIdentifier(seq.name + "_seq"))
+        "drop function " + quote(seq.name + "_nextval"),
+        "drop table " + quote(seq.name + "_seq"))
     }
   }
 }
 
-class MySQLSQLUtils extends BasicSQLUtils {
-  override def quoteIdentifier(id: String) = '`' + id + '`'
+class MySQLSQLUtils extends SQLUtils {
+  override def quote(id: String) = '`' + id + '`'
 }

@@ -1,22 +1,21 @@
-package org.scalaquery.ql.basic
+package org.scalaquery.ql.core
 
 import scala.collection.mutable.HashMap
 import java.io.PrintWriter
 import org.scalaquery.SQueryException
 import org.scalaquery.ql._
-import org.scalaquery.ql.extended.ExtendedColumn
 import org.scalaquery.util.Node
 
-class BasicDDLBuilder(val table: AbstractBasicTable[_], val profile: BasicProfile) {
+class DDLBuilder(val table: Table[_], val profile: Profile) {
   import profile.sqlUtils._
 
-  protected class BasicColumnDDLBuilder(protected val column: NamedColumn[_]) 
-  	extends ExtendedColumn {
+  protected class ColumnDDLBuilder(protected val column: NamedColumn[_]) {
   	
     protected val tmDelegate = column.typeMapper(profile)
     protected var sqlType: String = null
     protected var notNull = !tmDelegate.nullable
     protected var primaryKey = false
+    protected var autoIncrement = false
     protected var defaultLiteral: String = null
     init()
 
@@ -25,18 +24,19 @@ class BasicDDLBuilder(val table: AbstractBasicTable[_], val profile: BasicProfil
       if(sqlType eq null) sqlType = mapTypeName(tmDelegate)
     }
 
-    override protected def handleColumnOption(o: ColumnOption[_,_]): Unit = o match {
-      case BasicColumnOption.DBType(s) => sqlType = s
-      case BasicColumnOption.NotNull => notNull = true
-      case BasicColumnOption.Nullable => notNull = false
-      case BasicColumnOption.PrimaryKey => primaryKey = true
-      case BasicColumnOption.Default(v) => defaultLiteral = 
+    protected def handleColumnOption(o: ColumnOption[_,_]): Unit = o match {
+      case ColumnOption.DBType(s) => sqlType = s
+      case ColumnOption.NotNull => notNull = true
+      case ColumnOption.Nullable => notNull = false
+      case ColumnOption.PrimaryKey => primaryKey = true
+      case ColumnOption.Default(v) => defaultLiteral = 
       	column.asInstanceOf[NamedColumn[Any]].typeMapper(profile).valueToSQLLiteral(v)
-      case _ => super.handleColumnOption(o)
+      case ColumnOption.AutoInc => autoIncrement = true
+      case _ =>
     }
 
     def appendColumn(sb: StringBuilder) {
-      sb append quoteIdentifier(column.name) append ' '
+      sb append quote(column.name) append ' '
       sb append sqlType
       appendOptions(sb)
     }
@@ -49,11 +49,11 @@ class BasicDDLBuilder(val table: AbstractBasicTable[_], val profile: BasicProfil
     }
   }
 
-  protected def createColumnDDLBuilder(c: NamedColumn[_]) = new BasicColumnDDLBuilder(c)
+  protected def createColumnDDLBuilder(c: NamedColumn[_]) = new ColumnDDLBuilder(c)
 
   def buildDDL: DDL = {
     val createTable = {
-      val b = new StringBuilder append "CREATE TABLE " append quoteIdentifier(table.tableName) append " ("
+      val b = new StringBuilder append "CREATE TABLE " append quote(table.tableName) append " ("
       var first = true
       for(n <- table.create_*) {
         if(first) first = false
@@ -72,52 +72,52 @@ class BasicDDLBuilder(val table: AbstractBasicTable[_], val profile: BasicProfil
       val createPhase1 = Iterable(createTable) ++ primaryKeys.map(createPrimaryKey) ++ createIndexes
       val createPhase2 = foreignKeys.map(createForeignKey)
       val dropPhase1 = foreignKeys.map(dropForeignKey)
-      val dropPhase2 = primaryKeys.map(dropPrimaryKey) ++ Iterable("DROP TABLE " + quoteIdentifier(table.tableName))
+      val dropPhase2 = primaryKeys.map(dropPrimaryKey) ++ Iterable("DROP TABLE " + quote(table.tableName))
     }
   }
 
   protected def createIndex(idx: Index) = {
     val b = new StringBuilder append "CREATE "
     if(idx.unique) b append "UNIQUE "
-    b append "INDEX " append quoteIdentifier(idx.name) append " ON " append quoteIdentifier(table.tableName) append "("
+    b append "INDEX " append quote(idx.name) append " ON " append quote(table.tableName) append "("
     addIndexColumnList(idx.on, b, idx.table.tableName)
     b append ")"
     b.toString
   }
 
-  protected def createForeignKey(fk: ForeignKey[_ <: AbstractTable[_], _]) = {
-    val sb = new StringBuilder append "ALTER TABLE " append quoteIdentifier(table.tableName) append " ADD "
+  protected def createForeignKey(fk: ForeignKey[_ <: Table[_], _]) = {
+    val sb = new StringBuilder append "ALTER TABLE " append quote(table.tableName) append " ADD "
     addForeignKey(fk, sb)
     sb.toString
   }
 
-  protected def addForeignKey(fk: ForeignKey[_ <: AbstractTable[_], _], sb: StringBuilder) {
-    sb append "CONSTRAINT " append quoteIdentifier(fk.name) append " FOREIGN KEY("
+  protected def addForeignKey(fk: ForeignKey[_ <: Table[_], _], sb: StringBuilder) {
+    sb append "CONSTRAINT " append quote(fk.name) append " FOREIGN KEY("
     addForeignKeyColumnList(fk.linearizedSourceColumns, sb, table.tableName)
-    sb append ") REFERENCES " append quoteIdentifier(fk.targetTable.tableName) append "("
+    sb append ") REFERENCES " append quote(fk.targetTable.tableName) append "("
     addForeignKeyColumnList(fk.linearizedTargetColumnsForOriginalTargetTable, sb, fk.targetTable.tableName)
     sb append ") ON UPDATE " append fk.onUpdate.action
     sb append " ON DELETE " append fk.onDelete.action
   }
 
   protected def createPrimaryKey(pk: PrimaryKey) = {
-    val sb = new StringBuilder append "ALTER TABLE " append quoteIdentifier(table.tableName) append " ADD "
+    val sb = new StringBuilder append "ALTER TABLE " append quote(table.tableName) append " ADD "
     addPrimaryKey(pk, sb)
     sb.toString
   }
 
   protected def addPrimaryKey(pk: PrimaryKey, sb: StringBuilder) {
-    sb append "CONSTRAINT " append quoteIdentifier(pk.name) append " PRIMARY KEY("
+    sb append "CONSTRAINT " append quote(pk.name) append " PRIMARY KEY("
     addPrimaryKeyColumnList(pk.columns, sb, table.tableName)
     sb append ")"
   }
 
-  protected def dropForeignKey(fk: ForeignKey[_ <: AbstractTable[_], _]) = {
-    "ALTER TABLE " + quoteIdentifier(table.tableName) + " DROP CONSTRAINT " + quoteIdentifier(fk.name)
+  protected def dropForeignKey(fk: ForeignKey[_ <: Table[_], _]) = {
+    "ALTER TABLE " + quote(table.tableName) + " DROP CONSTRAINT " + quote(fk.name)
   }
 
   protected def dropPrimaryKey(pk: PrimaryKey) = {
-    "ALTER TABLE " + quoteIdentifier(table.tableName) + " DROP CONSTRAINT " + quoteIdentifier(pk.name)
+    "ALTER TABLE " + quote(table.tableName) + " DROP CONSTRAINT " + quote(pk.name)
   }
 
   protected def addIndexColumnList(columns: IndexedSeq[Node], sb: StringBuilder, requiredTableName: String) =
@@ -135,8 +135,8 @@ class BasicDDLBuilder(val table: AbstractBasicTable[_], val profile: BasicProfil
       case n:NamedColumn[_] =>
         if(first) first = false
         else sb append ","
-        sb append quoteIdentifier(n.name)
-        if(requiredTableName != n.table.asInstanceOf[AbstractTable[_]].tableName)
+        sb append quote(n.name)
+        if(requiredTableName != n.table.asInstanceOf[Table[_]].tableName)
           throw new SQueryException("All columns in "+typeInfo+" must belong to table "+requiredTableName)
       case _ => throw new SQueryException("Cannot use column "+c+
         " in "+typeInfo+" (only named columns are allowed)")

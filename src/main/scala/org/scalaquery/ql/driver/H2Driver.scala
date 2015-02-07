@@ -1,19 +1,19 @@
-package org.scalaquery.ql.extended
+package org.scalaquery.ql.driver
 
 import org.scalaquery.ql._
-import org.scalaquery.ql.basic._
+import org.scalaquery.ql.core._
 import org.scalaquery.util._
 
-class H2Driver extends ExtendedProfile { self =>
+class H2Driver extends Profile { self =>
 
-  type ImplicitT = ExtendedImplicitConversions[H2Driver]
-  type TypeMapperDelegatesT = BasicTypeMapperDelegates
+  type ImplicitT = ImplicitConversions[H2Driver]
+  type TypeMapperDelegatesT = TypeMapperDelegates
 
-  val Implicit = new ExtendedImplicitConversions[H2Driver] {
+  val Implicit = new ImplicitConversions[H2Driver] {
     implicit val scalaQueryDriver = self
   }
 
-  val typeMapperDelegates = new BasicTypeMapperDelegates {}
+  val typeMapperDelegates = new TypeMapperDelegates {}
   override val sqlUtils = new H2SQLUtils
 
   override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new H2QueryBuilder(query, nc, None, this)
@@ -21,10 +21,9 @@ class H2Driver extends ExtendedProfile { self =>
 
 object H2Driver extends H2Driver
 
-class H2QueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[BasicQueryBuilder], profile: H2Driver)
-	extends BasicQueryBuilder(_query, _nc, parent, profile) {
+class H2QueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: H2Driver)
+	extends QueryBuilder(_query, _nc, parent, profile) {
 
-  import ExtendedQueryOps._
 
   override type Self = H2QueryBuilder
   override protected val mayLimit0 = false
@@ -50,7 +49,7 @@ class H2QueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[Bas
   }
 }
 
-class H2SQLUtils extends BasicSQLUtils {
+class H2SQLUtils extends SQLUtils {
   override def mapTypeName(tmd: TypeMapperDelegate[_]): String = tmd.sqlType match {
     case java.sql.Types.VARCHAR => "VARCHAR"
     case _ => super.mapTypeName(tmd)
