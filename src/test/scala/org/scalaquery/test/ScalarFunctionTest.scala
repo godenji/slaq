@@ -4,9 +4,9 @@ import org.junit.Test
 import org.junit.Assert._
 import org.junit.runner.JUnitCore
 import org.scalaquery.ql._
-import org.scalaquery.ql.basic.{BasicQueryBuilder, BasicTable => Table}
+import org.scalaquery.ql.core.QueryBuilder
 import org.scalaquery.ql.TypeMapper._
-import org.scalaquery.ql.extended.DerbyDriver
+import org.scalaquery.ql.driver.DerbyDriver
 import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._

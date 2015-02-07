@@ -1,9 +1,9 @@
 package org.scalaquery.example
 
-import org.scalaquery.ql.{<|, Query, ColumnBase, AbstractTable}
-import org.scalaquery.ql.basic.BasicDriver
-import org.scalaquery.ql.basic.BasicDriver.Implicit._
-import org.scalaquery.ql.basic.{BasicTable => Table}
+import org.scalaquery.ql.{<|, Query, ColumnBase, Table}
+import org.scalaquery.ql.core.Driver
+import org.scalaquery.ql.core.Driver.Implicit._
+import org.scalaquery.ql.Table
 import org.scalaquery.util.NamingContext
 
 object SQuery2Test {
@@ -25,7 +25,7 @@ object SQuery2Test {
     def dump(n: String, q: Query[ColumnBase[_], _]) {
       val nc = NamingContext()
       q.dump(n+": ", nc)
-      println(BasicDriver.buildSelectStatement(q, nc))
+      println(Driver.buildSelectStatement(q, nc))
       println()
     }
 
@@ -75,7 +75,7 @@ object SQuery2Test {
     dump("q6b", q6b)
     dump("q6c", q6c)
 
-    val usersBase = Users.mapOp(n => new AbstractTable.Alias(n))
+    val usersBase = Users.mapOp(n => Table.Alias(n))
 
     {
       val m1a = for {
@@ -88,7 +88,7 @@ object SQuery2Test {
     }
 
     {
-      def f[A](t:Table[A]) = t.mapOp(n => new AbstractTable.Alias(n))
+      def f[A](t:Table[A]) = t.mapOp(n => Table.Alias(n))
       val m2a = for { u <- Query(Users) } yield f(u)
       val m2b = Query(f(Users))
       dump("m2a", m2a)
@@ -107,14 +107,14 @@ object SQuery2Test {
 
     println()
 
-    println("Insert1: " + BasicDriver.buildInsertStatement(Users))
-    println("Insert2: " + BasicDriver.buildInsertStatement(Users.first ~ Users.last))
+    println("Insert1: " +Driver.buildInsertStatement(Users))
+    println("Insert2: " +Driver.buildInsertStatement(Users.first ~ Users.last))
 
     val d1 = Users.filter(_.id is 42)
     val d2 = for(u <- Users filter( _.id notIn Orders.map(_.userID) )) yield u
-    println("d0: " + BasicDriver.buildDeleteStatement(Users, NamingContext()))
-    println("d1: " + BasicDriver.buildDeleteStatement(d1, NamingContext()))
-    println("d2: " + BasicDriver.buildDeleteStatement(d2, NamingContext()))
+    println("d0: " +Driver.buildDeleteStatement(Users, NamingContext()))
+    println("d1: " +Driver.buildDeleteStatement(d1, NamingContext()))
+    println("d2: " +Driver.buildDeleteStatement(d2, NamingContext()))
 
     (Users.ddl ++ Orders.ddl).createStatements.foreach(println)
   }

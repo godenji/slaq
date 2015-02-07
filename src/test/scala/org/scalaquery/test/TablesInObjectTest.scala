@@ -4,8 +4,8 @@ import org.junit.{AfterClass, BeforeClass, Test}
 import org.junit.Assert._
 import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
-import org.scalaquery.ql.extended.H2Driver.Implicit._
-import org.scalaquery.ql.extended.{ExtendedTable => Table}
+import org.scalaquery.ql.driver.H2Driver.Implicit._
+import org.scalaquery.ql.Table
 import org.scalaquery.session._
 
 object TablesInObjectTest {

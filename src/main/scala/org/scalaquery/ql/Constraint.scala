@@ -7,7 +7,7 @@ import org.scalaquery.util.{Node, BinaryNode}
  */
 trait Constraint
 
-class ForeignKey[TT <: AbstractTable[_], P](
+class ForeignKey[TT <: Table[_], P](
 	val name: String, 
 	val sourceTable: Node,
   val targetTableUnpackable: Unpackable[TT, _], 
@@ -44,7 +44,7 @@ object ForeignKeyAction {
   case object SetDefault extends ForeignKeyAction("SET DEFAULT")
 }
 
-class ForeignKeyQuery[TT <: AbstractTable[_], U](
+class ForeignKeyQuery[TT <: Table[_], U](
 	val fks: List[ForeignKey[TT, _]], override val unpackable: Unpackable[TT, U]) 
 	extends QueryWrap[TT, U](unpackable, fks, Nil, Nil) with Constraint {
 	

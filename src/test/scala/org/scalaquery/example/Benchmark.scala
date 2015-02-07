@@ -1,9 +1,9 @@
 package org.scalaquery.example
 
 import org.scalaquery.ql.{<|, Query}
-import org.scalaquery.ql.basic.BasicDriver
-import org.scalaquery.ql.basic.BasicDriver.Implicit._
-import org.scalaquery.ql.basic.{BasicTable => Table}
+import org.scalaquery.ql.core.Driver
+import org.scalaquery.ql.core.Driver.Implicit._
+import org.scalaquery.ql.Table
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.util.NamingContext
 
@@ -51,11 +51,11 @@ object Benchmark {
         filter { o => o.orderID is (for { o2 <- Orders filter(o.userID is _.userID) } yield o2.orderID.max).asColumn }
     ) yield o.orderID
 
-    val s1 = BasicDriver.buildSelectStatement(q1, NamingContext())
-    val s2 = BasicDriver.buildSelectStatement(q2, NamingContext())
-    val s3 = BasicDriver.buildSelectStatement(q3, NamingContext())
-    val s4 = BasicDriver.buildSelectStatement(q4, NamingContext())
-    val s5 = BasicDriver.buildSelectStatement(q5, NamingContext())
+    val s1 = Driver.buildSelectStatement(q1, NamingContext())
+    val s2 = Driver.buildSelectStatement(q2, NamingContext())
+    val s3 = Driver.buildSelectStatement(q3, NamingContext())
+    val s4 = Driver.buildSelectStatement(q4, NamingContext())
+    val s5 = Driver.buildSelectStatement(q5, NamingContext())
 
     if(print) {
       println("q1: " + s1)

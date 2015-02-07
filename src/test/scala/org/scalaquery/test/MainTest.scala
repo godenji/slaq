@@ -4,7 +4,7 @@ import org.junit.Test
 import org.junit.Assert._
 import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
-import org.scalaquery.ql.extended.{ExtendedTable => Table}
+import org.scalaquery.ql.Table
 import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
@@ -110,7 +110,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
         Set(("Homer",2), ("Marge",4), ("Carl",6), ("Lenny",8), ("Santa's Little Helper",10)),
         q4.list.toSet)
 
-      def maxOfPer[T <: TableBase[_]]
+      def maxOfPer[T <: Table[_]]
         (c: T, m: (T => Column[Int]), p: (T => Column[Int])) =
         c filter { o => m(o) in (for { o2 <- c if p(o) is p(o2) } yield m(o2).max) }
 

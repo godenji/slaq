@@ -1,6 +1,6 @@
 package org.scalaquery.ql
 
-import org.scalaquery.ql.basic.BasicProfile
+import org.scalaquery.ql.core.Profile
 import org.scalaquery.util.UnaryNode
 
 class Sequence[T] private[Sequence] (val name: String,
@@ -20,7 +20,7 @@ class Sequence[T] private[Sequence] (val name: String,
 
   final def curr = Sequence.Currval(this)
 
-  def ddl(implicit profile: BasicProfile): DDL = profile.buildSequenceDDL(this)
+  def ddl(implicit profile:Profile): DDL = profile.buildSequenceDDL(this)
 }
 
 object Sequence {

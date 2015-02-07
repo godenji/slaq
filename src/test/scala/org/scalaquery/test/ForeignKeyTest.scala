@@ -6,7 +6,7 @@ import org.junit.Test
 import org.junit.Assert._
 import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
-import org.scalaquery.ql.extended.{ExtendedTable => Table, SQLiteDriver}
+import org.scalaquery.ql.driver.SQLiteDriver
 import org.scalaquery.meta.MTable
 import org.scalaquery.session._
 import org.scalaquery.test.util._

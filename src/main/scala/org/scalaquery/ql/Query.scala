@@ -118,7 +118,7 @@ sealed abstract class Query[+P,+U] extends Node {
 
   private def wrap[R](base: Node)(implicit reify: Reify[P, R]): Query[R, U] = {
     def f[PP](unpackable: Unpackable[PP, _ <: U]) = unpackable.endoMap(v => v match {
-      case t:AbstractTable[_] =>
+      case t:Table[_] =>
         t.mapOp(_ => Subquery(base, false)).asInstanceOf[PP]
       case o =>
         var pos = 0
@@ -138,9 +138,10 @@ sealed abstract class Query[+P,+U] extends Node {
 
   //def reify[R](implicit reify: Reify[P, R]) =
   //  new QueryWrap[R, U](unpackable.reifiedUnpackable, cond, condHaving, modifiers)
-
-  def asColumn(implicit ev: P <:< Column[_]): P = 
-  	unpackable.value.asInstanceOf[WithOp].mapOp(_ => this).asInstanceOf[P]
+  
+  def asColumn(implicit ev: P <:< Column[_]): P = {
+  	ev(unpackable.value).mapOp(_=> this).asInstanceOf[P]
+  }
 }
 
 object Query 

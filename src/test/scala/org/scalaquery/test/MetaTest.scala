@@ -4,8 +4,8 @@ import java.io.PrintWriter
 import org.junit.Test
 import org.junit.Assert._
 import org.scalaquery.ql.TypeMapper._
-import org.scalaquery.ql.basic.{BasicTable => Table}
-import org.scalaquery.ql.extended.{H2Driver, PostgresDriver}
+import org.scalaquery.ql.Table
+import org.scalaquery.ql.driver.{H2Driver, PostgresDriver}
 import org.scalaquery.meta._
 import org.scalaquery.simple.{StaticQuery => Q}
 import org.scalaquery.test.util._
@@ -100,7 +100,7 @@ class MetaTest(tdb: TestDB) extends DBTest(tdb) {
       assertTrue("Tables before deleting",
         Set("orders", "users") subsetOf MTable.getTables(None, None, None, None).list.map(_.name.name).toSet)
       for(t <- tdb.getLocalTables.sorted) {
-        val st = "drop table " + tdb.driver.sqlUtils.quoteIdentifier(t)
+        val st = "drop table " + tdb.driver.sqlUtils.quote(t)
         println("Executing statement: "+st)
         Q.u + st execute
       }

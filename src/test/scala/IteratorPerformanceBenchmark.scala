@@ -3,8 +3,8 @@ import org.scalaquery._
 import org.scalaquery.session._
 import org.scalaquery.util._
 import org.scalaquery.ql._
-import org.scalaquery.ql.extended.{ExtendedTable => Table}
-import org.scalaquery.ql.extended.H2Driver.Implicit._
+import org.scalaquery.ql.Table
+import org.scalaquery.ql.driver.H2Driver.Implicit._
 
 object IteratorPerformanceBenchmark {
   def main(args: Array[String]) {

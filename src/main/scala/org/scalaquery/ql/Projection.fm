@@ -1,6 +1,6 @@
 package org.scalaquery.ql
 
-import org.scalaquery.ql.basic.BasicProfile
+import org.scalaquery.ql.core.Profile
 import org.scalaquery.session.{PositionedResult, PositionedParameters}
 import org.scalaquery.util.{Node, UnaryNode, ProductNode}
 
@@ -8,13 +8,13 @@ sealed trait Projection[T <: Product] extends ColumnBase[T] with ProductNode wit
   type V = T
   val product = this
 
-  def setParameter(profile: BasicProfile, ps: PositionedParameters, value: Option[T]) {
+  def setParameter(profile:Profile, ps: PositionedParameters, value: Option[T]) {
     for(i <- 0 until productArity) {
       productElement(i).asInstanceOf[Column[Any]].setParameter(profile, ps, value.map(_.productElement(i)))
     }
   }
 
-  def updateResult(profile: BasicProfile, rs: PositionedResult, value: T) {
+  def updateResult(profile:Profile, rs: PositionedResult, value: T) {
     for(i <- 0 until productArity) {
       productElement(i).asInstanceOf[Column[Any]].updateResult(profile, rs, value.productElement(i))
     }
@@ -42,10 +42,10 @@ class MappedProjection[T, P <: Product](val child: Projection[P], f: (P => T), g
   override def nodeDelegate = if(op eq null) Node(child) else op.nodeDelegate
   def getAllColumnTypeMappers = child.getAllColumnTypeMappers
 
-  def setParameter(profile: BasicProfile, ps: PositionedParameters, value: Option[T]): Unit =
+  def setParameter(profile:Profile, ps: PositionedParameters, value: Option[T]): Unit =
     child.setParameter(profile, ps, value.flatMap(g))
-  def getResult(profile: BasicProfile, rs: PositionedResult) = f(child.getResult(profile, rs))
-  def updateResult(profile: BasicProfile, rs: PositionedResult, value: T) = child.updateResult(profile, rs, g(value).get)
+  def getResult(profile:Profile, rs: PositionedResult) = f(child.getResult(profile, rs))
+  def updateResult(profile:Profile, rs: PositionedResult, value: T) = child.updateResult(profile, rs, g(value).get)
   def getLinearizedNodes = child.getLinearizedNodes
 }
 
@@ -65,7 +65,7 @@ final class Projection${i}[<#list 1..i as j>T${j}<#if i != j>,</#if></#list>](
 </#list>)
 extends Tuple${i}(<#list 1..i as j>_${j}<#if i != j>,</#if></#list>) with Projection[(<#list 1..i as j>T${j}<#if i != j>,</#if></#list>)] {
   <#if i != 22>def ~[U](c: Column[U]) = new Projection${i+1}(<#list 1..i as j>_${j},</#list>c)</#if>
-  def getResult(profile: BasicProfile, rs: PositionedResult) = (
+  def getResult(profile:Profile, rs: PositionedResult) = (
 <#list 1..i as j>
     _${j}.getResult(profile, rs)<#if i != j>,</#if>
 </#list>  )

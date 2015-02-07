@@ -1,7 +1,7 @@
 package org.scalaquery.ql
 
 import org.scalaquery.SQueryException
-import org.scalaquery.ql.basic.BasicProfile
+import org.scalaquery.ql.core.Profile
 import org.scalaquery.session.{PositionedResult, PositionedParameters}
 import org.scalaquery.util.{Node, WithOp, SimpleTypeName, ValueLinearizer}
 
@@ -19,15 +19,15 @@ abstract class Column[T : TypeMapper] extends ColumnBase[T] {
   final val typeMapper = implicitly[TypeMapper[T]]
   def getLinearizedNodes = Vector(Node(this))
   def getAllColumnTypeMappers = Vector(typeMapper)
-  def getResult(profile: BasicProfile, rs: PositionedResult): T = {
+  def getResult(profile:Profile, rs: PositionedResult): T = {
     val tmd = typeMapper(profile)
     tmd.nextValueOrElse(tmd.zero, rs)
   }
-  def updateResult(profile: BasicProfile, rs: PositionedResult, value: T) = typeMapper(profile).updateValue(value, rs)
-  final def setParameter(profile: BasicProfile, ps: PositionedParameters, value: Option[T]): Unit = typeMapper(profile).setOption(value, ps)
+  def updateResult(profile:Profile, rs: PositionedResult, value: T) = typeMapper(profile).updateValue(value, rs)
+  final def setParameter(profile:Profile, ps: PositionedParameters, value: Option[T]): Unit = typeMapper(profile).setOption(value, ps)
 
   def getOr[U](n: => U)(implicit ev: Option[U] =:= T): Column[U] = new WrappedColumn[U](this)(typeMapper.getBaseTypeMapper) {
-    override def getResult(profile: BasicProfile, rs: PositionedResult): U = typeMapper(profile).nextValueOrElse(n, rs)
+    override def getResult(profile:Profile, rs: PositionedResult): U = typeMapper(profile).nextValueOrElse(n, rs)
   }
   def get[U](implicit ev: Option[U] =:= T): Column[U] = getOr[U] { throw new SQueryException("Read NULL value for column "+this) }
   final def ~[U](b: Column[U]) = new Projection2[T, U](this, b)

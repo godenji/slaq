@@ -5,7 +5,7 @@ import javax.sql.rowset.serial.SerialBlob
 import org.junit.Test
 import org.junit.Assert._
 import org.scalaquery.ql._
-import org.scalaquery.ql.basic.{BasicTable => Table}
+import org.scalaquery.ql.Table
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 import org.scalaquery.session.Session

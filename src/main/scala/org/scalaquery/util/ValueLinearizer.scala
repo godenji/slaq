@@ -1,6 +1,6 @@
 package org.scalaquery.util
 
-import org.scalaquery.ql.basic.BasicProfile
+import org.scalaquery.ql.core.Profile
 import org.scalaquery.session.{PositionedParameters, PositionedResult}
 
 /**
@@ -9,9 +9,9 @@ import org.scalaquery.session.{PositionedParameters, PositionedResult}
  */
 
 trait ValueLinearizer[T] {
-  def getResult(profile: BasicProfile, rs: PositionedResult): T
-  def updateResult(profile: BasicProfile, rs: PositionedResult, value: T): Unit
-  def setParameter(profile: BasicProfile, ps: PositionedParameters, value: Option[T]): Unit
+  def getResult(profile:Profile, rs: PositionedResult): T
+  def updateResult(profile:Profile, rs: PositionedResult, value: T): Unit
+  def setParameter(profile:Profile, ps: PositionedParameters, value: Option[T]): Unit
   def getLinearizedNodes: IndexedSeq[Node]
 }
 
@@ -20,15 +20,15 @@ class ProductLinearizer(sub: IndexedSeq[ValueLinearizer[_]]) extends ValueLinear
   def getLinearizedNodes: IndexedSeq[Node] =
     (0 until sub.length).flatMap(i => sub(i).asInstanceOf[ValueLinearizer[Any]].getLinearizedNodes)(collection.breakOut)
 
-  def setParameter(profile: BasicProfile, ps: PositionedParameters, value: Option[Product]) =
+  def setParameter(profile:Profile, ps: PositionedParameters, value: Option[Product]) =
     for(i <- 0 until sub.length)
       sub(i).asInstanceOf[ValueLinearizer[Any]].setParameter(profile, ps, value.map(_.productElement(i)))
 
-  def updateResult(profile: BasicProfile, rs: PositionedResult, value: Product) =
+  def updateResult(profile:Profile, rs: PositionedResult, value: Product) =
     for(i <- 0 until sub.length)
       sub(i).asInstanceOf[ValueLinearizer[Any]].updateResult(profile, rs, value.productElement(i))
 
-  def getResult(profile: BasicProfile, rs: PositionedResult): Product = {
+  def getResult(profile:Profile, rs: PositionedResult): Product = {
     var i = -1
     def f = { i += 1; sub(i).getResult(profile, rs) }
     sub.length match {

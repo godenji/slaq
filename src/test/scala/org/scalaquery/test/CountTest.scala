@@ -4,7 +4,7 @@ import org.junit.Test
 import org.junit.Assert._
 import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
-import org.scalaquery.ql.extended.{ExtendedTable => Table}
+import org.scalaquery.ql.Table
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 import org.scalaquery.session.Session
@@ -26,5 +26,12 @@ class CountTest(tdb: TestDB) extends DBTest(tdb) {
     q1.dump("q1: ")
     println("q1: "+q1.selectStatement)
     assertEquals(5, q1.first)
+    
+//    val q2 = for{
+//    	t1 <- TestTable
+//    	if t1.id is (TestTable.filter(_.id > 1).map(_.id).asColumn)
+//    } yield t1
+//    println("q2: "+q2.selectStatement)
+//    assert(false)
   }
 }

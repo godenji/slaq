@@ -5,7 +5,7 @@ import org.junit.Assert._
 import org.junit.runner.JUnitCore
 import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
-import org.scalaquery.ql.basic.{BasicTable => Table}
+import org.scalaquery.ql.Table
 import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
