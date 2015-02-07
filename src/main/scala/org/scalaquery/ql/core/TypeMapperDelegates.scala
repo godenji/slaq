@@ -45,7 +45,7 @@ object TypeMapperDelegates {
     def setOption(v: Option[Blob], p: PositionedParameters) = p.setBlobOption(v)
     def nextValue(r: PositionedResult) = r.nextBlob
     def updateValue(v: Blob, r: PositionedResult) = r.updateBlob(v)
-    override def valueToSQLLiteral(value: Blob) =
+    override def value2SQLLiteral(value: Blob) =
       throw new SQueryException(
       	"Blob does not have a literal representation"
       )
@@ -67,7 +67,7 @@ object TypeMapperDelegates {
     def setOption(v: Option[Array[Byte]], p: PositionedParameters) = p.setBytesOption(v)
     def nextValue(r: PositionedResult) = r.nextBytes
     def updateValue(v: Array[Byte], r: PositionedResult) = r.updateBytes(v)
-    override def valueToSQLLiteral(value: Array[Byte]) =
+    override def value2SQLLiteral(value: Array[Byte]) =
       throw new SQueryException(
       	"Array[Byte] does not have a literal representation"
       )
@@ -89,7 +89,7 @@ object TypeMapperDelegates {
     def setOption(v: Option[Date], p: PositionedParameters) = p.setDateOption(v)
     def nextValue(r: PositionedResult) = r.nextDate
     def updateValue(v: Date, r: PositionedResult) = r.updateDate(v)
-    override def valueToSQLLiteral(value: Date) = "{d '"+value.toString+"'}"
+    override def value2SQLLiteral(value: Date) = "{d '"+value.toString+"'}"
   }
 
   class DoubleTypeMapperDelegate extends TypeMapperDelegate[Double] {
@@ -144,7 +144,7 @@ object TypeMapperDelegates {
     def setOption(v: Option[String], p: PositionedParameters) = p.setStringOption(v)
     def nextValue(r: PositionedResult) = r.nextString
     def updateValue(v: String, r: PositionedResult) = r.updateString(v)
-    override def valueToSQLLiteral(value: String) = if(value eq null) "NULL" else {
+    override def value2SQLLiteral(value: String) = if(value eq null) "NULL" else {
       val sb = new StringBuilder
       sb append '\''
       for(c <- value) c match {
@@ -163,7 +163,7 @@ object TypeMapperDelegates {
     def setOption(v: Option[Time], p: PositionedParameters) = p.setTimeOption(v)
     def nextValue(r: PositionedResult) = r.nextTime
     def updateValue(v: Time, r: PositionedResult) = r.updateTime(v)
-    override def valueToSQLLiteral(value: Time) = "{t '"+value.toString+"'}"
+    override def value2SQLLiteral(value: Time) = "{t '"+value.toString+"'}"
   }
 
   class TimestampTypeMapperDelegate extends TypeMapperDelegate[Timestamp] {
@@ -173,7 +173,7 @@ object TypeMapperDelegates {
     def setOption(v: Option[Timestamp], p: PositionedParameters) = p.setTimestampOption(v)
     def nextValue(r: PositionedResult) = r.nextTimestamp
     def updateValue(v: Timestamp, r: PositionedResult) = r.updateTimestamp(v)
-    override def valueToSQLLiteral(value: Timestamp) = "{ts '"+value.toString+"'}"
+    override def value2SQLLiteral(value: Timestamp) = "{ts '"+value.toString+"'}"
   }
 
   class UnitTypeMapperDelegate extends TypeMapperDelegate[Unit] {
@@ -183,7 +183,7 @@ object TypeMapperDelegates {
     def setOption(v: Option[Unit], p: PositionedParameters) = p.setIntOption(v.map(_ => 1))
     def nextValue(r: PositionedResult) = { r.nextInt; () }
     def updateValue(v: Unit, r: PositionedResult) = r.updateInt(1)
-    override def valueToSQLLiteral(value: Unit) = "1"
+    override def value2SQLLiteral(value: Unit) = "1"
   }
 
   class UUIDTypeMapperDelegate extends TypeMapperDelegate[UUID] {
@@ -195,7 +195,7 @@ object TypeMapperDelegates {
       if(v == None) p.setNull(sqlType) else p.setBytes(toBytes(v.get))
     def nextValue(r: PositionedResult) = fromBytes(r.nextBytes())
     def updateValue(v: UUID, r: PositionedResult) = r.updateBytes(toBytes(v))
-    override def valueToSQLLiteral(value: UUID): String =
+    override def value2SQLLiteral(value: UUID): String =
       throw new SQueryException(
       	"UUID does not support a literal representation"
       )
@@ -243,6 +243,6 @@ object TypeMapperDelegates {
     def setOption(v: Option[Null], p: PositionedParameters) = p.setString(null)
     def nextValue(r: PositionedResult) = { r.nextString; null }
     def updateValue(v: Null, r: PositionedResult) = r.updateNull()
-    override def valueToSQLLiteral(value: Null) = "NULL"
+    override def value2SQLLiteral(value: Null) = "NULL"
   }
 }

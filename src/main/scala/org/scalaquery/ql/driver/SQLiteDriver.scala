@@ -55,19 +55,19 @@ object SQLiteTypeMapperDelegates {
    * INTEGER with constants 1 and 0 for TRUE and FALSE. */
   class BooleanTypeMapperDelegate extends TypeMapperDelegates.BooleanTypeMapperDelegate {
     override def sqlTypeName = "INTEGER"
-    override def valueToSQLLiteral(value: Boolean) = if(value) "1" else "0"
+    override def value2SQLLiteral(value: Boolean) = if(value) "1" else "0"
   }
   /* The SQLite JDBC driver does not support the JDBC escape syntax for
    * date/time/timestamp literals. SQLite expects these values as milliseconds
    * since epoch. */
   class DateTypeMapperDelegate extends TypeMapperDelegates.DateTypeMapperDelegate {
-    override def valueToSQLLiteral(value: Date) = value.getTime.toString
+    override def value2SQLLiteral(value: Date) = value.getTime.toString
   }
   class TimeTypeMapperDelegate extends TypeMapperDelegates.TimeTypeMapperDelegate {
-    override def valueToSQLLiteral(value: Time) = value.getTime.toString
+    override def value2SQLLiteral(value: Time) = value.getTime.toString
   }
   class TimestampTypeMapperDelegate extends TypeMapperDelegates.TimestampTypeMapperDelegate {
-    override def valueToSQLLiteral(value: Timestamp) = value.getTime.toString
+    override def value2SQLLiteral(value: Timestamp) = value.getTime.toString
   }
   class UUIDTypeMapperDelegate extends TypeMapperDelegates.UUIDTypeMapperDelegate {
     override def sqlType = java.sql.Types.BLOB

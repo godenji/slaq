@@ -35,7 +35,7 @@ sealed trait TypeMapper[T] extends (Profile => TypeMapperDelegate[T]) { self =>
 }
 
 object TypeMapper {
-  @inline implicit final def typeMapperToOptionTypeMapper[T](implicit t: TypeMapper[T]): OptionTypeMapper[T] = t.createOptionTypeMapper
+  @inline implicit final def typeMapper2OptionTypeMapper[T](implicit t: TypeMapper[T]): OptionTypeMapper[T] = t.createOptionTypeMapper
 
   implicit object BooleanTypeMapper extends BaseTypeMapper[Boolean] {
     def apply(profile:Profile) = profile.typeMapperDelegates.booleanTypeMapperDelegate
@@ -161,7 +161,7 @@ trait TypeMapperDelegate[T] { self =>
     case Some(s) => updateValue(s, r)
     case None => r.updateNull()
   }
-  def valueToSQLLiteral(value: T): String = value.toString
+  def value2SQLLiteral(value: T): String = value.toString
   def nullable = false
 
   def createOptionTypeMapperDelegate: TypeMapperDelegate[Option[T]] = new TypeMapperDelegate[Option[T]] {
@@ -172,7 +172,7 @@ trait TypeMapperDelegate[T] { self =>
     def setOption(v: Option[Option[T]], p: PositionedParameters) = self.setOption(v.getOrElse(None), p)
     def nextValue(r: PositionedResult) = self.nextOption(r)
     def updateValue(v: Option[T], r: PositionedResult) = self.updateOption(v, r)
-    override def valueToSQLLiteral(value: Option[T]): String = value.map(self.valueToSQLLiteral).getOrElse("null")
+    override def value2SQLLiteral(value: Option[T]): String = value.map(self.value2SQLLiteral).getOrElse("null")
     override def nullable = true
   }
 }
@@ -189,7 +189,7 @@ abstract class MappedTypeMapper[T,U](implicit tm: TypeMapper[U]) extends TypeMap
 
   def sqlType: Option[Int] = None
   def sqlTypeName: Option[String] = None
-  def valueToSQLLiteral(value: T): Option[String] = None
+  def value2SQLLiteral(value: T): Option[String] = None
   def nullable: Option[Boolean] = None
 
   def apply(profile:Profile): TypeMapperDelegate[T] = new TypeMapperDelegate[T] {
@@ -201,7 +201,7 @@ abstract class MappedTypeMapper[T,U](implicit tm: TypeMapper[U]) extends TypeMap
     def setOption(v: Option[T], p: PositionedParameters) = tmd.setOption(v.map(map _), p)
     def nextValue(r: PositionedResult) = comap(tmd.nextValue(r))
     def updateValue(v: T, r: PositionedResult) = tmd.updateValue(map(v), r)
-    override def valueToSQLLiteral(value: T) = self.valueToSQLLiteral(value).getOrElse(tmd.valueToSQLLiteral(map(value)))
+    override def value2SQLLiteral(value: T) = self.value2SQLLiteral(value).getOrElse(tmd.value2SQLLiteral(map(value)))
     override def nullable = self.nullable.getOrElse(tmd.nullable)
   }
 }

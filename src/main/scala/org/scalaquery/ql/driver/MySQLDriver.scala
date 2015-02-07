@@ -26,7 +26,7 @@ object MySQLDriver extends MySQLDriver
 
 class MySQLTypeMapperDelegates extends TypeMapperDelegates {
   override val stringTypeMapperDelegate = new TypeMapperDelegates.StringTypeMapperDelegate {
-    override def valueToSQLLiteral(value: String) = if(value eq null) "NULL" else {
+    override def value2SQLLiteral(value: String) = if(value eq null) "NULL" else {
       val sb = new StringBuilder
       sb append '\''
       for(c <- value) c match {

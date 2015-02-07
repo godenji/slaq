@@ -57,20 +57,20 @@ object SQLServerTypeMapperDelegates {
   /* SQL Server does not have a proper BOOLEAN type. The suggested workaround is
    * BIT with constants 1 and 0 for TRUE and FALSE. */
   class BooleanTypeMapperDelegate extends TypeMapperDelegates.BooleanTypeMapperDelegate {
-    override def valueToSQLLiteral(value: Boolean) = if(value) "1" else "0"
+    override def value2SQLLiteral(value: Boolean) = if(value) "1" else "0"
   }
   /* Selecting a straight Date or Timestamp literal fails with a NPE (probably
    * because the type information gets lost along the way), so we cast all Date
    * and Timestamp values to the proper type. This work-around does not seem to
    * be required for Time values. */
   class DateTypeMapperDelegate extends TypeMapperDelegates.DateTypeMapperDelegate {
-    override def valueToSQLLiteral(value: Date) = "{fn convert({d '" + value + "'}, DATE)}"
+    override def value2SQLLiteral(value: Date) = "{fn convert({d '" + value + "'}, DATE)}"
   }
   class TimestampTypeMapperDelegate extends TypeMapperDelegates.TimestampTypeMapperDelegate {
     /* TIMESTAMP in SQL Server is a data type for sequence numbers. What we
      * want here is DATETIME. */
     override def sqlTypeName = "DATETIME"
-    override def valueToSQLLiteral(value: Timestamp) = "{fn convert({ts '" + value + "'}, DATETIME)}"
+    override def value2SQLLiteral(value: Timestamp) = "{fn convert({ts '" + value + "'}, DATETIME)}"
   }
   /* SQL Server's TINYINT is unsigned, so we use SMALLINT instead to store a signed byte value.
    * The JDBC driver also does not treat signed values correctly when reading bytes from result

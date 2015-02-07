@@ -30,7 +30,7 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
       case ColumnOption.Nullable => notNull = false
       case ColumnOption.PrimaryKey => primaryKey = true
       case ColumnOption.Default(v) => defaultLiteral = 
-      	column.asInstanceOf[NamedColumn[Any]].typeMapper(profile).valueToSQLLiteral(v)
+      	column.asInstanceOf[NamedColumn[Any]].typeMapper(profile).value2SQLLiteral(v)
       case ColumnOption.AutoInc => autoIncrement = true
       case _ =>
     }

@@ -56,7 +56,7 @@ object DerbyTypeMapperDelegates {
    * SMALLINT with constants 1 and 0 for TRUE and FALSE. */
   class BooleanTypeMapperDelegate extends TypeMapperDelegates.BooleanTypeMapperDelegate {
     override def sqlTypeName = "SMALLINT"
-    override def valueToSQLLiteral(value: Boolean) = if(value) "1" else "0"
+    override def value2SQLLiteral(value: Boolean) = if(value) "1" else "0"
   }
   /* Derby does not have a TINYINT type, so we use SMALLINT instead. */
   class ByteTypeMapperDelegate extends TypeMapperDelegates.ByteTypeMapperDelegate {

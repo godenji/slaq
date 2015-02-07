@@ -157,7 +157,7 @@ extends QueryBuilderAction
     	if(seq.isEmpty) expr(ConstColumn(false), b) else {
       	b += '('; expr(e, b); b += " IN ("
       	if(bind) b.sep(seq, ",")(x=> b +?= {(p,param)=> tm(profile).setValue(x, p)})
-      	else b += seq.map(tm(profile).valueToSQLLiteral).mkString(",")
+      	else b += seq.map(tm(profile).value2SQLLiteral).mkString(",")
       	b += "))"
     	}
     case ColumnOps.Is(l, ConstColumn(null)) => 
@@ -208,7 +208,7 @@ extends QueryBuilderAction
     	b += "("; subQueryBuilderFor(query).innerBuildSelect(b, false); b += ")"
     	
     case c @ ConstColumn(v)=>
-    	b += c.typeMapper(profile).valueToSQLLiteral(v)
+    	b += c.typeMapper(profile).value2SQLLiteral(v)
     	
     case c @ BindColumn(v)=>
     	b +?= {(p,param)=> c.typeMapper(profile).setValue(v, p)}

@@ -32,7 +32,7 @@ class PostgresTypeMapperDelegates extends TypeMapperDelegates {
     override def setOption(v: Option[UUID], p: PositionedParameters) = p.setObjectOption(v, sqlType)
     override def nextValue(r: PositionedResult) = r.nextObject().asInstanceOf[UUID]
     override def updateValue(v: UUID, r: PositionedResult) = r.updateObject(v)
-    override def valueToSQLLiteral(value: UUID) = "'" + value + "'"
+    override def value2SQLLiteral(value: UUID) = "'" + value + "'"
   }
 
   override val byteTypeMapperDelegate = new ByteTypeMapperDelegate
