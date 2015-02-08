@@ -23,10 +23,21 @@ class ForeignKey[TT <: Table[_], P](
   val left = Node(unpackp.reify(originalSourceColumns))
   val right = Node(unpackp.reify(originalTargetColumns(targetTable)))
   override def toString = "ForeignKey " + name
-  def targetColumnsForOriginalTargetTable = Node(unpackp.reify(originalTargetColumns(originalTargetTable)))
-  def linearizedSourceColumns = unpackp.linearizer(originalSourceColumns).getLinearizedNodes
-  def linearizedTargetColumns = unpackp.linearizer(originalTargetColumns(targetTable)).getLinearizedNodes
-  def linearizedTargetColumnsForOriginalTargetTable = unpackp.linearizer(originalTargetColumns(originalTargetTable)).getLinearizedNodes
+  
+  def targetColumnsForOriginalTargetTable = 
+  	Node(unpackp.reify(originalTargetColumns(originalTargetTable)))
+  
+  def linearizedSourceColumns = 
+  	unpackp.linearizer(originalSourceColumns).getLinearizedNodes
+  
+  def linearizedTargetColumns = 
+  	unpackp.linearizer(originalTargetColumns(targetTable)).getLinearizedNodes
+  
+  def linearizedTargetColumnsForOriginalTargetTable = 
+  	unpackp.linearizer(
+  		originalTargetColumns(originalTargetTable)
+  	).getLinearizedNodes
+  	
   def withTargetTableUnpackable(targetTableUnpackable: Unpackable[TT, _]) =
     new ForeignKey[TT, P](
     	name, sourceTable, targetTableUnpackable, originalTargetTable,
@@ -35,7 +46,6 @@ class ForeignKey[TT <: Table[_], P](
 }
 
 sealed abstract class ForeignKeyAction(val action: String)
-
 object ForeignKeyAction {
   case object Cascade extends ForeignKeyAction("CASCADE")
   case object Restrict extends ForeignKeyAction("RESTRICT")
@@ -57,8 +67,11 @@ class ForeignKeyQuery[TT <: Table[_], U](
    */
   def & (other: ForeignKeyQuery[TT, U]) = {
     val tt = fks.head.targetTableUnpackable
-    new ForeignKeyQuery(fks ++ other.fks.map { fk => fk.withTargetTableUnpackable(tt) }, unpackable)
+    new ForeignKeyQuery(fks ++ other.fks.map{
+    	fk => fk.withTargetTableUnpackable(tt)
+    }, unpackable)
   }
 }
 
-case class PrimaryKey(name: String, columns: IndexedSeq[Node]) extends Constraint
+case class PrimaryKey
+	(name: String, columns: IndexedSeq[Node]) extends Constraint
