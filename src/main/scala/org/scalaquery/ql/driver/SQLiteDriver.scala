@@ -35,7 +35,7 @@ class SQLiteDriver extends Profile { self =>
 
   val typeMapperDelegates = new SQLiteTypeMapperDelegates
 
-  override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new SQLiteQueryBuilder(query, nc, None, this)
+  override def createQueryBuilder(query: Query[_,_], nc: NamingContext) = new SQLiteQueryBuilder(query, nc, None, this)
   override def buildTableDDL(table: Table[_]): DDL = new SQLiteDDLBuilder(table, this).buildDDL
 }
 
@@ -118,7 +118,7 @@ class SQLiteDDLBuilder(table: Table[_], profile: SQLiteDriver)
   }
 }
 
-class SQLiteQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: SQLiteDriver)
+class SQLiteQueryBuilder(_query: Query[_,_], _nc: NamingContext, parent: Option[QueryBuilder], profile: SQLiteDriver)
 extends QueryBuilder(_query, _nc, parent, profile) {
 
   import profile.sqlUtils._
@@ -127,13 +127,8 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   override protected val supportsTuples = false
   override protected val concatOperator = Some("||")
 
-  protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
+  protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
     new SQLiteQueryBuilder(query, nc, Some(this), profile)
-
-  override protected def table(t: Node, name: String, b: SQLBuilder): Unit = t match {
-    case j: Join[_,_] => createJoin(j, b)
-    case _ => super.table(t, name, b)
-  }
 
   override protected def appendOrdering(o: Ordering, b: SQLBuilder) {
     val desc = o.isInstanceOf[Ordering.Desc]
@@ -160,7 +155,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   }
 
   override protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {
-    case StdFunction("exists", q: Query[_, _]) =>
+    case StdFunction("exists", q: Query[_,_]) =>
       // SQLite doesn't like double parens around the sub-expression
       b += "exists"; expr(q, b)
     case EscFunction("ucase", ch) => b += "upper("; expr(ch, b); b += ')'
