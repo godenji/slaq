@@ -3,19 +3,11 @@ package org.scalaquery.ql
 import scala.reflect.ClassTag
 import org.scalaquery.SQueryException
 import org.scalaquery.util.{Node, WithOp, ValueLinearizer}
+import scala.annotation.unchecked.{uncheckedVariance=> uV}
 
-class QueryWrap[+P,+U](
-	val unpackable: Unpackable[_ <: P, _ <: U], 
-	val cond: List[Column[_]],  
-	val condHaving: List[Column[_]],
-	val modifiers: List[QueryModifier] ) extends Query[P,U] {
-	
-	override lazy val reified = unpackable.reifiedNode
-  override lazy val linearizer = unpackable.linearizer
-}
 /**
- * A query monad which contains the AST for a query's projection and the accumulated
- * restrictions and other modifiers.
+ * A query monad which contains the AST for a query's projection and 
+ * the accumulated restrictions and other modifiers.
  */
 sealed abstract class Query[+P,+U] extends Node {
 	override def toString = "Query"
@@ -33,7 +25,7 @@ sealed abstract class Query[+P,+U] extends Node {
   	cond.map(n=> (Node(n), "where")) ::: 
   	modifiers.map(o=> (o, "modifier"))
 
-  def flatMap[P2,U2](f: P => Query[P2,U2]): Query[P2,U2] = {
+  def flatMap[P2,U2](f: P=> Query[P2,U2]): Query[P2,U2] = {
     val q = f(unpackable.value)
     new QueryWrap[P2,U2](
     	q.unpackable, 
@@ -43,22 +35,23 @@ sealed abstract class Query[+P,+U] extends Node {
     )
   }
 
-  def map[P2,U2](f: P => P2)(implicit unpack: Unpack[P2,U2]): Query[P2,U2] = { 
-  	flatMap{v=> Query(f(v))}
-  }
+  def map[P2,U2](f: P=> P2)(implicit unpack: Unpack[P2,U2]): 
+  	Query[P2,U2] = {
+  		flatMap{p=> Query(f(p))}
+  	}
 
   // append operation (e.g. orderBy chaining)
-  def >>[P2,U2](q: Query[P2,U2]): Query[P2,U2] = flatMap(_ => q)
+  //def >>[P2,U2](q: Query[P2,U2]): Query[P2,U2] = flatMap(_ => q)
 
-  def filter[T](f: P => T)(implicit qc: Queryable[T]): Query[P,U] =
+  def filter[T](f: P=> T)(implicit qc: Queryable[T]): Query[P,U] =
     new QueryWrap[P,U](
     	unpackable, qc(f(unpackable.value), cond), condHaving, modifiers
     )
 
-  def withFilter[T](f: P => T)(implicit qc: Queryable[T]): Query[P,U] = 
+  def withFilter[T](f: P=> T)(implicit qc: Queryable[T]): Query[P,U] = 
   	filter(f)(qc)
 
-  def having[T <: Column[_]](f: P => T)(implicit qc: Queryable[T]): Query[P,U] =
+  def having[T <: Column[_]](f: P=> T)(implicit qc: Queryable[T]): Query[P,U] =
     new QueryWrap[P,U](
     	unpackable, cond, qc(f(unpackable.value), condHaving), modifiers
     )
@@ -92,46 +85,53 @@ sealed abstract class Query[+P,+U] extends Node {
   def take(num: Int): Query[P,U] = take(ConstColumn(num))
   def drop(num: Int): Query[P,U] = drop(ConstColumn(num))
   
-  def take(node: Column[Int]): Query[P,U] = createOrReplaceSingularModifier[TakeDrop] {
-    case Some(TakeDrop(None,d,_)) => TakeDrop(Some(node),d)
-    case _ => TakeDrop(Some(node),None)
-  }
-  def drop(node: Column[Int]): Query[P,U] = createOrReplaceSingularModifier[TakeDrop] {
-    case Some(TakeDrop(t,None,_)) => TakeDrop(t, Some(node), compareNode = Some(node))
-    case _ => TakeDrop(None,Some(node))
-  }
+  def take(node: Column[Int]): Query[P,U] = 
+  	createOrReplaceSingularModifier[TakeDrop] {
+	    case Some(TakeDrop(None,d,_)) => TakeDrop(Some(node),d)
+	    case _ => TakeDrop(Some(node),None)
+	  }
+  def drop(node: Column[Int]): Query[P,U] = 
+  	createOrReplaceSingularModifier[TakeDrop] {
+	    case Some(TakeDrop(t,None,_)) => 
+	    	TakeDrop(t, Some(node), compareNode = Some(node))
+	    case _ => 
+	    	TakeDrop(None,Some(node))
+	  }
   
-  def join[P2,U2](q: Query[P2,U2], joinType: Join.JoinType = Join.Inner) = {
+  def join[P2,U2](q: Query[P2,U2], joinType: JoinType = JoinType.Inner) = {
   	new JoinBase[P,P2](unpackable.value, q.unpackable.value, joinType)
   }
-  def leftJoin[P2,U2](q: Query[P2,U2]) = join(q, Join.Left)
-  def rightJoin[P2,U2](q: Query[P2,U2]) = join(q, Join.Right)
-  def outerJoin[P2,U2](q: Query[P2,U2]) = join(q, Join.Outer)
+  def leftJoin[P2,U2](q: Query[P2,U2]) = join(q, JoinType.Left)
+  def rightJoin[P2,U2](q: Query[P2,U2]) = join(q, JoinType.Right)
+  def outerJoin[P2,U2](q: Query[P2,U2]) = join(q, JoinType.Outer)
 
-  def union[O >: P, T >: U, R](other: Query[O, T]*)(implicit reify: Reify[O, R]) = 
-  	wrap(Union(false, this :: other.toList))
+  def union[O >: P, T >: U, R](other: Query[O, T]*)
+  	(implicit reify: Reify[O, R]) = wrap(Union(false, this :: other.toList))
 
-  def unionAll[O >: P, T >: U, R](other: Query[O, T]*)(implicit reify: Reify[O, R]) = 
-  	wrap(Union(true, this :: other.toList))
+  def unionAll[O >: P, T >: U, R](other: Query[O, T]*)
+  	(implicit reify: Reify[O, R]) = wrap(Union(true, this :: other.toList))
 
   def sub[UU >: U, R](implicit reify: Reify[P, R]) = wrap(this)
 
   private def wrap[R](base: Node)(implicit reify: Reify[P, R]): Query[R, U] = {
-    def f[PP](unpackable: Unpackable[PP, _ <: U]) = unpackable.endoMap(v => v match {
-      case t:Table[_] =>
-        t.mapOp(_ => Subquery(base, false)).asInstanceOf[PP]
-      case o =>
-        var pos = 0
-        val p = Subquery(base, true)
-        unpackable.mapOp { v =>
-          pos += 1
-          SubqueryColumn(pos, p, v match {
-            case c: Column[_] => c.typeMapper
-            case SubqueryColumn(_, _, tm) => tm
-            case _ => throw new SQueryException("Expected Column or SubqueryColumn")
-          })
-        }
-    })
+    def f[PP](unpackable: Unpackable[PP, _ <: U]) = 
+    	unpackable.endoMap(v=> v match {
+	      case t:Table[_] =>
+	        t.mapOp(_ => Subquery(base, false)).asInstanceOf[PP]
+	      case o =>
+	        var pos = 0
+	        val p = Subquery(base, true)
+	        unpackable.mapOp{v=>
+	          pos += 1
+	          SubqueryColumn(pos, p, v match {
+	            case c: Column[_] => c.typeMapper
+	            case SubqueryColumn(_,_,tm) => tm
+	            case _ => throw new SQueryException(
+	            	"Expected Column or SubqueryColumn"
+	            )
+	          })
+	        }
+	    })
     val r: Unpackable[R, _ <: U] = unpackable.reifiedUnpackable(reify)
     Query[R, U](f(r))
   }
@@ -145,7 +145,7 @@ sealed abstract class Query[+P,+U] extends Node {
 }
 
 object Query 
-	extends QueryWrap[Unit, Unit](
+	extends QueryWrap[Unit,Unit](
 		Unpackable((), Unpack.unpackPrimitive[Unit]
 	), Nil, Nil, Nil) {
 	
@@ -154,6 +154,30 @@ object Query
   	
   def apply[P,U](unpackable: Unpackable[_ <: P, _ <: U]): Query[P,U] = 
   	new QueryWrap[P,U](unpackable, Nil, Nil, Nil)
+}
+
+class QueryWrap[+P,+U](
+	val unpackable: Unpackable[_ <: P, _ <: U], 
+	val cond: List[Column[_]],  
+	val condHaving: List[Column[_]],
+	val modifiers: List[QueryModifier]
+) extends Query[P,U] {
+	
+	override lazy val reified = unpackable.reifiedNode
+  override lazy val linearizer = unpackable.linearizer
+}
+
+final class JoinBase[+E1,E2](left: E1, right: E2, joinType: JoinType) {
+	private type uPack[+E1,E2] = Unpack[Join[E1 @uV, E2], (E1 @uV, E2)]
+	private def qWrap(node:Node)(implicit unpack: uPack[E1 @uV,E2]) = { 
+		new QueryWrap[Join[E1,E2], (E1,E2)](
+  		Unpackable(
+  			new Join(left, right, joinType, node), unpack 
+  		), Nil, Nil, Nil	
+  	)
+	}
+	def on[T <: Column[_]](pred: (E1, E2) => T)(implicit unpack: uPack[E1 @uV,E2]): 
+		Query[Join[E1,E2], (E1,E2)] = qWrap(Node(pred(left,right)))
 }
 
 case class Subquery(query: Node, rename: Boolean) extends Node {
@@ -170,7 +194,7 @@ case class SubqueryColumn(
   override def toString = "SubqueryColumn c"+pos
 }
 
-case class Union(all: Boolean, queries: List[Query[_, _]]) extends Node {
+case class Union(all: Boolean, queries: List[Query[_,_]]) extends Node {
   override def toString = if(all) "Union all" else "Union"
   def nodeChildren = queries
 }
