@@ -37,7 +37,7 @@ class SQLServerDriver extends Profile { self =>
   override val sqlUtils = new SQLServerSQLUtils
 
   override def buildTableDDL(table: Table[_]): DDL = new SQLServerDDLBuilder(table, this).buildDDL
-  override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new SQLServerQueryBuilder(query, nc, None, this)
+  override def createQueryBuilder(query: Query[_,_], nc: NamingContext) = new SQLServerQueryBuilder(query, nc, None, this)
 }
 
 object SQLServerDriver extends SQLServerDriver
@@ -84,7 +84,7 @@ object SQLServerTypeMapperDelegates {
   }
 }
 
-class SQLServerQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: SQLServerDriver)
+class SQLServerQueryBuilder(_query: Query[_,_], _nc: NamingContext, parent: Option[QueryBuilder], profile: SQLServerDriver)
 extends QueryBuilder(_query, _nc, parent, profile) {
 
   import profile.sqlUtils._
@@ -99,7 +99,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     case _ => false
   }
 
-  protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
+  protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
     new SQLServerQueryBuilder(query, nc, Some(this), profile)
 
   override def buildSelect(b: SQLBuilder): Unit = {

@@ -31,7 +31,7 @@ class HsqldbDriver extends Profile { self =>
 
   val typeMapperDelegates = new HsqldbTypeMapperDelegates
 
-  override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new HsqldbQueryBuilder(query, nc, None, this)
+  override def createQueryBuilder(query: Query[_,_], nc: NamingContext) = new HsqldbQueryBuilder(query, nc, None, this)
   override def buildTableDDL(table: Table[_]): DDL = new HsqldbDDLBuilder(table, this).buildDDL
   override def buildSequenceDDL(seq: Sequence[_]): DDL = new HsqldbSequenceDDLBuilder(seq, this).buildDDL
 }
@@ -77,7 +77,7 @@ class HsqldbDDLBuilder(table: Table[_], profile: HsqldbDriver) extends DDLBuilde
   }
 }
 
-class HsqldbQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: HsqldbDriver)
+class HsqldbQueryBuilder(_query: Query[_,_], _nc: NamingContext, parent: Option[QueryBuilder], profile: HsqldbDriver)
 extends QueryBuilder(_query, _nc, parent, profile) {
 
   import profile.sqlUtils._
@@ -87,7 +87,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   override protected val scalarFrom = Some("(VALUES (0))")
   override protected val concatOperator = Some("||")
 
-  protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
+  protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
     new HsqldbQueryBuilder(query, nc, Some(this), profile)
 
   override protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {

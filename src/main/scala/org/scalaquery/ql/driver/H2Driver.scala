@@ -16,12 +16,12 @@ class H2Driver extends Profile { self =>
   val typeMapperDelegates = new TypeMapperDelegates {}
   override val sqlUtils = new H2SQLUtils
 
-  override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new H2QueryBuilder(query, nc, None, this)
+  override def createQueryBuilder(query: Query[_,_], nc: NamingContext) = new H2QueryBuilder(query, nc, None, this)
 }
 
 object H2Driver extends H2Driver
 
-class H2QueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: H2Driver)
+class H2QueryBuilder(_query: Query[_,_], _nc: NamingContext, parent: Option[QueryBuilder], profile: H2Driver)
 	extends QueryBuilder(_query, _nc, parent, profile) {
 
 
@@ -29,7 +29,7 @@ class H2QueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[Que
   override protected val mayLimit0 = false
   override protected val concatOperator = Some("||")
 
-  protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
+  protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
     new H2QueryBuilder(query, nc, Some(this), profile)
 
   override protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {

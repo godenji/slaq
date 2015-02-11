@@ -34,7 +34,7 @@ class DerbyDriver extends Profile { self =>
 
   val typeMapperDelegates = new DerbyTypeMapperDelegates
 
-  override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new DerbyQueryBuilder(query, nc, None, this)
+  override def createQueryBuilder(query: Query[_,_], nc: NamingContext) = new DerbyQueryBuilder(query, nc, None, this)
   override def buildTableDDL(table: Table[_]): DDL = new DerbyDDLBuilder(table, this).buildDDL
   override def buildSequenceDDL(seq: Sequence[_]): DDL = new DerbySequenceDDLBuilder(seq, this).buildDDL
 }
@@ -64,7 +64,7 @@ object DerbyTypeMapperDelegates {
   }
 }
 
-class DerbyQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: DerbyDriver)
+class DerbyQueryBuilder(_query: Query[_,_], _nc: NamingContext, parent: Option[QueryBuilder], profile: DerbyDriver)
 extends QueryBuilder(_query, _nc, parent, profile) {
 
   import profile.sqlUtils._
@@ -74,7 +74,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   override protected val scalarFrom = Some("sysibm.sysdummy1")
   override protected val supportsTuples = false
 
-  protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
+  protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
     new DerbyQueryBuilder(query, nc, Some(this), profile)
 
   override protected def expr(c: Node, b: SQLBuilder, rename: Boolean, topLevel: Boolean): Unit = {

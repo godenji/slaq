@@ -15,12 +15,12 @@ class OracleDriver extends Profile { self =>
 
   val typeMapperDelegates = new TypeMapperDelegates {}
 
-  override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new OracleQueryBuilder(query, nc, None, this)
+  override def createQueryBuilder(query: Query[_,_], nc: NamingContext) = new OracleQueryBuilder(query, nc, None, this)
 }
 
 object OracleDriver extends OracleDriver
 
-class OracleQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: OracleDriver)
+class OracleQueryBuilder(_query: Query[_,_], _nc: NamingContext, parent: Option[QueryBuilder], profile: OracleDriver)
 extends QueryBuilder(_query, _nc, parent, profile) {
 
 
@@ -28,7 +28,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   override protected val scalarFrom = Some("DUAL")
   override protected val concatOperator = Some("||")
 
-  protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
+  protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
     new OracleQueryBuilder(query, nc, Some(this), profile)
 
   override protected def innerBuildSelect(b: SQLBuilder, rename: Boolean) {

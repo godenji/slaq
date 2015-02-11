@@ -17,7 +17,7 @@ class PostgresDriver extends Profile { self =>
 
   val typeMapperDelegates = new PostgresTypeMapperDelegates
 
-  override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new PostgresQueryBuilder(query, nc, None, this)
+  override def createQueryBuilder(query: Query[_,_], nc: NamingContext) = new PostgresQueryBuilder(query, nc, None, this)
   override def buildTableDDL(table: Table[_]): DDL = new PostgresDDLBuilder(table, this).buildDDL
 }
 
@@ -43,14 +43,14 @@ class PostgresTypeMapperDelegates extends TypeMapperDelegates {
   }
 }
 
-class PostgresQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: PostgresDriver)
+class PostgresQueryBuilder(_query: Query[_,_], _nc: NamingContext, parent: Option[QueryBuilder], profile: PostgresDriver)
 extends QueryBuilder(_query, _nc, parent, profile) {
 
 
   override type Self = PostgresQueryBuilder
   override protected val concatOperator = Some("||")
 
-  protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
+  protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
     new PostgresQueryBuilder(query, nc, Some(this), profile)
 
   override protected def appendLimitClause(b: SQLBuilder) = query.typedModifiers[TakeDrop].lastOption.foreach {
