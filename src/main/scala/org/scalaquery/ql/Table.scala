@@ -28,6 +28,13 @@ abstract class Table[T](
   override def toString = "Table " + tableName
 
   def * : ColumnBase[T]
+	
+	def join[U <: Table[_]](other: U, joinType: JoinType = JoinType.Inner) = { 
+		new JoinBase[this.type, U](this, other, joinType)
+	}
+	def leftJoin[U <: Table[_]](other: U) = join(other, JoinType.Left)
+	def rightJoin[U <: Table[_]](other: U) = join(other, JoinType.Right)
+	def outerJoin[U <: Table[_]](other: U) = join(other, JoinType.Outer)
   
 	def createFinderBy[P](f: this.type => NamedColumn[P])
   	(implicit profile:Profile, tm: TypeMapper[P]): QueryTemplate[P,T] = {
@@ -91,7 +98,7 @@ abstract class Table[T](
     } yield q
 
   final def foreignKeys: Iterable[ForeignKey[_ <: Table[_], _]] =
-    tableConstraints collect { case q: ForeignKeyQuery[_, _] => q.fks } flatten
+    tableConstraints collect { case q: ForeignKeyQuery[_,_] => q.fks } flatten
 
   final def primaryKeys: Iterable[PrimaryKey] =
     tableConstraints collect { case k: PrimaryKey => k }
@@ -125,71 +132,44 @@ object Table {
   }
 }
 
-final class JoinBase[+E1,E2](left: E1, right: E2, joinType: Join.JoinType) {
-	private type uPack[+E1,E2] = Unpack[Join[(E1 @uV), E2], ((E1 @uV), E2)]
-	private def qWrap(node:Node)(implicit unpack: uPack[(E1 @uV),E2]) = { 
-		new QueryWrap[Join[E1,E2], (E1,E2)](
-  		Unpackable(
-  			new Join(left, right, joinType, node), unpack 
-  		), Nil, Nil, Nil	
-  	)
-	}
-	def on[T <: Column[_]](pred: (E1, E2) => T)(implicit unpack: uPack[(E1 @uV),E2]): 
-		Query[Join[E1,E2], (E1,E2)] = qWrap(Node(pred(left,right)))
-		
-	/*
-	 * left & right on helpers
-	 * with more than 1 join clause we need to throw away either the
-	 * left or right table alias. Why? Preceding clause won't be joined
-	 * to the current table; a new table alias tX will be generated instead,
-	 * which is not how sql joins work: 
-	 * 	from A a join B b on(a.id = b.aId) join C on(b.id = c.bId), etc.
-	 */
-	def left[T <: Column[_]](f: E1 => T)(implicit unpack: uPack[(E1 @uV),E2]): 
-		Query[Join[E1,E2], (E1,E2)] = qWrap( Node(f(left)) )
-		
-	def using[T <: ForeignKeyQuery[_,_]](f: E1 => T)(implicit unpack: uPack[(E1 @uV),E2]): 
-		Query[Join[E1,E2], (E1,E2)] = qWrap( Node(f(left)) )
-	
-	def right[T <: Column[_]](f: E2 => T)(implicit unpack: uPack[(E1 @uV),E2]): 
-		Query[Join[E1,E2], (E1,E2)] = qWrap( Node(f(right)) )
-}
-final class Join[+E1,E2](
-	lnode: E1, rnode: E2, val joinType: Join.JoinType, val on: Node
-) extends TableBase[Nothing] {
-	
-	def left = lnode.asInstanceOf[WithOp].mapOp(n => 
-		Join.JoinPart(Node(lnode), Node(this))
-	).asInstanceOf[(E1 @uV)]
-	
-  def right = rnode.asInstanceOf[WithOp].mapOp(n => 
-  	Join.JoinPart(Node(rnode), Node(this))
-  ).asInstanceOf[E2]
-	
-  def leftNode = Node(lnode)
-  def rightNode = Node(rnode)
+final class JoinBase[+T1 <: Table[_], +T2 <: TableBase[_]]
+	(left: T1, right: T2, joinType: JoinType) {
   
-  def nodeChildren = leftNode :: rightNode :: Nil
-  override def toString = "Join(" + Node(lnode) + "," + Node(rnode) + ")"
+  def on[T <: Column[_] : Queryable]
+  	(pred: (T1, T2) => T) = new Join(
+  		left, right, joinType, Node( pred(left, right) )
+  	)
 }
 
-object <| { // alternative Join extractor (nicer syntax for queries)
-	def unapply[T1 <: Table[_], T2 <: TableBase[_]]
-		(j: Join[T1, T2]) = Some((j.left, j.right))
+final class Join[+T1 <: Table[_], +T2 <: TableBase[_]](
+	lt: T1, rt: T2,
+	val joinType: JoinType, 
+	val on: Node
+) extends TableBase[Nothing] {
+
+  def left = lt.mapOp{n=>
+  	Join.Part(Node(n), Node(this))
+  }
+  def right = rt.mapOp{n=>
+  	Join.Part(Node(n), Node(this))
+  }
+  def leftNode = Node(lt)
+  def rightNode = Node(rt)
+  
+  def nodeChildren = leftNode :: rightNode :: Nil
+  override def toString = "Join(" + Node(lt) + "," + Node(rt) + ")"
 }
+
 object Join {
   def unapply[T1 <: Table[_], T2 <: TableBase[_]]
   	(j: Join[T1, T2]) = Some((j.left, j.right))
   
-  final case class JoinPart(left: Node, right: Node) extends BinaryNode {
+  final case class Part(left: Node, right: Node) extends BinaryNode {
     override def toString = "JoinPart"
     override def nodeNamedChildren = (left, "table") :: (right, "from") :: Nil
   }
-
-  abstract class JoinType(val sqlName: String)
-  case object Inner extends JoinType("INNER")
-  case object Left extends JoinType("LEFT OUTER")
-  case object Right extends JoinType("RIGHT OUTER")
-  case object Outer extends JoinType("FULL OUTER")
 }
-
+object <| { // Join extractor (nicer syntax for queries)
+	def unapply[T1 <: Table[_], T2 <: TableBase[_]]
+		(j: Join[T1, T2]) = Some((j.left, j.right))
+}

@@ -42,6 +42,12 @@ sealed abstract class Query[+P,+U] extends Node {
 
   // append operation (e.g. orderBy chaining)
   //def >>[P2,U2](q: Query[P2,U2]): Query[P2,U2] = flatMap(_ => q)
+  
+  // WiP chainable queries; usage: User >> UserRole >> Role
+  def >>[P2,U2](q: Query[P2,U2])(implicit unpack: Unpack[(P,P2),(U @uV,U2)]):
+		Query[(P,P2),(U,U2)] = flatMap{p=>
+			q.map((p,_))
+		}
 
   def filter[T](f: P=> T)(implicit qc: Queryable[T]): Query[P,U] =
     new QueryWrap[P,U](
@@ -97,13 +103,6 @@ sealed abstract class Query[+P,+U] extends Node {
 	    case _ => 
 	    	TakeDrop(None,Some(node))
 	  }
-  
-  def join[P2,U2](q: Query[P2,U2], joinType: JoinType = JoinType.Inner) = {
-  	new JoinBase[P,P2](unpackable.value, q.unpackable.value, joinType)
-  }
-  def leftJoin[P2,U2](q: Query[P2,U2]) = join(q, JoinType.Left)
-  def rightJoin[P2,U2](q: Query[P2,U2]) = join(q, JoinType.Right)
-  def outerJoin[P2,U2](q: Query[P2,U2]) = join(q, JoinType.Outer)
 
   def union[O >: P, T >: U, R](other: Query[O, T]*)
   	(implicit reify: Reify[O, R]) = wrap(Union(false, this :: other.toList))
@@ -165,19 +164,6 @@ class QueryWrap[+P,+U](
 	
 	override lazy val reified = unpackable.reifiedNode
   override lazy val linearizer = unpackable.linearizer
-}
-
-final class JoinBase[+E1,E2](left: E1, right: E2, joinType: JoinType) {
-	private type uPack[+E1,E2] = Unpack[Join[E1 @uV, E2], (E1 @uV, E2)]
-	private def qWrap(node:Node)(implicit unpack: uPack[E1 @uV,E2]) = { 
-		new QueryWrap[Join[E1,E2], (E1,E2)](
-  		Unpackable(
-  			new Join(left, right, joinType, node), unpack 
-  		), Nil, Nil, Nil	
-  	)
-	}
-	def on[T <: Column[_]](pred: (E1, E2) => T)(implicit unpack: uPack[E1 @uV,E2]): 
-		Query[Join[E1,E2], (E1,E2)] = qWrap(Node(pred(left,right)))
 }
 
 case class Subquery(query: Node, rename: Boolean) extends Node {
