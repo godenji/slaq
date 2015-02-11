@@ -36,6 +36,13 @@ object Unpack extends UnpackLowPriority {
     def linearizer(from: Packed) = from.left
     def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
   }
+  
+  @inline implicit final def unpackTable2[T1 <: Table[_], T2 <: Table[_],U1,U2]: Unpack[(T1, T2), (U1, U2)] = new Unpack[(T1, T2), (U1, U2)] {
+    def linearizer(from: Packed): ValueLinearizer[_] = from match {
+      case (l,r) => l.*
+    }
+    def mapOp(from: Packed, f: Node => Node) = from.asInstanceOf[WithOp].mapOp(f)
+  }
 
   def unpackTableBase[T <: TableBase[_]]: Unpack[T, Nothing] = new Unpack[T, Nothing] {
     def linearizer(from: Packed): ValueLinearizer[_] = from match {
