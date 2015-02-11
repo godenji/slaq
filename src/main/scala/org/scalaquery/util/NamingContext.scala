@@ -1,15 +1,19 @@
 package org.scalaquery.util
 
 import scala.collection.mutable.HashMap
+import org.scalaquery.ql._
 
-trait NamingContext { self =>
+trait NamingContext {self=>
   def nameFor(t: Node) = checkNameFor(t)._1
 
   def checkNameFor(t: Node): (String, Boolean)
 
-  def overrideName(node: Node, newName: String): NamingContext = new NamingContext {
-    def checkNameFor(t: Node) = if(t eq node) (newName, false) else self.checkNameFor(t)
-  }
+  def overrideName(node: Node, newName: String): NamingContext = 
+  	new NamingContext {
+    	def checkNameFor(t: Node) = 
+    		if(t eq node) (newName, false) else 
+    		self.checkNameFor(t)
+  	}
 }
 
 object NamingContext {
@@ -17,13 +21,37 @@ object NamingContext {
     private val tnames = new HashMap[RefId[Node], String]
     private var nextTid = 1
 
-    def checkNameFor(t: Node) = tnames.get(RefId(t)) match {
-      case Some(n) => (n, false)
+    private def checkNode(t: Node) = tnames.get(RefId(t)) match{
+      case Some(n) => (n,false)
       case None =>
         val n = "t" + nextTid
+        // println(s"NamingContext() >> no alias for $t creating $n")
         nextTid += 1
         tnames.put(RefId(t), n)
-        (n, true)
+        (n,true)
     }
+    private def matchJoin(n: Node) = n match{
+    	case t: Table[_]=> Some(checkNode(t))
+    	case _=> None
+    }
+    def checkNameFor(t: Node) = t match{
+  		/*
+  		 * TODO: join must have a Table on left or right side so
+  		 * .get is (somewhat) safe here, but safer approach exists
+  		 */
+  		case j:Join[_,_]=> (
+  			matchJoin(j.leftNode) orElse matchJoin(j.rightNode)
+  		).get
+  		/* 
+  		 * join part left Node = concrete Table
+  		 * join part right node = Join[lTable, rTable] 
+  		 */
+  		case Join.Part(left,_)=> checkNode(left)
+  		/*
+  		 * standard non-join table
+  		 */
+  		case _=> checkNode(t)
+    }
+    
   }
 }
