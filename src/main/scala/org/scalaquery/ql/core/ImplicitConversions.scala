@@ -5,7 +5,9 @@ import org.scalaquery.util.Node
 
 trait ImplicitConversions[DriverType <: Profile] {
   implicit val scalaQueryDriver: DriverType
-  
+  /*
+   * instances of type Table and Join can be converted to Query 
+   */
   @inline implicit final def table2Query[T <: TableBase[_], U](t: T) = {
   	Query[T, Nothing](t.mapOp{n=> 
   		Table.Alias(Node(n))
