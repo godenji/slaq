@@ -33,7 +33,7 @@ object Unpack extends UnpackLowPriority {
   }
 
   @inline implicit final def unpackJoin[T1 <: Table[_], T2 <: Table[_]]: Unpack[Join[T1, T2], (T1, T2)] = new Unpack[Join[T1, T2], (T1, T2)] {
-    def linearizer(from: Packed) = from.left
+    def linearizer(from: Packed): ValueLinearizer[_] = from.left
     def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
   }
   
@@ -55,14 +55,14 @@ object Unpack extends UnpackLowPriority {
 
 trait UnpackLowPriority extends UnpackLowPriority2 {
   implicit final def unpackColumnBase[T]: Unpack[ColumnBase[T], T] = new Unpack[ColumnBase[T], T] {
-    def linearizer(from: Packed) = from
+    def linearizer(from: Packed): ValueLinearizer[_] = from
     def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
   }
 
   implicit final def unpackPrimitive[T](implicit tm: TypeMapper[T]): Unpack[T, T] = new Unpack[T, T] {
     override def reify(from: Packed) = ConstColumn(from)
     override def reifiedUnpack = unpackColumnBase[T]
-    def linearizer(from: Packed) = ConstColumn(from)
+    def linearizer(from: Packed): ValueLinearizer[_] = ConstColumn(from)
     def mapOp(from: Packed, f: Node => Node) = from
   }
 }
