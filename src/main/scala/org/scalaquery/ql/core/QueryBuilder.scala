@@ -1,6 +1,8 @@
 package org.scalaquery.ql.core
 
-import scala.collection.mutable.{HashMap, HashSet}
+import scala.collection.mutable.{
+	LinkedHashMap, LinkedHashSet
+}
 import org.scalaquery.SQueryException
 import org.scalaquery.ql._
 import org.scalaquery.util._
@@ -51,9 +53,9 @@ extends QueryBuilderAction
   protected val profile = _profile
   protected val query: Query[_,_] = _query
   protected var nc: NamingContext = _nc
-  protected val localTables = new HashMap[String, Node]
-  protected val declaredTables = new HashSet[String]
-  protected val subQueryBuilders = new HashMap[RefId[Query[_,_]], Self]
+  protected val localTables = new LinkedHashMap[String, Node]
+  protected val declaredTables = new LinkedHashSet[String]
+  protected val subQueryBuilders = new LinkedHashMap[RefId[Query[_,_]], Self]
   protected var fromSlot: SQLBuilder = _
   protected var selectSlot: SQLBuilder = _
   protected var maxColumnPos = 0
@@ -68,47 +70,12 @@ extends QueryBuilderAction
   	(query: Query[_,_], nc: NamingContext): Self
 
   protected def localTableName(node: Node) = node match {
-    case Join.JoinPart(left,right) =>
+    case Join.Part(left,right) =>
       localTables(nc.nameFor(right)) = right
       nc.nameFor(left)
-    case x: Table.Alias=> // check for existing alias when node child is JoinPart
-    	val alias = nc.nameFor(node)
-    	
-//    	println(s"localTableName() >> ${x.child} with alias $alias of $x")
-//    	x.child match{
-//    		case Join.JoinPart(left,_) => 
-//    			left match{
-//    				case a: Table.Alias=>
-//    					//println(s"${a.child} of inner $a"); println(localTables)
-//    					val maybeAlias = localTables.find{
-//    						case(alias,tbl:Table.Alias)=> a.child == tbl.child
-//    						case _=> false
-//    					}.map(_._1)
-//    					maybeAlias.foreach{currAlias=>
-//    						println(s"${a.child} already has alias $currAlias, discarding new alias $alias\n")	
-//    					}
-//    				case _=>
-//    			}
-//    		case _=>
-//    	}
-    	
-    	// override alias when join table and previous alias already defined  
-    	val modAlias = x.child match{
-    		case Join.JoinPart(left,_) =>
-    			left match{
-    				case at: Table.Alias=>
-    					localTables.find{
-    						case(_,table:Table.Alias)=> at.child == table.child
-    						case _=> false
-    					}.map{case(firstAlias,_)=> firstAlias}.getOrElse(alias)
-    				case _ => alias
-    			}
-    		case _ => alias
-    	}
-    	localTables(modAlias) = node
-    	modAlias
-    case _ =>
+    case _=>
       val alias = nc.nameFor(node)
+      //println(s"localTableName() >> node ${node}, alias $alias")
       localTables(alias) = node
       alias
   }
@@ -204,8 +171,8 @@ extends QueryBuilderAction
     case s: SimpleBinaryOperator=>
     	b += '('; expr(s.left, b); b += ' ' += s.name += ' '; expr(s.right, b); b += ')'
     	
-    case query:Query[_,_]=>
-    	b += "("; subQueryBuilderFor(query).innerBuildSelect(b, false); b += ")"
+    case q:Query[_,_]=>
+    	b += "("; subQueryBuilderFor(q).innerBuildSelect(b, false); b += ")"
     	
     case c @ ConstColumn(v)=>
     	b += c.typeMapper(profile).value2SQLLiteral(v)
@@ -240,11 +207,10 @@ extends QueryBuilderAction
     	
     case sq @ Subquery(_,_)=>
     	b += quote(localTableName(sq)) += ".*"
-    	
+    
+    // implicit joins
     case a @ Table.Alias(t: WithOp)=> expr(t.mapOp(_ => a), b)
     case t: Table[_] => expr(Node(t.*), b)
-    case t: TableBase[_]=>
-    	b += quote(localTableName(t)) += ".*"
     	
     case fk: ForeignKey[_,_] =>
       if(supportsTuples) {
@@ -255,7 +221,7 @@ extends QueryBuilderAction
         b.sep(cols, " AND "){ case (l,r) => expr(l, b); b += "="; expr(r, b) }
         b += ")"
       }
-    case Join.JoinPart(left,right)=>
+    case Join.Part(left,right)=>
     	//left.dump("left-dump", nc); right.dump("right-dump", nc)
     	throw new SQueryException("""
 				Join queries require yield clause to reference a table's
@@ -296,22 +262,30 @@ extends QueryBuilderAction
     case _ => //println(s"table() >> could not match node $t")
   }
 
+  /*
+   * Join takes the following forms:
+   * 	1) Join[tleft,tRight] i.e. first join is between 2 tables
+   * 	2) Join[tLeft, Join[tleft,tRight]]
+   * 	3) Join[Join[tleft,tRight], tRight]
+   */
   protected def createJoin(j: Join[_,_], b: SQLBuilder, isFirst: Boolean = true) {
-    val(l,r) = (j.leftNode, j.rightNode)
-    val(lname, rname) = (nc.nameFor(l), nc.nameFor(r))
-    //println(s"left = ${j.left}; right = ${j.right}")
+    val(left,right) = (j.leftNode, j.rightNode)
+    //println(s"left = ${left}; right = ${right}")
     
-    // left join table precedes join clause when FROM table
-    if(isFirst) table(l, lname, b)
+    // FROM table precedes join clause
+    if(isFirst) table(left, nc.nameFor(left), b)
     b += s" ${j.joinType.sqlName} JOIN "
-    // else left table comes after join clause
-    if(!isFirst) table(l, lname, b)
     
-    r match {
-      case rj: Join[_,_] => createJoin(rj, b, isFirst = false)
-      case _=> table(r, rname, b)
-    }
+    // and JOIN tables come after join clause
+    if(!isFirst) matchNode(left,b)
+    matchNode(right,b)
+    
     b += " ON "
     expr(j.on, b)
   }
+  private def matchNode(n: Node, b: SQLBuilder) = n match{
+  	case t: Table[_]=> Some(table(n, nc.nameFor(n), b))
+  	case _=> None
+  }
+  
 }

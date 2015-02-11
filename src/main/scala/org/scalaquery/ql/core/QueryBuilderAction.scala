@@ -1,40 +1,12 @@
 package org.scalaquery.ql.core
 
-import scala.collection.mutable.{HashMap, HashSet}
+import scala.collection.mutable.{LinkedHashMap, LinkedHashSet}
 import org.scalaquery.SQueryException
 import org.scalaquery.ql._
 import org.scalaquery.util._
 
 trait QueryBuilderAction {self: QueryBuilder=>
 	import _profile.sqlUtils._
-	
-	object FromBuilder{
-		def insertAllFromClauses(): Unit = {
-	    if(fromSlot ne null) insertFromClauses()
-	    for(qb <- subQueryBuilders.valuesIterator) qb.insertAllFromClauses()
-	  }
-	
-	  protected def insertFromClauses() {
-	    var(isFirst,isJoin) = (true,false)
-	    for((name, t) <- new HashMap ++= localTables) {
-	      if(!parent.map(_.isDeclaredTable(name)).getOrElse(false)) {
-	        if(isFirst) { fromSlot += " FROM "; isFirst = false }
-	        else {
-	        	t match{
-	        		case j:Join[_,_] => // don't comma delimit join clauses
-	        			isJoin = true
-	        			createJoin(j, fromSlot, isFirst = false)
-	        			//println(s"insertFromClauses() >> Join, omitting comma; $name has tables ${j.left} ${j.right}")
-	        		case _ => fromSlot += ','
-	        	}
-	        }
-	        if(!isJoin) table(t, name, fromSlot)
-	        declaredTables += name
-	      }
-	    }
-	    if(fromSlot.isEmpty) scalarFrom.foreach(s => fromSlot += " FROM " += s)
-	  }
-	}
 	
 	object SelectBuilder{
 		def buildSelect: (SQLBuilder.Result, ValueLinearizer[_]) = {
@@ -63,6 +35,33 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	        case _=> inner
 	      }
 	    } else inner
+	  }
+	}
+	
+	object FromBuilder{
+		def insertAllFromClauses(): Unit = {
+	    if(fromSlot ne null) insertFromClauses()
+	    for(qb <- subQueryBuilders.valuesIterator) qb.insertAllFromClauses()
+	  }
+	
+	  protected def insertFromClauses() {
+	    var(isFirst,isJoin) = (true,false)
+	    for((name,t) <- new LinkedHashMap ++= localTables) {
+	      if(!parent.map(_.isDeclaredTable(name)).getOrElse(false)) {
+	        if(isFirst) { fromSlot += " FROM "; isFirst = false }
+	        else t match{
+        		case j:Join[_,_] => // don't comma delimit join clauses
+        			isJoin = true
+        			createJoin(j, fromSlot, isFirst = false)
+        		case _ => 
+        			fromSlot += ','
+        	}
+	        if(!isJoin) table(t, name, fromSlot)
+	        declaredTables += name
+	      }
+	    }
+	    if(fromSlot.isEmpty) 
+	    	scalarFrom.foreach(s=> fromSlot += " FROM " += s)
 	  }
 	}
 	
