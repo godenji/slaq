@@ -160,16 +160,14 @@ final class Join[+T1 <: Table[_], +T2 <: TableBase[_]](
   override def toString = "Join(" + Node(lt) + "," + Node(rt) + ")"
 }
 
-object Join {
-  def unapply[T1 <: Table[_], T2 <: TableBase[_]]
-  	(j: Join[T1, T2]) = Some((j.left, j.right))
-  
+sealed trait JoinExtractor{
+	def unapply[T1 <: Table[_], T2 <: TableBase[_]]
+		(j: Join[T1, T2]) = Some((j.left, j.right))
+}
+object Join extends JoinExtractor {
   final case class Part(left: Node, right: Node) extends BinaryNode {
     override def toString = "JoinPart"
     override def nodeNamedChildren = (left, "table") :: (right, "from") :: Nil
   }
 }
-object <| { // Join extractor (nicer syntax for queries)
-	def unapply[T1 <: Table[_], T2 <: TableBase[_]]
-		(j: Join[T1, T2]) = Some((j.left, j.right))
-}
+object <| extends JoinExtractor // alternate Join extractor
