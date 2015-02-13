@@ -7,6 +7,9 @@ import org.scalaquery.util.{Node, BinaryNode}
  */
 trait Constraint
 
+case class PrimaryKey
+	(name: String, columns: IndexedSeq[Node]) extends Constraint
+
 class ForeignKey[TT <: Table[_], P](
 	val name: String, 
 	val sourceTable: Node,
@@ -24,6 +27,15 @@ class ForeignKey[TT <: Table[_], P](
   val right = Node(unpackp.reify(originalTargetColumns(targetTable)))
   override def toString = "ForeignKey " + name
   
+  /**
+   * Needed for JoinBase fkey on clause shortcut (@see def $(..))<br /><br />
+   * 	NamingContext() relies on RefId to generate table aliases; since
+   * 	targetTable's hashcode<br />is not the same as originalTargetTable
+   * 	an extraneous table alias is generated in the ON clause<br />
+   * 	example FROM tableA t1 JOIN tableB t2 ON (t2.id = t7.id)<br /><br />
+   * 	using the original target table prevents the extraneous alias
+   * 	from being generated
+   */
   def targetColumnsForOriginalTargetTable = 
   	Node(unpackp.reify(originalTargetColumns(originalTargetTable)))
   
@@ -72,6 +84,3 @@ class ForeignKeyQuery[TT <: Table[_], U](
     }, unpackable)
   }
 }
-
-case class PrimaryKey
-	(name: String, columns: IndexedSeq[Node]) extends Constraint
