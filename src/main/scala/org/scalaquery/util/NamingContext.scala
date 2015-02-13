@@ -25,7 +25,7 @@ object NamingContext {
       case Some(n) => (n,false)
       case None =>
         val n = "t" + nextTid
-        // println(s"NamingContext() >> no alias for $t creating $n")
+        //println(s"NamingContext() >> no alias for $t creating $n")
         nextTid += 1
         tnames.put(RefId(t), n)
         (n,true)
@@ -48,7 +48,7 @@ object NamingContext {
   		 */
   		case Join.Part(left,_)=> checkNode(left)
   		/*
-  		 * standard non-join table
+  		 * non-join table or select clause column
   		 */
   		case _=> checkNode(t)
     }
