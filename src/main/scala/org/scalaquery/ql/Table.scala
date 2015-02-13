@@ -132,7 +132,7 @@ object Table {
   }
 }
 
-final class JoinBase[+T1 <: Table[_], +T2 <: TableBase[_]]
+final class JoinBase[+T1 <: Table[_], +T2 <: Table[_]]
 	(left: T1, right: T2, joinType: JoinType) {
   
   def on[T <: Column[_] : Queryable]
