@@ -20,8 +20,9 @@ abstract class Table[T](
   type ProfileType = Profile
   val O: ColumnOptions = ColumnOptions
   
-  def column[C : TypeMapper](n: String, options: ColumnOption[C, ProfileType]*) = 
-  	new NamedColumn[C](Node(this), n, options:_*)
+  def column[C : TypeMapper]
+		(n: String, options: ColumnOption[C, ProfileType]*) = 
+  		new NamedColumn[C](Node(this), n, options:_*)
   	
   final type TableType = T
   def nodeChildren = Nil
@@ -29,12 +30,13 @@ abstract class Table[T](
 
   def * : ColumnBase[T]
 	
-	def join[U <: Table[_]](other: U, joinType: JoinType = JoinType.Inner) = { 
-		new JoinBase[this.type, U](this, other, joinType)
+	final def join[P <: Table[_], U]
+		(other: P, joinType: JoinType = JoinType.Inner) = { 
+			new JoinBase[this.type, P, T, U](this, other, joinType)
 	}
-	def leftJoin[U <: Table[_]](other: U) = join(other, JoinType.Left)
-	def rightJoin[U <: Table[_]](other: U) = join(other, JoinType.Right)
-	def outerJoin[U <: Table[_]](other: U) = join(other, JoinType.Outer)
+	def leftJoin[P <: Table[_], U](other: P) = join(other, JoinType.Left)
+	def rightJoin[P <: Table[_], U](other: P) = join(other, JoinType.Right)
+	def outerJoin[P <: Table[_], U](other: P) = join(other, JoinType.Outer)
   
 	def createFinderBy[P](f: this.type => NamedColumn[P])
   	(implicit profile:Profile, tm: TypeMapper[P]): QueryTemplate[P,T] = {
@@ -71,18 +73,19 @@ abstract class Table[T](
     	onUpdate: ForeignKeyAction = ForeignKeyAction.NoAction,
       onDelete: ForeignKeyAction = ForeignKeyAction.NoAction
     )
-    (implicit unpack: Unpack[TT, U], unpackp: Unpack[P, PU]): ForeignKeyQuery[TT, U] = {
-  	
-    val mappedTTU = Unpackable(
-    	targetTable.mapOp(tt => Table.Alias(Node(tt))), unpack
-    )
-    new ForeignKeyQuery(
-    	List(new ForeignKey(
-	    	name, this, mappedTTU, targetTable, unpackp,
-	      sourceColumns, targetColumns, onUpdate, onDelete
-      )),
-      mappedTTU
-    )
+    (implicit unpack: Unpack[TT, U], unpackp: Unpack[P, PU]):
+    
+    ForeignKeyQuery[TT, U] = {
+	    val mappedTTU = Unpackable(
+	    	targetTable.mapOp(tt => Table.Alias(Node(tt))), unpack
+	    )
+	    new ForeignKeyQuery(
+	    	List(new ForeignKey(
+		    	name, this, mappedTTU, targetTable, unpackp,
+		      sourceColumns, targetColumns, onUpdate, onDelete
+	      )),
+	      mappedTTU
+	    )
   }
 
   def primaryKey[T](name: String, sourceColumns: T)
@@ -98,13 +101,15 @@ abstract class Table[T](
     } yield q
 
   final def foreignKeys: Iterable[ForeignKey[_ <: Table[_], _]] =
-    tableConstraints collect { case q: ForeignKeyQuery[_,_] => q.fks } flatten
+    tableConstraints collect {
+    	case q: ForeignKeyQuery[_,_] => q.fks
+    } flatten
 
   final def primaryKeys: Iterable[PrimaryKey] =
     tableConstraints collect { case k: PrimaryKey => k }
 
-  def index[T]
-  	(name: String, on: T, unique: Boolean = false)(implicit unpack: Unpack[T, _]) = 
+  def index[T](name: String, on: T, unique: Boolean = false)
+  	(implicit unpack: Unpack[T, _]) = 
   		new Index(name, this, unpack.linearizer(on).getLinearizedNodes, unique)
 
   def indexes: Iterable[Index] = (for {
@@ -113,7 +118,10 @@ abstract class Table[T](
     } yield m.invoke(this).asInstanceOf[Index])
 
   def getLinearizedNodes = *.getLinearizedNodes
-  def getResult(profile:Profile, rs: PositionedResult) = *.getResult(profile, rs)
+  
+  def getResult(profile:Profile, rs: PositionedResult) = 
+  	*.getResult(profile, rs)
+  	
   def updateResult(profile:Profile, rs: PositionedResult, value: T) = 
   	*.updateResult(profile, rs, value)
   	
@@ -132,27 +140,36 @@ object Table {
   }
 }
 
-final class JoinBase[+T1 <: Table[_], +T2 <: Table[_]]
+class JoinBase[+T1 <: Table[_], +T2 <: Table[_], U1, U2]
 	(left: T1, right: T2, joinType: JoinType) {
-  
+			
   def on[T <: Column[_] : Queryable]
-  	(pred: (T1, T2) => T) = new Join(
+  	(pred: (T1, T2) => T): Join[T1,T2] = new Join(
   		left, right, joinType, Node( pred(left, right) )
   	)
+	/**
+	 * foreign key based ON clause<br /><br />
+	 * example: 'A join B $ (_.fkey)'
+	 * where fkey is B table's foreign key to A
+	 */
+	def $(fn: T2 => ForeignKeyQuery[T1 @uV,U1]): Join[T1,T2] = {
+		val fk = fn(right).fks.head
+		new Join(left, right, joinType, ColumnOps.Is(
+				fk.left, fk.targetColumnsForOriginalTargetTable
+			)
+		)
+	}
 }
 
-final class Join[+T1 <: Table[_], +T2 <: TableBase[_]](
-	lt: T1, rt: T2,
+final case class Join[+T1 <: Table[_], +T2 <: Table[_]](
+	lt: T1, rt: T2, 
 	val joinType: JoinType, 
 	val on: Node
 ) extends TableBase[Nothing] {
 
-  def left = lt.mapOp{n=>
-  	Join.Part(Node(n), Node(this))
-  }
-  def right = rt.mapOp{n=>
-  	Join.Part(Node(n), Node(this))
-  }
+	def left  = lt.mapOp{n=> JoinPart(Node(n), Node(this))}
+  def right = rt.mapOp{n=> JoinPart(Node(n), Node(this))}
+  
   def leftNode = Node(lt)
   def rightNode = Node(rt)
   
@@ -160,14 +177,7 @@ final class Join[+T1 <: Table[_], +T2 <: TableBase[_]](
   override def toString = "Join(" + Node(lt) + "," + Node(rt) + ")"
 }
 
-sealed trait JoinExtractor{
-	def unapply[T1 <: Table[_], T2 <: TableBase[_]]
-		(j: Join[T1, T2]) = Some((j.left, j.right))
+object ^ { // Join table extractor; usage: a^b <- A join B on(..)
+	def unapply[T1 <: Table[_], T2 <: Table[_]]
+		(j: Join[T1, T2]): Option[(T1,T2)] = Some(j.left,j.right)
 }
-object Join extends JoinExtractor {
-  final case class Part(left: Node, right: Node) extends BinaryNode {
-    override def toString = "JoinPart"
-    override def nodeNamedChildren = (left, "table") :: (right, "from") :: Nil
-  }
-}
-object <| extends JoinExtractor // alternate Join extractor
