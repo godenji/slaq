@@ -46,7 +46,7 @@ object NamingContext {
   		 * join part left Node = concrete Table
   		 * join part right node = Join[lTable, rTable] 
   		 */
-  		case Join.Part(left,_)=> checkNode(left)
+  		case JoinPart(left,_)=> checkNode(left)
   		/*
   		 * non-join table or select clause column
   		 */

@@ -70,7 +70,7 @@ extends QueryBuilderAction
   	(query: Query[_,_], nc: NamingContext): Self
 
   protected def localTableName(node: Node) = node match {
-    case Join.Part(left,right) =>
+    case JoinPart(left,right) =>
       localTables(nc.nameFor(right)) = right
       nc.nameFor(left)
     case _=>
@@ -221,7 +221,7 @@ extends QueryBuilderAction
         b.sep(cols, " AND "){ case (l,r) => expr(l, b); b += "="; expr(r, b) }
         b += ")"
       }
-    case Join.Part(left,right)=>
+    case JoinPart(left,right)=>
     	//left.dump("left-dump", nc); right.dump("right-dump", nc)
     	throw new SQueryException("""
 				Join queries require yield clause to reference a table's
