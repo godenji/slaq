@@ -32,7 +32,7 @@ class ForeignKey[TT <: Table[_], P](
    * 	NamingContext() relies on RefId to generate table aliases; since
    * 	targetTable's hashcode<br />is not the same as originalTargetTable
    * 	an extraneous table alias is generated in the ON clause<br />
-   * 	example FROM tableA t1 JOIN tableB t2 ON (t2.id = t7.id)<br /><br />
+   * 	example: FROM tableA t1 JOIN tableB t2 ON (t2.id = t7.id)<br /><br />
    * 	using the original target table prevents the extraneous alias
    * 	from being generated
    */
