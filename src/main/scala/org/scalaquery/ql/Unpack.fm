@@ -20,51 +20,76 @@ import org.scalaquery.util.{Node, ValueLinearizer, ProductLinearizer, WithOp}
 sealed trait Unpack[-P,U] {
   type Packed   = P @annotation.unchecked.uncheckedVariance
   type Unpacked = U
-  def reify(from: Packed): Any = from // must return the reified type
-  def reifiedUnpack: Unpack[_, Unpacked] = this // must return an Unpack for the reified type
+  
+  // must return the reified type
+  def reify(from: Packed): Any = from
+  
+  // must return an Unpack for the reified type
+  def reifiedUnpack: Unpack[_, Unpacked] = this
+  
   def linearizer(from: Packed): ValueLinearizer[_]
+  
   def mapOp(x: Packed, f: Node => Node): Any // really returns x.type
 }
 
 object Unpack extends UnpackLowPriority {
-  def unpackValueLinearizer[T <: ValueLinearizer[_] with WithOp, U] = new Unpack[T, U] {
-    def linearizer(from: Packed): ValueLinearizer[_] = from
-    def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
+  def unpackValueLinearizer[T <: ValueLinearizer[_] with WithOp, U] = { 
+  	new Unpack[T, U] {
+    	def linearizer(from: Packed): ValueLinearizer[_] = from
+    	def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
+  	}
   }
 
-  @inline implicit final def unpackJoin[T1 <: Table[_], T2 <: Table[_]]: Unpack[Join[T1, T2], (T1, T2)] = new Unpack[Join[T1, T2], (T1, T2)] {
-    def linearizer(from: Packed): ValueLinearizer[_] = from.left
-    def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
+  @inline implicit final def unpackJoin
+  	[T1 <: Table[_], T2 <: Table[_]]: Unpack[Join[T1, T2], (T1, T2)] = {
+  	
+  	new Unpack[Join[T1, T2], (T1, T2)] {
+    	def linearizer(from: Packed): ValueLinearizer[_] = from.left
+    	def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
+  	}
   }
   
-  @inline implicit final def unpackTable2[T1 <: Table[_], T2 <: Table[_],U1,U2]: Unpack[(T1, T2), (U1, U2)] = new Unpack[(T1, T2), (U1, U2)] {
-    def linearizer(from: Packed): ValueLinearizer[_] = from match {
-      case (l,r) => l.*
-    }
-    def mapOp(from: Packed, f: Node => Node) = from.asInstanceOf[WithOp].mapOp(f)
+  @inline implicit final def unpackTable2
+  	[T1 <: Table[_], T2 <: Table[_],U1,U2]: Unpack[(T1, T2), (U1, U2)] = {
+  	
+  	new Unpack[(T1, T2), (U1, U2)] {
+    	def linearizer(from: Packed): ValueLinearizer[_] = from match {
+      	case (l,r) => l.*
+    	}
+    	def mapOp(from: Packed, f: Node => Node) = 
+    		from.asInstanceOf[WithOp].mapOp(f)
+  	}
   }
 
-  def unpackTableBase[T <: TableBase[_]]: Unpack[T, Nothing] = new Unpack[T, Nothing] {
-    def linearizer(from: Packed): ValueLinearizer[_] = from match {
-      case a: Table[_] => a.*
-      case Join(l,r) => l.*
-    }
-    def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
-  }
+  def unpackTableBase[T <: TableBase[_]]: Unpack[T, Nothing] = {
+  	new Unpack[T, Nothing] {
+	    def linearizer(from: Packed): ValueLinearizer[_] = from match {
+	      case a: Table[_] => a.*
+	      case Join(left,_,_,_) => left.*
+	    }
+	    def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
+	  }
+	}
 }
 
 trait UnpackLowPriority extends UnpackLowPriority2 {
-  implicit final def unpackColumnBase[T]: Unpack[ColumnBase[T], T] = new Unpack[ColumnBase[T], T] {
-    def linearizer(from: Packed): ValueLinearizer[_] = from
-    def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
-  }
+  implicit final def unpackColumnBase[T]: Unpack[ColumnBase[T], T] = {
+	  new Unpack[ColumnBase[T], T] {
+	    def linearizer(from: Packed): ValueLinearizer[_] = from
+	    def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
+	  }
+	}
 
-  implicit final def unpackPrimitive[T](implicit tm: TypeMapper[T]): Unpack[T, T] = new Unpack[T, T] {
-    override def reify(from: Packed) = ConstColumn(from)
-    override def reifiedUnpack = unpackColumnBase[T]
-    def linearizer(from: Packed): ValueLinearizer[_] = ConstColumn(from)
-    def mapOp(from: Packed, f: Node => Node) = from
-  }
+  implicit final def unpackPrimitive[T]
+  	(implicit tm: TypeMapper[T]): Unpack[T, T] = { 
+  	
+  	new Unpack[T, T] {
+	    override def reify(from: Packed) = ConstColumn(from)
+	    override def reifiedUnpack = unpackColumnBase[T]
+	    def linearizer(from: Packed): ValueLinearizer[_] = ConstColumn(from)
+	    def mapOp(from: Packed, f: Node => Node) = from
+	  }
+	}
 }
 
 trait UnpackLowPriority2 {
