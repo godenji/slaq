@@ -41,13 +41,7 @@ sealed abstract class Query[+P,+U] extends Node {
   	}
 
   // append operation (e.g. orderBy chaining)
-  //def >>[P2,U2](q: Query[P2,U2]): Query[P2,U2] = flatMap(_ => q)
-  
-  // WiP chainable queries; usage: User >> UserRole >> Role
-  def >>[P2,U2](q: Query[P2,U2])(implicit unpack: Unpack[(P,P2),(U @uV,U2)]):
-		Query[(P,P2),(U,U2)] = flatMap{p=>
-			q.map((p,_))
-		}
+  def >>[P2,U2](q: Query[P2,U2]): Query[P2,U2] = flatMap{_=> q}
 
   def filter[T](f: P=> T)(implicit qc: Queryable[T]): Query[P,U] =
     new QueryWrap[P,U](
@@ -135,9 +129,6 @@ sealed abstract class Query[+P,+U] extends Node {
     Query[R, U](f(r))
   }
 
-  //def reify[R](implicit reify: Reify[P, R]) =
-  //  new QueryWrap[R, U](unpackable.reifiedUnpackable, cond, condHaving, modifiers)
-  
   def asColumn(implicit ev: P <:< Column[_]): P = {
   	ev(unpackable.value).mapOp(_=> this).asInstanceOf[P]
   }
