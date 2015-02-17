@@ -43,8 +43,8 @@ abstract class Table[T](
   	
     import profile.Implicit._
     Params[P](tm).flatMap{p=> 
-    	Query(this).filter{t=> 
-    		ColumnOps.Is( f(t.asInstanceOf[Table.this.type] ), p)
+    	Query(this).filter{case(t: Table.this.type)=> 
+    		ColumnOps.Is( f(t), p)
     	}
     }(profile)
   }
@@ -178,6 +178,10 @@ final case class Join[+T1 <: Table[_], +T2 <: Table[_]](
 }
 
 object ^ { // Join table extractor; usage: a^b <- A join B on(..)
+	def unapply[T1 <: Table[_], T2 <: Table[_]]
+		(j: Join[T1, T2]): Option[(T1,T2)] = Some(j.left,j.right)
+}
+object <| { // Join table extractor; usage: a^b <- A join B on(..)
 	def unapply[T1 <: Table[_], T2 <: Table[_]]
 		(j: Join[T1, T2]): Option[(T1,T2)] = Some(j.left,j.right)
 }
