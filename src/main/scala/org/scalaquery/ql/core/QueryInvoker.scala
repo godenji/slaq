@@ -18,7 +18,7 @@ class QueryInvoker[Q, R](q: Query[Q, R], profile: Profile)
   	profile.buildSelectStatement(q, NamingContext())
 
   @inline final def selectStatement = getStatement
-  def printable = // printable/readable statement 
+  def pretty = 
   	getStatement.replaceAll("`", "").replaceAll("\"", "").split(",").mkString(", ").
   	replaceAll("(FROM|INNER|LEFT|RIGHT|FULL|WHERE|GROUP BY|ORDER BY|LIMIT)", "\n$1")
 

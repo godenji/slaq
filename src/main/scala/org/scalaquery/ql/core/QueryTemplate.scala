@@ -13,7 +13,7 @@ class QueryTemplate[P, R](query: Query[_,R], profile: Profile)
   	profile.buildSelectStatement(query, NamingContext())
 
   @inline final def selectStatement = getStatement
-  def printable = // printable/readable statement 
+  def pretty = 
   	getStatement.replaceAll("`", "").replaceAll("\"", "").split(",").mkString(", ").
   	replaceAll("(FROM|INNER|LEFT|RIGHT|FULL|WHERE|GROUP BY|ORDER BY|LIMIT)", "\n$1")
 
