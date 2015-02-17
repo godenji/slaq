@@ -16,10 +16,10 @@ trait ImplicitConversions[DriverType <: Profile] {
 
   @inline implicit final 
   	def baseColumn2ColumnOps[B1 : BaseTypeMapper]
-  		(c: Column[B1]): ColumnOps[B1, B1] =
+  		(c: Column[B1]): ColumnOps[B1,B1] =
   			
   		c match {
-		    case o: ColumnOps[_,_] => o.asInstanceOf[ColumnOps[B1, B1]]
+		    case o: ColumnOps[_,_] => o//.asInstanceOf[ColumnOps[B1, B1]]
 		    case _ => new ColumnOps[B1, B1] {
 		    	protected[this] val leftOperand = Node(c)
 		   	}
@@ -30,7 +30,7 @@ trait ImplicitConversions[DriverType <: Profile] {
   		(c: Column[Option[B1]]): ColumnOps[B1, Option[B1]] =
   			
   		c match {
-		    case o: ColumnOps[_,_] => o.asInstanceOf[ColumnOps[B1, Option[B1]]]
+		    case o: ColumnOps[_,_] => o//.asInstanceOf[ColumnOps[B1, Option[B1]]]
 		    case _ => new ColumnOps[B1, Option[B1]] {
 		    	protected[this] val leftOperand = Node(c)
 		    }
