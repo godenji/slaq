@@ -15,18 +15,23 @@ trait ValueLinearizer[T] {
   def getLinearizedNodes: IndexedSeq[Node]
 }
 
-class ProductLinearizer(sub: IndexedSeq[ValueLinearizer[_]]) extends ValueLinearizer[Product] {
+class ProductLinearizer
+	(sub: IndexedSeq[ValueLinearizer[_]]) extends ValueLinearizer[Product] {
 
   def getLinearizedNodes: IndexedSeq[Node] =
-    (0 until sub.length).flatMap(i => sub(i).asInstanceOf[ValueLinearizer[Any]].getLinearizedNodes)(collection.breakOut)
+    (0 until sub.length).flatMap(i => sub(i).
+    	asInstanceOf[ValueLinearizer[Any]].getLinearizedNodes)(collection.breakOut)
 
   def setParameter(profile:Profile, ps: PositionedParameters, value: Option[Product]) =
     for(i <- 0 until sub.length)
-      sub(i).asInstanceOf[ValueLinearizer[Any]].setParameter(profile, ps, value.map(_.productElement(i)))
+      sub(i).asInstanceOf[ValueLinearizer[Any]].
+      setParameter(profile, ps, value.map(_.productElement(i)))
 
-  def updateResult(profile:Profile, rs: PositionedResult, value: Product) =
+  def updateResult(profile:Profile, rs: PositionedResult, value: Product) = {
     for(i <- 0 until sub.length)
-      sub(i).asInstanceOf[ValueLinearizer[Any]].updateResult(profile, rs, value.productElement(i))
+      sub(i).asInstanceOf[ValueLinearizer[Any]].
+      updateResult(profile, rs, value.productElement(i))
+  }
 
   def getResult(profile:Profile, rs: PositionedResult): Product = {
     var i = -1
