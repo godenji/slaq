@@ -5,14 +5,17 @@ import org.junit.Test
 import org.junit.Assert._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.Table
-import org.scalaquery.ql.driver.{H2Driver, PostgresDriver}
+import org.scalaquery.ql.driver.{H2Driver, PostgresDriver, SQLiteDriver}
 import org.scalaquery.meta._
 import org.scalaquery.simple.{StaticQuery => Q}
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 import org.scalaquery.session.Session
+import java.sql.SQLException
 
-object MetaTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
+object MetaTest extends DBTestObject(
+	H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer
+)
 
 class MetaTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
@@ -48,7 +51,7 @@ class MetaTest(tdb: TestDB) extends DBTest(tdb) {
 
       if(tdb.driver != PostgresDriver) {
         /* Not supported by PostgreSQL and H2 but calling it on H2 is safe
-         * because it throws an AbstractMethodError which is handled
+         * because it throws an SQLException which is handled
          * automatically by ScalaQuery and turned into an empty result set. */
         println("Functions from DatabaseMetaData:")
         for(f <- MFunction.getFunctions(MQName.local("%"))) {
@@ -67,21 +70,28 @@ class MetaTest(tdb: TestDB) extends DBTest(tdb) {
       }, 3)
 
       println("Tables from DatabaseMetaData:")
-      for(t <- MTable.getTables(None, None, None, None).list if Set("users", "orders") contains t.name.name) {
-        println("  "+t)
-        for(c <- t.getColumns) {
-          println("    "+c)
-          for(p <- c.getColumnPrivileges) println("      "+p)
-        }
-        for(v <- t.getVersionColumns) println("    "+v)
-        for(k <- t.getPrimaryKeys) println("    "+k)
-        for(k <- t.getImportedKeys) println("    Imported "+k)
-        for(k <- t.getExportedKeys) println("    Exported "+k)
-        for(i <- t.getIndexInfo()) println("    "+i)
-        for(p <- t.getTablePrivileges) println("    "+p)
-        for(c <- t.getBestRowIdentifier(MBestRowIdentifierColumn.Scope.Session))
-          println("    Row identifier for session: "+c)
-      }
+      for(t <- MTable.getTables(None, None, None, None).list 
+      	if Set("users", "orders") contains t.name.name) {
+	        println("  "+t)
+	        for(c <- t.getColumns) {
+	          println("    "+c)
+	          for(p <- c.getColumnPrivileges) println("      "+p)
+	        }
+	        for(v <- t.getVersionColumns) println("    "+v)
+	        for(k <- t.getPrimaryKeys) println("    "+k)
+	        for(k <- t.getImportedKeys) println("    Imported "+k)
+	        for(k <- t.getExportedKeys) println("    Exported "+k)
+	        for(p <- t.getTablePrivileges) println("    "+p)
+	        for(c <- t.getBestRowIdentifier(MBestRowIdentifierColumn.Scope.Session))
+	          println("    Row identifier for session: "+c)
+	        
+	        //TODO: remove; sqlite 3.8.7 blows up on getIndexInfo(), fixed in to-be-released 3.8.8
+	        if(tdb.driver == SQLiteDriver)
+		        try { 
+		        	for(i <- t.getIndexInfo()) println("    "+i)
+		        } catch {case _:SQLException => null}
+	        else for(i <- t.getIndexInfo()) println("    "+i)
+	      }
 
       println("Schemas from DatabaseMetaData:")
       for(t <- MSchema.getSchemas) println("  "+t)
