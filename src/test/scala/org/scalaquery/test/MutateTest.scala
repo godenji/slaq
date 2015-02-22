@@ -16,37 +16,37 @@ class MutateTest(tdb: TestDB) extends DBTest(tdb) {
 
   @Test def test() {
 
-    object Users extends Table[(Int,String,String)]("users") {
-      def id = column[Int]("id", O PrimaryKey)
+  	case class User(id: Int, first: String, last: String)
+    object Users extends Table[User]("users") {
+      def id = column[Int]("id", O PrimaryKey, O AutoInc)
       def first = column[String]("first")
       def last = column[String]("last")
-      def * = id ~ first ~ last
+      def * = id ~ first ~ last <> (User, User.unapply _)
     }
 
     db withSession { implicit ss:Session=>
-
       Users.ddl.create
       Users insertAll(
-        (1, "Marge", "Bouvier"),
-        (2, "Homer", "Simpson"),
-        (3, "Bart", "Simpson"),
-        (4, "Carl", "Carlson")
+        User(1, "Marge", "Bouvier"),
+        User(2, "Homer", "Simpson"),
+        User(3, "Bart", "Simpson"),
+        User(4, "Carl", "Carlson")
       )
-
+    
       println("Before mutating:")
       Query(Users).foreach(u => println("  "+u))
 
-      val q1 = for(u <- Users if u.last =~ "Simpson" | u.last =~ "Bouvier") yield u
+      val q1 = for(u <- Users if u.last =~ "Simpson".bind | u.last =~ "Bouvier".bind) yield u
       q1.mutate { m =>
         println("***** Row: "+m.row)
-        if(m.row._3 == "Bouvier") m.row = m.row.copy(_3 = "Simpson")
-        else if(m.row._2 == "Homer") m.delete()
-        else if(m.row._2 == "Bart") m.insert((42, "Lisa", "Simpson"))
+        if(m.row.last == "Bouvier") m.row = m.row.copy(last = "Simpson")
+        else if(m.row.first == "Homer") m.delete()
+        else if(m.row.first == "Bart") m.insert(User(42, "Lisa", "Simpson"))
       }
 
       println("After mutating:")
       Query(Users).foreach(u => println("  "+u))
-
+      
       assertEquals(
         Set("Marge Simpson", "Bart Simpson", "Lisa Simpson", "Carl Carlson"),
         (for(u <- Users) yield u.first ++ " " ++ u.last).list.toSet
