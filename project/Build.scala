@@ -16,7 +16,7 @@ object ScalaQueryBuild
 			scalacOptions ++= Seq(
 				"-language:implicitConversions", "-language:postfixOps", 
 				"-language:higherKinds", "-language:existentials",
-				"-feature", "-deprecation", "-optimise", "-Yinline-warnings"
+				"-feature", "-deprecation"/*, "-optimise"*/, "-Yinline-warnings"
 			),
 			description := "A type-safe database API for Scala",
 			homepage := Some(url("http://scalaquery.org/")),
@@ -24,14 +24,14 @@ object ScalaQueryBuild
 			licenses += ("Two-clause BSD-style license", url("http://github.com/szeiger/scala-query/blob/master/LICENSE.txt")),
 			testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v"),
 			libraryDependencies ++= Seq(
-			  "com.h2database" % "h2" % "1.3.148" % "test",
-			  "org.xerial" % "sqlite-jdbc" % "3.7.2" % "test",
-			  "org.apache.derby" % "derby" % "10.9.1.0" % "test",
+			  "com.h2database" % "h2" % "1.4.185" % "test",
+			  "org.xerial" % "sqlite-jdbc" % "3.8.7" % "test",
+			  "org.apache.derby" % "derby" % "10.11.1.1" % "test",
 			  "org.hsqldb" % "hsqldb" % "2.3.2" % "test",
 			  "postgresql" % "postgresql" % "9.1-901.jdbc4" % "test",
 			  "mysql" % "mysql-connector-java" % "5.1.6" % "test",
-			  "net.sourceforge.jtds" % "jtds" % "1.3.0" % "test",
-			  "com.novocode" % "junit-interface" % "0.10" % "test"
+			  "net.sourceforge.jtds" % "jtds" % "1.3.1" % "test",
+			  "com.novocode" % "junit-interface" % "0.11" % "test"
 			),
       repoKind <<= (version)(v => if(v.trim.endsWith("SNAPSHOT")) "snapshots" else "releases"),
       scalacOptions in doc <++= (version).map(v => Seq("-doc-title", "ScalaQuery", "-doc-version", v)),
