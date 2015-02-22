@@ -92,7 +92,8 @@ abstract class Table[T](
   	(implicit unpack: Unpack[T, _]): PrimaryKey = 
   		PrimaryKey(name, unpack.linearizer(sourceColumns).getLinearizedNodes)
 
-  def tableConstraints: Iterable[Constraint] = for {
+  def tableConstraints: Iterable[Constraint] = 
+  	for {
       m <- getClass().getMethods.view
       if m.getParameterTypes.length == 0 &&
         (m.getReturnType == classOf[ForeignKeyQuery[_ <: Table[_], _]]
@@ -122,7 +123,7 @@ abstract class Table[T](
   def getResult(profile:Profile, rs: PositionedResult) = 
   	*.getResult(profile, rs)
   	
-  def updateResult(profile:Profile, rs: PositionedResult, value: T) = 
+  def updateResult(profile:Profile, rs: PositionedResult, value: T) =
   	*.updateResult(profile, rs, value)
   	
   def setParameter(profile:Profile, ps: PositionedParameters, value: Option[T]) = 

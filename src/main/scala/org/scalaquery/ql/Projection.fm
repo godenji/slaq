@@ -15,9 +15,9 @@ sealed trait Projection[T <: Product] extends ColumnBase[T] with ProductNode wit
   }
 
   def updateResult(profile:Profile, rs: PositionedResult, value: T) {
-    for(i <- 0 until productArity) {
-      productElement(i).asInstanceOf[Column[Any]].updateResult(profile, rs, value.productElement(i))
-    }
+  	for(i <- 0 until productArity)
+  		productElement(i).asInstanceOf[Column[Any]].
+  			updateResult(profile, rs, value.productElement(i))
   }
 
   def getAllColumnTypeMappers = 0.until(productArity).flatMap[TypeMapper[_], Vector[TypeMapper[_]]](
