@@ -29,7 +29,7 @@ object ScalaQueryBuild
 			  "org.apache.derby" % "derby" % "10.11.1.1" % "test",
 			  "org.hsqldb" % "hsqldb" % "2.3.2" % "test",
 			  "postgresql" % "postgresql" % "9.1-901.jdbc4" % "test",
-			  "mysql" % "mysql-connector-java" % "5.1.6" % "test",
+			  "mysql" % "mysql-connector-java" % "5.1.34" % "test",
 			  "net.sourceforge.jtds" % "jtds" % "1.3.1" % "test",
 			  "com.novocode" % "junit-interface" % "0.11" % "test"
 			),
