@@ -211,6 +211,12 @@ extends QueryBuilderAction
     // implicit joins
     case a @ Table.Alias(t: WithOp)=> expr(t.mapOp(_ => a), b)
     case t: Table[_] => expr(Node(t.*), b)
+    
+    // Union
+    case _ @ Table.Alias(ta: Table.Alias)=>
+    	ta match{
+    		case a @ Table.Alias(t: WithOp)=> expr(t.mapOp(_ => a), b)
+    	}
     	
     case fk: ForeignKey[_,_] =>
       if(supportsTuples) {
@@ -249,18 +255,30 @@ extends QueryBuilderAction
       	") " += quote(name)
     case 
     	Subquery(Union(all, sqs), rename) => {
-	      b += "("
+	      b += s"($lp"
 	      var first = true
 	      for(sq <- sqs) {
-	        if(!first) b += (if(all) " UNION ALL " else " UNION ")
+	        if(!first) b += (if(all) s"$rp UNION ALL $lp" else s"$rp UNION $lp")
 	        subQueryBuilderFor(sq).innerBuildSelect(b, first && rename)
 	        first = false
 	      }
-	      b += ") " += quote(name)
+	      b += s")$rp " += quote(name)
 	    }
     case j: Join[_,_] => createJoin(j, b)
     case _ => //println(s"table() >> could not match node $t")
   }
+  /*
+   * hack: SQLite subqueries do not allow nested parens
+   * 	while MySQL (at least) requires Union queries in the form of:
+   *  select t1.* from (
+   *  	(select t2.id from A t2 ..) UNION (select t3.id from A t3 ..)
+   * 	) t1
+   * 	when orderBy and limit clauses are required in both selects
+   */
+  private val(lp,rp) = _profile match{
+		case driver.SQLiteDriver => ("","")
+		case _=> ("(",")")
+	}
 
   /*
    * Join takes the following forms:
