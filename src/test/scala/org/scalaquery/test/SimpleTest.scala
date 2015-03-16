@@ -21,9 +21,9 @@ class SimpleTest(tdb: TestDB) extends DBTest(tdb) {
       id map { q + "where id =" +? _ } getOrElse q
     }
 
-    def InsertUser(id: Int, name: String) = Q.u + "insert into USERS values (" +? id + "," +? name + ")"
+    def InsertUser(id: Int, name: String) = Q.u + "insert into users values (" +? id + "," +? name + ")"
 
-    val createTable = Q[Int] + "create table USERS(ID int not null primary key, NAME varchar(255))"
+    val createTable = Q[Int] + "create table users(ID int not null primary key, NAME varchar(255))"
     val populateUsers = List(InsertUser(1, "szeiger"), InsertUser(0, "admin"), InsertUser(2, "guest"), InsertUser(3, "foo"))
 
     val allIDs = Q[Int] + "select id from users"
@@ -91,7 +91,7 @@ class SimpleTest(tdb: TestDB) extends DBTest(tdb) {
         for(t <- tdb.getLocalTables) println("  "+t)
         assertEquals(List("users"), tdb.getLocalTables.map(_.toLowerCase))
       }
-      tdb.assertUnquotedTablesExist("USERS")
+      tdb.assertUnquotedTablesExist("users")
     }
   }
 }
