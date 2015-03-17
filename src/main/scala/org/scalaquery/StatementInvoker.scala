@@ -18,15 +18,29 @@ abstract class StatementInvoker[-P, +R] extends Invoker[P, R] { self =>
 
   /**
    * Invoke the statement and return the raw results.
+   * TODO Support multiple results
    */
   def results(param: P, maxRows: Int,
-        defaultType: ResultSetType = ResultSetType.ForwardOnly,
-        defaultConcurrency: ResultSetConcurrency = ResultSetConcurrency.ReadOnly,
-        defaultHoldability: ResultSetHoldability = ResultSetHoldability.Default)
-      (implicit session: Session): Either[Int, PositionedResultIterator[R]] = {
-    //TODO Support multiple results
-    val statement = getStatement
-    val st = session.prepareStatement(statement, defaultType, defaultConcurrency, defaultHoldability)
+    defaultType: ResultSetType = ResultSetType.ForwardOnly,
+    defaultConcurrency: ResultSetConcurrency = ResultSetConcurrency.ReadOnly,
+    defaultHoldability: ResultSetHoldability = ResultSetHoldability.Default
+  )
+  (implicit session: Session): Either[Int, PositionedResultIterator[R]] = {
+  	val currStatement = getStatement
+    val statement = (
+    	/*
+	  	 * hack in for update clause; workaround for server side statement caching
+	  	 * and cache hit on select statement with READ_ONLY concurrency.
+	  	 * beneficial side effect: "select ... for update" gets cached ;-) 
+	  	 */
+    	if(defaultConcurrency.intValue == ResultSetConcurrency.Updatable.intValue)
+    		s"$currStatement FOR UPDATE"
+    	else 
+    		currStatement
+    )
+    val st = session.prepareStatement(
+    	statement, defaultType, defaultConcurrency, defaultHoldability
+    )
     setParam(param, st)
     var doClose = true
     try {
