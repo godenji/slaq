@@ -61,36 +61,52 @@ trait QueryBuilderClause {self: QueryBuilder=>
 	    case TakeDrop(Some(ConstColumn(0)),_,_)
 	    	if(!mayLimit0) => // handled in innerBuildSelect
 	    		
-	    case TakeDrop(Some(t), Some(d), compareNode) => 
-	    	appendColumnValue(b+= " OFFSET ",d) 
-	    	appendColumnValue(b+= " ROW FETCH NEXT ", t, compareNode)
+	    case TakeDrop(Some(t), Some(d), compareNode) =>
+	    	val compFn = maybeLimitNode(t,d,compareNode,_:Boolean)
+	    	appendLimitValue(b+= " OFFSET ", d, compFn(true)) 
+	    	appendLimitValue(b+= " ROW FETCH NEXT ", t, compFn(false))
 	    	b+= " ROW ONLY"
 	    	
 	    case TakeDrop(Some(t), None, _) => 
-	    	appendColumnValue(b+= " FETCH NEXT ",t)
+	    	appendLimitValue(b+= " FETCH NEXT ",t)
 	    	b+= " ROW ONLY"
 	    	
 	    case TakeDrop(None, Some(d), _) => 
-	    	appendColumnValue(b+= " OFFSET ",d)
+	    	appendLimitValue(b+= " OFFSET ",d)
 	    	b+= " ROW"
 	    case _ =>
 	  }
   
   /*
-   * appends a concrete value of type ConstColumn or bound Param 
-   * to a QueryModifier clause
-   * @compareNode used to calculate `take x drop y` operation 
-   * where take must be of value max(0, x-y)
+   * returns a potential comparison node for take, drop calculation
    */
-  protected def appendColumnValue(
+  protected def maybeLimitNode(
+  	takeColumn: Column[Int],
+  	dropColumn: Column[Int],
+  	compareColumn: Option[Column[Int]], 
+  	isDrop: Boolean): Option[Column[Int]] = {
+  	
+  	if(isDrop){
+  		if(Some(dropColumn) == compareColumn) None else Some(takeColumn)
+  	}
+  	else
+  		if(Some(takeColumn) == compareColumn) Some(dropColumn) else None
+  }
+  
+  /*
+   * appends a concrete value of type ConstColumn or bound Param 
+   * to a QueryModifier take/drop clause
+   * @compareNode used to calculate limit/offset
+   */
+  protected def appendLimitValue(
   	b: SQLBuilder, node: Column[Int], 
   	compareNode: Option[Column[Int]] = None): Unit = {
   	
   	(node,compareNode) match{
-  		case(x @ ConstColumn(nodeVal), None) => b+= nodeVal
+  		case(x @ ConstColumn(v), None) => b+= v
   		
-  		case(t @ ConstColumn(takeVal), d @ Some(ConstColumn(dropVal)))=> 
-  			b+= math.max(0, takeVal - dropVal)
+  		case(aCol @ ConstColumn(aVal), bCol @ Some(ConstColumn(bVal)))=>
+  			b+= setColValue(aVal,bVal)
   			
   		case(x @ ParameterColumn(idx), None) => b +?= {(p,param)=>
   			val nodeVal = (
@@ -100,30 +116,32 @@ trait QueryBuilderClause {self: QueryBuilder=>
   			x.typeMapper(profile).setValue(nodeVal, p)
   		}
   		case(
-  			takeCol @ ParameterColumn(tIdx), 
-  			dropCol @ Some(ParameterColumn(dIdx)))=>
+  			targCol @ ParameterColumn(aIdx), // i.e. column to set value for
+  			compCol @ Some(ParameterColumn(bIdx)))=>
   				
   			b +?= {(p,param)=>
-	  			val takeVal = (
-	  				if(tIdx == -1) param
-	  				else param.asInstanceOf[Product].productElement(tIdx)
+	  			val aVal = (
+	  				if(aIdx == -1) param
+	  				else param.asInstanceOf[Product].productElement(aIdx)
 	  			).asInstanceOf[Int]
-	  			val dropVal = (
-	  				if(dIdx == -1) param 
-	  				else param.asInstanceOf[Product].productElement(dIdx)
+	  			val bVal = (
+	  				if(bIdx == -1) param 
+	  				else param.asInstanceOf[Product].productElement(bIdx)
 	  			).asInstanceOf[Int]
-	      	takeCol.typeMapper(profile).setValue(
-	      		math.max(0, takeVal - dropVal), p
-	      	)
+	      	targCol.typeMapper(profile).setValue(setColValue(aVal,bVal), p)
 	  		}
   		case _=> throw new SQueryException(s"""
-				values in a take + drop operation cannot be mixed; 
+				values in a take, drop operation cannot be mixed; 
 				they must be either ConstColumn[Int] or Param[Int].
 				Supplied node $node and Optional compareNode $compareNode
 				could not be converted to a literal value
 			""")
   	}
   	()
+  }
+  private def setColValue(aVal: Int, bVal: Int): Int = {
+  	if(aVal > bVal) aVal - bVal
+		else (bVal - aVal) + 1
   }
   
 }

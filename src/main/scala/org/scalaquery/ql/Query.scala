@@ -87,13 +87,14 @@ sealed abstract class Query[+P,+U] extends Node {
   
   def take(node: Column[Int]): Query[P,U] = 
   	createOrReplaceSingularModifier[TakeDrop] {
-	    case Some(TakeDrop(None,d,_)) => TakeDrop(Some(node),d)
+	    case Some(TakeDrop(None,d,_)) => 
+	    	TakeDrop(Some(node), d, compareNode = d)
 	    case _ => TakeDrop(Some(node),None)
 	  }
   def drop(node: Column[Int]): Query[P,U] = 
   	createOrReplaceSingularModifier[TakeDrop] {
-	    case Some(TakeDrop(t,None,_)) => 
-	    	TakeDrop(t, Some(node), compareNode = Some(node))
+	    case Some(TakeDrop(t,None,_)) =>
+	    	TakeDrop(t, Some(node), compareNode = t)
 	    case _ => 
 	    	TakeDrop(None,Some(node))
 	  }

@@ -38,7 +38,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
         expr(query.reified, b, rename, true)
         fromSlot = b.createSlot
         appendClauses(b)
-        appendColumnValue(b += ") WHERE ROWNUM <= ",t)
+        appendLimitValue(b += ") WHERE ROWNUM <= ",t)
       case TakeDrop(to, Some(d), _) :: _ =>
         b += "SELECT * FROM (SELECT t0.*, ROWNUM ROWNUM_O FROM (SELECT "
         expr(Node(query.reified), b, rename, true)
@@ -48,11 +48,11 @@ extends QueryBuilder(_query, _nc, parent, profile) {
         b += ") t0) WHERE ROWNUM_O"
         to match {
           case Some(t) =>
-          	appendColumnValue(b+= " BETWEEN (1+",d)
-          	appendColumnValue(b+= ") AND (",d)
-          	appendColumnValue(b+= "+",t)
+          	appendLimitValue(b+= " BETWEEN (1+",d)
+          	appendLimitValue(b+= ") AND (",d)
+          	appendLimitValue(b+= "+",t)
           	b+= ")"
-          case None => appendColumnValue(b += ">",d)
+          case None => appendLimitValue(b += ">",d)
         }
         b += " ORDER BY ROWNUM_I"
       case _ =>

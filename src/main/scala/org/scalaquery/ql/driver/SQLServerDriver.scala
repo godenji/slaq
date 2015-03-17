@@ -113,7 +113,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
 	/*
 	 * literal value(s) required for sql server fetch/offset since it is not possible
 	 * 	to perform multiple calculations with Param based values.
-	 * 	@seeQueryBuilder `appendColumnValue`   
+	 * 	@seeQueryBuilder `appendLimitValue`   
 	 */
   override protected def innerBuildSelect(b: SQLBuilder, rename: Boolean) {
     query.typedModifiers[TakeDrop] match {

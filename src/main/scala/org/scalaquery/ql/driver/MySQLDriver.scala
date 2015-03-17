@@ -72,11 +72,13 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   }
   
   override protected def appendLimitClause(b: SQLBuilder) = query.typedModifiers[TakeDrop].lastOption.foreach {
-  	case TakeDrop(Some(t), Some(d), compareNode) => 
-  		appendColumnValue(b+=" LIMIT ", d, compareNode); appendColumnValue(b+=",",t)
+  	case TakeDrop(Some(t), Some(d), compareNode) =>
+  		val compFn = maybeLimitNode(t,d,compareNode,_:Boolean)
+  		appendLimitValue(b+=" LIMIT ", d, compFn(true))  
+  		appendLimitValue(b+=",", t, compFn(false))
   		
-    case TakeDrop(Some(t), None, _) => appendColumnValue(b+=" LIMIT ",t)
-    case TakeDrop(None, Some(d), _) => appendColumnValue(b+=" LIMIT ",d); b+= ",18446744073709551615"
+    case TakeDrop(Some(t), None, _) => appendLimitValue(b+=" LIMIT ", t)
+    case TakeDrop(None, Some(d), _) => appendLimitValue(b+=" LIMIT ", d); b+= ",18446744073709551615"
     case _ =>
   }
 

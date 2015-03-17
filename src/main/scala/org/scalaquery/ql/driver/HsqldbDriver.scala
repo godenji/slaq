@@ -115,11 +115,13 @@ extends QueryBuilder(_query, _nc, parent, profile) {
 
   override protected def appendLimitClause(b: SQLBuilder) = query.typedModifiers[TakeDrop].lastOption.foreach {
     case TakeDrop(Some(ConstColumn(0)),_,_) => () // handled in innerBuildSelect
-    case TakeDrop(Some(t), Some(d), compareNode) => 
-    	appendColumnValue(b+=" LIMIT ", t, compareNode); appendColumnValue(b+=" OFFSET ", d)
+    case TakeDrop(Some(t), Some(d), compareNode) =>
+    	val compFn = maybeLimitNode(t,d,compareNode,_:Boolean)
+    	appendLimitValue(b+=" LIMIT ", t, compFn(false))
+    	appendLimitValue(b+=" OFFSET ", d, compFn(true))
     	
-    case TakeDrop(Some(t), None, _) => appendColumnValue(b+=" LIMIT ", t)
-    case TakeDrop(None, Some(d), _) => appendColumnValue(b+=" OFFSET ", d)
+    case TakeDrop(Some(t), None, _) => appendLimitValue(b+=" LIMIT ", t)
+    case TakeDrop(None, Some(d), _) => appendLimitValue(b+=" OFFSET ", d)
     case _ =>
   }
 }

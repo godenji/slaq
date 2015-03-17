@@ -37,8 +37,8 @@ final case class Grouping(val by: Node) extends QueryModifier {
 }
 
 /*
- * @compareNode used to calculate `take x drop y` operation where take must be of value max(0, x-y)
- * @see QueryBuilder `appendColumnValue`
+ * @compareNode used to calculate limit/offset value in take/drop operation
+ * @see QueryBuilderClause `appendLimitValue`
  */
 final case class TakeDrop(
 	take: Option[Column[Int]], drop: Option[Column[Int]], compareNode: Option[Column[Int]] = None

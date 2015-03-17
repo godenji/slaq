@@ -40,21 +40,20 @@ class H2QueryBuilder(_query: Query[_,_], _nc: NamingContext, parent: Option[Quer
 
   override protected def appendLimitClause(b: SQLBuilder) = query.typedModifiers[TakeDrop].lastOption.foreach {
     case TakeDrop(Some(ConstColumn(0)),_,_) => () // handled in innerBuildSelect
-    case TakeDrop(Some(t), Some(d), compareNode) => limitOffset(b,t,d,compareNode)
+    case TakeDrop(Some(t), Some(d), compareNode) => 
+    	val compFn = maybeLimitNode(t,d,compareNode,_:Boolean)
+    	appendLimitValue(b+=" LIMIT ", t, compFn(false))
+    	appendLimitValue(b+=" OFFSET ", d, compFn(true))
     /*
      * 'LIMIT 0' no longer works as of H2 1.4.185; need to limit/offset same dropN
      */
-    case TakeDrop(None, Some(d), compareNode) => 
-    	limitOffset(b,d,d,compareNode) //appendColumnValue(b+=s" LIMIT 0 OFFSET ",d)
+    case TakeDrop(None, Some(d), compareNode) =>
+    	val compFn = maybeLimitNode(ConstColumn(0),d,compareNode,_:Boolean)
+    	appendLimitValue(b+=" LIMIT ", d, compFn(false)) // pretend drop is a take
+    	appendLimitValue(b+=" OFFSET ", d, compFn(true))
     	
-    case TakeDrop(Some(t), None, _) => appendColumnValue(b+=" LIMIT ",t)
+    case TakeDrop(Some(t), None, _) => appendLimitValue(b+=" LIMIT ",t)
     case _ =>
-  }
-  private def limitOffset(
-  	b: SQLBuilder, take: Column[Int], drop: Column[Int], compareNode: Option[Column[Int]]
- 	) = {	
-  	appendColumnValue(b+=" LIMIT ", take, compareNode)
-  	appendColumnValue(b+=" OFFSET ", drop)
   }
 }
 
