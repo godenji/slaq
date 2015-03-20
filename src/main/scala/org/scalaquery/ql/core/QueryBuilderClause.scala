@@ -140,7 +140,8 @@ trait QueryBuilderClause {self: QueryBuilder=>
   	()
   }
   private def setColValue(aVal: Int, bVal: Int): Int = {
-  	if(aVal > bVal) aVal - bVal
+  	if(aVal == bVal) aVal
+  	else if(aVal > bVal) aVal - bVal
 		else (bVal - aVal) + 1
   }
   
