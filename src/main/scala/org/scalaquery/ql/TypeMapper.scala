@@ -1,10 +1,12 @@
 package org.scalaquery.ql
 
+import scala.annotation.unchecked.{uncheckedVariance=> uV}
 import java.util.UUID
 import java.sql.{Blob, Clob, Date, Time, Timestamp}
+import org.scalaquery.session.{PositionedParameters, PositionedResult}
 import org.scalaquery.SQueryException
 import org.scalaquery.ql.core.Profile
-import org.scalaquery.session.{PositionedParameters, PositionedResult}
+import org.scalaquery.macros._
 
 /**
  * A (usually implicit) TypeMapper object represents a Scala type that can be
@@ -26,17 +28,25 @@ import org.scalaquery.session.{PositionedParameters, PositionedResult}
  * }
  * </pre></code>
  */
-sealed trait TypeMapper[T] extends (Profile => TypeMapperDelegate[T]) { self =>
-  def createOptionTypeMapper: OptionTypeMapper[T] = new OptionTypeMapper[T](self) {
+sealed trait TypeMapper[-T] extends (Profile => TypeMapperDelegate[T @uV]) { self =>
+  def createOptionTypeMapper: OptionTypeMapper[T @uV] = new OptionTypeMapper[T @uV](self) {
     def apply(profile:Profile) = self(profile).createOptionTypeMapperDelegate
-    def getBaseTypeMapper[U](implicit ev: Option[U] =:= Option[T]): TypeMapper[U] = self.asInstanceOf[TypeMapper[U]]
+    def getBaseTypeMapper[U](implicit ev: Option[U] =:= Option[T @uV]): TypeMapper[U] = self.asInstanceOf[TypeMapper[U]]
   }
-  def getBaseTypeMapper[U](implicit ev: Option[U] =:= T): TypeMapper[U]
+  def getBaseTypeMapper[U](implicit ev: Option[U] =:= T @uV): TypeMapper[U]
 }
 
 object TypeMapper {
   @inline implicit final def typeMapper2OptionTypeMapper[T](implicit t: TypeMapper[T]): OptionTypeMapper[T] = t.createOptionTypeMapper
 
+  implicit final def mappableType[T <: Isomorphic]
+		(implicit iso: Isomorphism[T], tm: TypeMapper[T#Type]): BaseTypeMapper[T] =
+      MappedTypeMapper.base[T,T#Type](iso.map, iso.comap)
+      
+//  implicit def mappableType[A,B]
+//		(implicit m: Mappable[A,B], tm: TypeMapper[B]): BaseTypeMapper[A] =
+//      MappedTypeMapper.base[A,B](m.map, m.comap)
+      
   implicit object BooleanTypeMapper extends BaseTypeMapper[Boolean] {
     def apply(profile:Profile) = profile.typeMapperDelegates.booleanTypeMapperDelegate
   }
