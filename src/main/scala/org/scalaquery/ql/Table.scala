@@ -88,8 +88,8 @@ abstract class Table[T](
 	    )
   }
 
-  def primaryKey[T](name: String, sourceColumns: T)
-  	(implicit unpack: Unpack[T, _]): PrimaryKey = 
+  def primaryKey[TT](name: String, sourceColumns: TT)
+  	(implicit unpack: Unpack[TT, _]): PrimaryKey = 
   		PrimaryKey(name, unpack.linearizer(sourceColumns).getLinearizedNodes)
 
   def tableConstraints: Iterable[Constraint] = 
@@ -109,8 +109,8 @@ abstract class Table[T](
   final def primaryKeys: Iterable[PrimaryKey] =
     tableConstraints collect { case k: PrimaryKey => k }
 
-  def index[T](name: String, on: T, unique: Boolean = false)
-  	(implicit unpack: Unpack[T, _]) = 
+  def index[TT](name: String, on: TT, unique: Boolean = false)
+  	(implicit unpack: Unpack[TT, _]) = 
   		new Index(name, this, unpack.linearizer(on).getLinearizedNodes, unique)
 
   def indexes: Iterable[Index] = (for {
@@ -180,9 +180,9 @@ final case class Join[+T1 <: Table[_], +T2 <: Table[_]](
 
 object ^ { // Join table extractor; usage: a^b <- A join B on(..)
 	def unapply[T1 <: Table[_], T2 <: Table[_]]
-		(j: Join[T1, T2]): Option[(T1,T2)] = Some(j.left,j.right)
+		(j: Join[T1, T2]): Option[(T1,T2)] = Some( (j.left,j.right) )
 }
 object <| { // Join table extractor; usage: a^b <- A join B on(..)
 	def unapply[T1 <: Table[_], T2 <: Table[_]]
-		(j: Join[T1, T2]): Option[(T1,T2)] = Some(j.left,j.right)
+		(j: Join[T1, T2]): Option[(T1,T2)] = Some( (j.left,j.right) )
 }

@@ -59,7 +59,7 @@ trait Invoker[-P, +R] { self =>
   /**
    * Execute the statement and return a fully materialized collection of the specified type.
    */
-  final def build[To](param: P)(implicit session: Session, canBuildFrom: CanBuildFrom[Nothing, R, To]): To = {
+  final def build[T](param: P)(implicit session: Session, canBuildFrom: CanBuildFrom[Nothing, R, T]): T = {
     val b = canBuildFrom()
     foreach(param, { x => b += x }, 0)
     b.result()
