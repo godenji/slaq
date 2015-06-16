@@ -6,8 +6,6 @@ import java.sql.{Blob, Clob, Date, Time, Timestamp}
 import org.scalaquery.session.{PositionedParameters, PositionedResult}
 import org.scalaquery.SQueryException
 import org.scalaquery.ql.core.Profile
-import org.scalaquery.macros._
-
 /**
  * A (usually implicit) TypeMapper object represents a Scala type that can be
  * used as a column type in the database. The actual implementation of the
@@ -39,9 +37,10 @@ sealed trait TypeMapper[-T] extends (Profile => TypeMapperDelegate[T @uV]) { sel
 object TypeMapper {
   @inline implicit final def typeMapper2OptionTypeMapper[T](implicit t: TypeMapper[T]): OptionTypeMapper[T] = t.createOptionTypeMapper
 
-  implicit final def mappableType[T <: Isomorphic]
-		(implicit iso: Isomorphism[T], tm: TypeMapper[T#Type]): BaseTypeMapper[T] =
-      MappedTypeMapper.base[T,T#Type](iso.map, iso.comap)
+  import godenji.iso.macros._
+  implicit final def mappableType[T <: MappedToBase]
+		(implicit iso: Isomorphism[T], tm: TypeMapper[T#Underlying]): BaseTypeMapper[T] =
+      MappedTypeMapper.base[T,T#Underlying](iso.map, iso.comap)
       
 //  implicit def mappableType[A,B]
 //		(implicit m: Mappable[A,B], tm: TypeMapper[B]): BaseTypeMapper[A] =

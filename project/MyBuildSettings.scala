@@ -7,7 +7,6 @@ trait MyBuildSettings
   override protected def _settings(
   	moduleName: String, appDeps: Seq[ModuleID] = Seq()): Seq[Setting[_]] = {
   	
-    super._settings(moduleName, appDeps) ++ Seq(
-    )
+    super._settings(moduleName, appDeps) ++ Seq()
   }
 }
