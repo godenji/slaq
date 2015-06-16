@@ -18,10 +18,12 @@ object ApplicationBuild extends Build
 			organizationName := "ScalaQuery", organization := "org.scalaquery",
 			scalaVersion := scalaRelease,
 			scalacOptions ++= Seq(
+				"-optimise", /* note: tests FAIL with optimise enabled */
+				"-Yinline-warnings", 
 				"-language:implicitConversions", "-language:postfixOps", 
 				"-language:higherKinds", "-language:existentials",
-				"-optimise", "-Yinline-warnings", 
-				"-Xfatal-warnings:false" // turn off super's Xfatal-warnings
+				// compile fails unless disable these inherited defaults
+				"-Yno-adapted-args:false", "-Xfatal-warnings:false"
 			),
 			description := "A type-safe database API for Scala",
 			homepage := Some(url("http://scalaquery.org/")),
