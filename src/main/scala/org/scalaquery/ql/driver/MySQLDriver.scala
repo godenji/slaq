@@ -51,7 +51,7 @@ class MySQLTypeMapperDelegates extends TypeMapperDelegates {
     override def sqlType = java.sql.Types.BINARY
     override def sqlTypeName = "BINARY(16)"
 
-    override def valueToSQLLiteral(value: UUID): String =
+    def valueToSQLLiteral(value: UUID): String =
       "x'"+value.toString.replace("-", "")+"'"
   }
 }
