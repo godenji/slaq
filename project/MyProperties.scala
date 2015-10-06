@@ -1,5 +1,4 @@
-trait MyProperties extends Properties {
+trait MyProperties extends meta.Properties with Properties {
 	val appName         = "scala-query"
   val appVersion      = "0.10.1"
-	val scalaRelease		= "2.11.6"
 }
