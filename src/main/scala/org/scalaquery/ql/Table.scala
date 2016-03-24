@@ -26,7 +26,7 @@ abstract class Table[T](
   	
   final type TableType = T
   def nodeChildren = Nil
-  override def toString = "Table " + tableName
+  override def toString = s"Table $tableName"
 
   def * : ColumnBase[T]
 	
@@ -175,7 +175,7 @@ final case class Join[+T1 <: Table[_], +T2 <: Table[_]](
   def rightNode = Node(rt)
   
   def nodeChildren = leftNode :: rightNode :: Nil
-  override def toString = "Join(" + Node(lt) + "," + Node(rt) + ")"
+  override def toString = s"Join(${Node(lt)}, ${Node(rt)})"
 }
 
 object ^ { // Join table extractor; usage: a^b <- A join B on(..)

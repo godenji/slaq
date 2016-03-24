@@ -7,7 +7,8 @@ import org.scalaquery.{ResultSetInvoker, UnitInvoker}
  * A wrapper for a row in the ResultSet returned by DatabaseMetaData.getSchemas().
  */
 case class MSchema(schema: String, catalog: Option[String]) {
-  override def toString = "MSchema(" + catalog.map(_ + ".").getOrElse("") + schema + ")"
+  override def toString =
+  	s"MSchema(${catalog.map(x=> s"$x.").mkString("")}$schema)"
 }
 
 object MSchema {

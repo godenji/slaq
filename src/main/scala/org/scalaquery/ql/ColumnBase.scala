@@ -52,7 +52,7 @@ abstract class Column[T : TypeMapper] extends ColumnBase[T] {
  */
 case class ConstColumn[T : TypeMapper](value: T) extends Column[T] {
   def nodeChildren = Nil
-  override def toString = "ConstColumn["+SimpleTypeName.forVal(value)+"] "+value
+  override def toString = s"ConstColumn[${SimpleTypeName.forVal(value)}] $value"
   def bind = new BindColumn(value)
 }
 
@@ -65,7 +65,7 @@ object ConstColumn {
  */
 case class BindColumn[T : TypeMapper](value: T) extends Column[T] {
   def nodeChildren = Nil
-  override def toString = "BindColumn["+SimpleTypeName.forVal(value)+"] "+value
+  override def toString = s"BindColumn[${SimpleTypeName.forVal(value)}] $value"
 }
 
 /**
@@ -73,7 +73,7 @@ case class BindColumn[T : TypeMapper](value: T) extends Column[T] {
  */
 case class ParameterColumn[T : TypeMapper](idx: Int) extends Column[T] {
   def nodeChildren = Nil
-  override def toString = "ParameterColumn "+idx
+  override def toString = s"ParameterColumn $idx"
 }
 
 /**
@@ -97,7 +97,7 @@ class WrappedColumn[T : TypeMapper](parent: ColumnBase[_]) extends Column[T] {
 class NamedColumn[T : TypeMapper](val table: Node, val name: String, val options: ColumnOption[T, _]*)
 extends Column[T] {
   def nodeChildren = table :: Nil
-  override def toString = "NamedColumn " + name
+  override def toString = s"NamedColumn $name"
   override def nodeNamedChildren = (table, "table") :: Nil
 }
 

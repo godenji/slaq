@@ -25,7 +25,7 @@ class ForeignKey[TT <: Table[_], P](
   val targetTable = targetTableUnpackable.value
   val left = Node(unpackp.reify(originalSourceColumns))
   val right = Node(unpackp.reify(originalTargetColumns(targetTable)))
-  override def toString = "ForeignKey " + name
+  override def toString = s"ForeignKey $name"
   
   /**
    * Needed for JoinBase fkey on clause shortcut (@see def $(..))<br /><br />

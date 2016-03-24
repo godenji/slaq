@@ -10,7 +10,7 @@ import org.scalaquery.util.{SQLBuilder, Node, BinaryNode}
 trait SimpleFunction extends Node {
   val name: String
   val scalar = false
-  override def toString = "SimpleFunction(" + name + ", " + scalar + ")"
+  override def toString = s"SimpleFunction($name, $scalar)"
 }
 
 object SimpleFunction {

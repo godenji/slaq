@@ -169,7 +169,7 @@ case class SubqueryColumn(
 	
   def nodeChildren = subquery :: Nil
   override def nodeNamedChildren = (subquery, "subquery") :: Nil
-  override def toString = "SubqueryColumn c"+pos
+  override def toString = s"SubqueryColumn c$pos"
 }
 
 case class Union(all: Boolean, queries: List[Query[_,_]]) extends Node {

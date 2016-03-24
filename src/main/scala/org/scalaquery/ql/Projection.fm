@@ -28,7 +28,7 @@ sealed trait Projection[T <: Product] extends ColumnBase[T] with ProductNode wit
 
   @inline final def <>[R](f: (T => R), g: (R => Option[T])): MappedProjection[R,T] = new MappedProjection(this, f, g)
 
-  override def toString = "Projection" + productArity
+  override def toString = s"Projection$productArity"
 }
 
 /*object Projection {

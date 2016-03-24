@@ -39,9 +39,9 @@ object Node {
     case n:Node => n.nodeDelegate
     case p:Product => new ProductNode { val product = p }
     case r:AnyRef => throw new SQueryException(
-    	"Cannot narrow "+o+" of type "+SimpleTypeName.forVal(r)+" to a Node"
+    	s"Cannot narrow $o of type ${SimpleTypeName.forVal(r)} to Node"
     )
-    case _ => throw new SQueryException("Cannot narrow "+o+" to a Node")
+    case _ => throw new SQueryException(s"Cannot narrow $o to Node")
   }
 
   final class DumpContext(val out: PrintWriter, val nc: NamingContext)
@@ -49,11 +49,13 @@ object Node {
 
 trait ProductNode extends Node {
   val product: Product
-  lazy val nodeChildren =
-    ( for(i <- 0 until product.productArity)
-        yield Node(product.productElement(i)) ).toList
+  lazy val nodeChildren = (
+  	for(i <- 0 until product.productArity) yield Node(
+  		product.productElement(i)
+  	)
+  ).toList
 
-  override def toString = "ProductNode "+product
+  override def toString = s"ProductNode $product"
 }
 
 trait BinaryNode extends Node {
