@@ -68,7 +68,7 @@ object ForeignKeyAction {
 
 class ForeignKeyQuery[TT <: Table[_], U](
 	val fks: List[ForeignKey[TT, _]], override val unpackable: Unpackable[TT, U]) 
-	extends QueryWrap[TT, U](unpackable, fks, Nil, Nil) with Constraint {
+	extends QueryWrap[TT, U](unpackable, fks, Nil) with Constraint {
 	
   override def toString = "ForeignKeyQuery"
 

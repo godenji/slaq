@@ -202,6 +202,8 @@ extends QueryBuilderAction
     case n: NamedColumn[_]=>
     	b += quote(localTableName(n.table)) += '.' += quote(n.name)
     	
+    case HavingColumn(x) => expr(c,b)
+    	
     case SubqueryColumn(pos,sq,_)=> 
     	b += quote(localTableName(sq)) += "." += quote("c" + pos.toString)
     	

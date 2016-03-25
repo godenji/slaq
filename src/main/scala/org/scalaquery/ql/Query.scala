@@ -16,7 +16,6 @@ sealed abstract class Query[+P,+U] extends Node {
 	val linearizer: ValueLinearizer[_ <: U]
 	val unpackable: Unpackable[_ <: P, _ <: U] 
 	val cond: List[Column[_]]
-	val condHaving: List[Column[_]]
 	val modifiers: List[QueryModifier]
 
   def nodeChildren = reified :: cond.map(Node.apply) ::: modifiers
@@ -28,42 +27,43 @@ sealed abstract class Query[+P,+U] extends Node {
   def flatMap[P2,U2](f: P=> Query[P2,U2]): Query[P2,U2] = {
     val q = f(unpackable.value)
     new QueryWrap[P2,U2](
-    	q.unpackable, 
-    	cond ::: q.cond, 
-    	condHaving ::: q.condHaving, 
-    	modifiers ::: q.modifiers
+    	q.unpackable, cond ::: q.cond, modifiers ::: q.modifiers
     )
   }
+  def >>[P2,U2](q: Query[P2,U2]): Query[P2,U2] = flatMap(_=> q)
 
   def map[P2,U2](f: P=> P2)(implicit unpack: Unpack[P2,U2]): 
   	Query[P2,U2] = {
   		flatMap{p=> Query(f(p))}
   	}
 
-  // append operation (e.g. orderBy chaining)
-  def >>[P2,U2](q: Query[P2,U2]): Query[P2,U2] = flatMap{_=> q}
-
   def filter[T](f: P=> T)(implicit qc: Queryable[T]): Query[P,U] =
     new QueryWrap[P,U](
-    	unpackable, qc(f(unpackable.value), cond), condHaving, modifiers
+    	unpackable, qc(f(unpackable.value), cond), modifiers
     )
 
   def withFilter[T](f: P=> T)(implicit qc: Queryable[T]): Query[P,U] = 
   	filter(f)(qc)
 
-  def having[T <: Column[_]](f: P=> T)(implicit qc: Queryable[T]): Query[P,U] =
-    new QueryWrap[P,U](
-    	unpackable, cond, qc(f(unpackable.value), condHaving), modifiers
-    )
-
   def groupBy(by: Column[_]*) =
     new QueryWrap[P,U](
-    	unpackable, cond, condHaving, 
+    	unpackable, cond,
     	modifiers ::: by.view.map(c => new Grouping(Node(c))).toList
     )
+  
+  def having[T <: Column[_]](f: P=> T)(implicit qc: Queryable[T]): Query[P,U] = {
+  	val c = f(unpackable.value)
+  	val conditions = qc(c, cond).map{
+  		case x if x == c => HavingColumn(c)(c.typeMapper)
+  		case x => x
+  	}
+    new QueryWrap[P,U](
+    	unpackable, conditions, modifiers
+    )
+  }
 
   def orderBy(by: Ordering*) = 
-  	new QueryWrap[P,U](unpackable, cond, condHaving, modifiers ::: by.toList)
+  	new QueryWrap[P,U](unpackable, cond, modifiers ::: by.toList)
 
   def exists = 
   	StdFunction[Boolean]("exists", map(_ => ConstColumn(1)))
@@ -79,7 +79,7 @@ sealed abstract class Query[+P,+U] extends Node {
       case x :: _ => f(Some(x.asInstanceOf[T]))
       case _ => f(None)
     }
-    new QueryWrap[P,U](unpackable, cond, condHaving, mod :: other)
+    new QueryWrap[P,U](unpackable, cond, mod :: other)
   }
   
   def take(num: Int): Query[P,U] = take(ConstColumn(num))
@@ -130,27 +130,28 @@ sealed abstract class Query[+P,+U] extends Node {
     Query[R, U](f(r))
   }
 
-  def asColumn(implicit ev: P <:< Column[_]): P = {
+  def asColumn(implicit ev: P <:< Column[_]): P =
   	ev(unpackable.value).mapOp(_=> this).asInstanceOf[P]
-  }
 }
 
 object Query 
 	extends QueryWrap[Unit,Unit](
 		Unpackable((), Unpack.unpackPrimitive[Unit]
-	), Nil, Nil, Nil) {
+	), Nil, Nil) {
 	
-  def apply[P,U](value: P)(implicit unpack: Unpack[P,U]): Query[P,U] = 
-  	new QueryWrap[P,U](Unpackable(value, unpack), Nil, Nil, Nil)
+  def apply[P,U](value: P)(implicit unpack: Unpack[P,U]): Query[P,U] =
+  	wrapper(Unpackable(value, unpack))
   	
-  def apply[P,U](unpackable: Unpackable[_ <: P, _ <: U]): Query[P,U] = 
-  	new QueryWrap[P,U](unpackable, Nil, Nil, Nil)
+  def apply[P,U](unpackable: Unpackable[_ <: P, _ <: U]): Query[P,U] =
+  	wrapper(unpackable)
+	
+	private def wrapper[P,U](unpack: Unpackable[P,U]) =
+		new QueryWrap[P,U](unpack, Nil, Nil)
 }
 
 class QueryWrap[+P,+U](
 	val unpackable: Unpackable[_ <: P, _ <: U], 
-	val cond: List[Column[_]],  
-	val condHaving: List[Column[_]],
+	val cond: List[Column[_]],
 	val modifiers: List[QueryModifier]
 ) extends Query[P,U] {
 	

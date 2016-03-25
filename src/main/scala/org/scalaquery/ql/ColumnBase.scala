@@ -77,6 +77,14 @@ case class ParameterColumn[T : TypeMapper](idx: Int) extends Column[T] {
 }
 
 /**
+ * Wrapper for group by having column
+ */
+case class HavingColumn[T : TypeMapper](val c: Column[_]) extends Column[T] {
+  def nodeChildren = Nil
+  override def toString = s"Having $c"
+}
+
+/**
  * A column which gets created as the result of applying an operator.
  */
 abstract class OperatorColumn[T : TypeMapper] extends Column[T] {

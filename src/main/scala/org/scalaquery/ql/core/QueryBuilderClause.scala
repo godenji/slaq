@@ -14,7 +14,8 @@ trait QueryBuilderClause {self: QueryBuilder=>
   }
 
   protected def appendConditions(b: SQLBuilder): Unit = 
-  	query.cond match {
+  	query.cond.filter{case HavingColumn(x) => false; case _ => true} 
+  	match {
 	    case Nil =>
 	    case xs => 
 	    	b += " WHERE "
@@ -29,13 +30,14 @@ trait QueryBuilderClause {self: QueryBuilder=>
     		b.sep(xs, ",")(x=> expr(x.by, b, false, true))
   	}
 
-  protected def appendHavingConditions(b: SQLBuilder): Unit = 
-  	query.condHaving match {
+  protected def appendHavingConditions(b: SQLBuilder): Unit = {
+  	query.cond.collect{case HavingColumn(c) => c} match {
 	    case Nil =>
-	    case xs => 
+	    case xs =>
 	    	b += " HAVING "
 	    	b.sep(xs, " AND ")(x=> expr(Node(x), b))
 	  }
+  }
 
   protected def appendOrderClause(b: SQLBuilder): Unit = 
   	query.typedModifiers[Ordering] match {

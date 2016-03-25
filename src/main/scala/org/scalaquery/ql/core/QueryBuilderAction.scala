@@ -67,7 +67,7 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	
 	object UpdateBuilder {
 		def buildUpdate = {
-	    if(!query.condHaving.isEmpty || !query.modifiers.isEmpty)
+	    if(!query.modifiers.isEmpty)
 	    	throw new SQueryException("""
 					A query for an UPDATE statement must not have any modifiers
 					other than WHERE restrictions"""
@@ -148,9 +148,6 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	    appendConditions(b)
 	    if(localTables.size > 1) throw new SQueryException(
 	    	"Conditions of a DELETE statement must not reference other tables"
-	    )
-	    if(query.condHaving ne Nil) throw new SQueryException(
-	    	"DELETE statement must not contain a HAVING clause"
 	    )
 	    for(qb <- subQueryBuilders.valuesIterator) qb.insertAllFromClauses()
 	    b.build
