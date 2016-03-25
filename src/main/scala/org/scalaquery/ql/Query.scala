@@ -1,8 +1,7 @@
 package org.scalaquery.ql
 
-import scala.reflect.ClassTag
 import org.scalaquery.SQueryException
-import org.scalaquery.util.{Node, WithOp, ValueLinearizer}
+import org.scalaquery.util.{Node, BinaryNode, WithOp, ValueLinearizer}
 import scala.annotation.unchecked.{uncheckedVariance=> uV}
 
 /**
@@ -42,8 +41,8 @@ sealed abstract class Query[+P,+U] extends Node {
     	unpackable, qc(f(unpackable.value), cond), modifiers
     )
 
-  def withFilter[T](f: P=> T)(implicit qc: Queryable[T]): Query[P,U] = 
-  	filter(f)(qc)
+  def withFilter[T](f: P=> T)(implicit qc: Queryable[T]): 
+  	Query[P,U] = filter(f)(qc)
 
   def groupBy(by: Column[_]*) =
     new QueryWrap[P,U](
@@ -57,48 +56,51 @@ sealed abstract class Query[+P,+U] extends Node {
   		case x if x == c => HavingColumn(c)(c.typeMapper)
   		case x => x
   	}
-    new QueryWrap[P,U](
-    	unpackable, conditions, modifiers
-    )
+    new QueryWrap[P,U](unpackable, conditions, modifiers)
   }
 
-  def orderBy(by: Ordering*) = 
-  	new QueryWrap[P,U](unpackable, cond, modifiers ::: by.toList)
+  def orderBy(by: Ordering*) = new QueryWrap[P,U](
+  	unpackable, cond, modifiers ::: by.toList
+  )
 
   def exists = 
   	StdFunction[Boolean]("exists", map(_ => ConstColumn(1)))
-
-  def typedModifiers[T <: QueryModifier](implicit m: ClassTag[T]) =
-    modifiers.filter(m.runtimeClass.isInstance(_)).asInstanceOf[List[T]]
-
-  def createOrReplaceSingularModifier[T <: QueryModifier]
-  	(f: Option[T] => T)(implicit m: ClassTag[T]): Query[P,U] = {
-  	
-    val (xs, other) = modifiers.partition(m.runtimeClass.isInstance(_))
-    val mod = xs match {
-      case x :: _ => f(Some(x.asInstanceOf[T]))
-      case _ => f(None)
-    }
-    new QueryWrap[P,U](unpackable, cond, mod :: other)
-  }
   
-  def take(num: Int): Query[P,U] = take(ConstColumn(num))
-  def drop(num: Int): Query[P,U] = drop(ConstColumn(num))
+  def take(num: Int): Query[P,U] = take( ConstColumn(num) )
+  def drop(num: Int): Query[P,U] = drop( ConstColumn(num) )
   
   def take(node: Column[Int]): Query[P,U] = 
-  	createOrReplaceSingularModifier[TakeDrop] {
-	    case Some(TakeDrop(None,d,_)) => 
-	    	TakeDrop(Some(node), d, compareNode = d)
-	    case _ => TakeDrop(Some(node),None)
-	  }
+  	takeDrop(
+  		TakeDrop.extract[TakeDrop](modifiers) {
+		    case Some(TakeDrop(None,d,_)) => TakeDrop( Some(node), d, compareNode = d )
+		    case _ => 											 TakeDrop( Some(node), None )
+		  }
+  	)
   def drop(node: Column[Int]): Query[P,U] = 
-  	createOrReplaceSingularModifier[TakeDrop] {
-	    case Some(TakeDrop(t,None,_)) =>
-	    	TakeDrop(t, Some(node), compareNode = t)
-	    case _ => 
-	    	TakeDrop(None,Some(node))
-	  }
+  	takeDrop(
+  		TakeDrop.extract[TakeDrop](modifiers) {
+		    case Some(TakeDrop(t,None,_)) => TakeDrop( t, Some(node), compareNode = t )
+		    case _ => 											 TakeDrop( None, Some(node) )
+		  }
+  	)
+  private def takeDrop(x: (TakeDrop, List[QueryModifier])): Query[P,U] = 
+  	new QueryWrap[P,U](
+  		unpackable, cond, x._1 :: x._2
+  	)
 
+//  def union1[O >: P, R](other: Query[O, U]) = {
+////  	val uu = Union2(
+////  		Node(unpackable.value), Node(other.unpackable.value), false
+////  	)
+//  	val uu = Union2(this, other, false)
+//    new QueryWrap[O, U]( 
+//    	unpackable, cond, modifiers
+//    )
+//  }
+//    
+//  def union2[O >: P, T >: U, R](other: Query[O, T]*)
+//  	(implicit reify: Reify[O, R]) = wrap(Union(false, this :: other.toList))
+  
   def union[O >: P, T >: U, R](other: Query[O, T]*)
   	(implicit reify: Reify[O, R]) = wrap(Union(false, this :: other.toList))
 
@@ -134,10 +136,8 @@ sealed abstract class Query[+P,+U] extends Node {
   	ev(unpackable.value).mapOp(_=> this).asInstanceOf[P]
 }
 
-object Query 
-	extends QueryWrap[Unit,Unit](
-		Unpackable((), Unpack.unpackPrimitive[Unit]
-	), Nil, Nil) {
+object Query extends QueryWrap
+	[Unit,Unit](Unpackable((), Unpack.unpackPrimitive[Unit]), Nil, Nil) {
 	
   def apply[P,U](value: P)(implicit unpack: Unpack[P,U]): Query[P,U] =
   	wrapper(Unpackable(value, unpack))
@@ -177,3 +177,9 @@ case class Union(all: Boolean, queries: List[Query[_,_]]) extends Node {
   override def toString = if(all) "Union all" else "Union"
   def nodeChildren = queries
 }
+
+//case class Union2(left: Query[_,_], right: Query[_,_], all: Boolean) 
+//	extends BinaryNode {
+//  	override def toString = if(all) "Union all" else "Union"
+//	}
+

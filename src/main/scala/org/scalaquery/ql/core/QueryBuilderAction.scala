@@ -29,7 +29,7 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	      appendClauses(b)
 	    }
 	    if(!mayLimit0) {
-	      query.typedModifiers[TakeDrop] match {
+	      queryModifiers[TakeDrop] match {
 	        case TakeDrop(Some(ConstColumn(0)),_,_) :: _=>
 	        	b += "SELECT * FROM ("; inner; b += ") t0 WHERE 1=0"
 	        case _=> inner

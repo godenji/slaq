@@ -93,8 +93,8 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   override protected val supportsTuples = false
   override protected val concatOperator = Some("+")
 
-  val hasTakeDrop = !query.typedModifiers[TakeDrop].isEmpty
-  val hasDropOnly = query.typedModifiers[TakeDrop] match {
+  val hasTakeDrop = !queryModifiers[TakeDrop].isEmpty
+  val hasDropOnly = queryModifiers[TakeDrop] match {
     case TakeDrop(None, Some(_), _) :: _ => true
     case _ => false
   }
@@ -116,7 +116,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
 	 * 	@seeQueryBuilder `appendLimitValue`   
 	 */
   override protected def innerBuildSelect(b: SQLBuilder, rename: Boolean) {
-    query.typedModifiers[TakeDrop] match {
+    queryModifiers[TakeDrop] match {
       case TakeDrop(Some(t:CCI), Some(d:CCI), _) :: _ =>
         b+= s"WITH T AS (SELECT TOP ${t.value + d.value} "
         expr(query.reified, b, rename, true)
@@ -168,7 +168,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     if(topLevel && hasTakeDrop) {
       b += ",ROW_NUMBER() OVER ("
       appendOrderClause(b)
-      if(query.typedModifiers[Ordering].isEmpty) b += "ORDER BY (SELECT NULL)"
+      if(queryModifiers[Ordering].isEmpty) b += "ORDER BY (SELECT NULL)"
       b += ") AS \"c0r\""
     }
   }

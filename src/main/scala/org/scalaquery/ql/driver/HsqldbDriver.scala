@@ -113,7 +113,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     case _ => super.innerExpr(c, b)
   }
 
-  override protected def appendLimitClause(b: SQLBuilder) = query.typedModifiers[TakeDrop].lastOption.foreach {
+  override protected def appendLimitClause(b: SQLBuilder) = queryModifiers[TakeDrop].lastOption.foreach {
     case TakeDrop(Some(ConstColumn(0)),_,_) => () // handled in innerBuildSelect
     case TakeDrop(Some(t), Some(d), compareNode) =>
     	val compFn = maybeLimitNode(t,d,compareNode,_:Boolean)

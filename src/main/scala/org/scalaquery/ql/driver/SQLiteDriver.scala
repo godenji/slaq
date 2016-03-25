@@ -145,7 +145,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     if(desc) b += " desc"
   }
 
-  override protected def appendLimitClause(b: SQLBuilder) = query.typedModifiers[TakeDrop].lastOption.foreach {
+  override protected def appendLimitClause(b: SQLBuilder) = queryModifiers[TakeDrop].lastOption.foreach {
     case TakeDrop(Some(t), Some(d), compareNode) => 
     	val compFn = maybeLimitNode(t,d,compareNode,_:Boolean)
     	appendLimitValue(b+=" LIMIT ", d, compFn(true))

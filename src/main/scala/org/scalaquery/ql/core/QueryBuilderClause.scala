@@ -1,5 +1,6 @@
 package org.scalaquery.ql.core
 
+import scala.reflect.ClassTag
 import org.scalaquery.SQueryException
 import org.scalaquery.ql._
 import org.scalaquery.util._
@@ -12,6 +13,9 @@ trait QueryBuilderClause {self: QueryBuilder=>
     appendOrderClause(b)
     appendLimitClause(b)
   }
+	
+	protected def queryModifiers[T <: QueryModifier](implicit m: ClassTag[T]) = 
+		query.modifiers.filter(m.runtimeClass.isInstance(_)).asInstanceOf[List[T]]
 
   protected def appendConditions(b: SQLBuilder): Unit = 
   	query.cond.filter{case HavingColumn(x) => false; case _ => true} 
@@ -23,7 +27,7 @@ trait QueryBuilderClause {self: QueryBuilder=>
 	  }
 
   protected def appendGroupClause(b: SQLBuilder): Unit = 
-  	query.typedModifiers[Grouping] match {
+  	queryModifiers[Grouping] match {
     	case Nil =>
     	case xs => 
     		b += " GROUP BY "
@@ -40,7 +44,7 @@ trait QueryBuilderClause {self: QueryBuilder=>
   }
 
   protected def appendOrderClause(b: SQLBuilder): Unit = 
-  	query.typedModifiers[Ordering] match {
+  	queryModifiers[Ordering] match {
     	case Nil =>
     	case xs => 
     		b += " ORDER BY "
@@ -58,7 +62,7 @@ trait QueryBuilderClause {self: QueryBuilder=>
   }
 
   protected def appendLimitClause(b: SQLBuilder): Unit = 
-  	query.typedModifiers[TakeDrop].lastOption.foreach {
+  	queryModifiers[TakeDrop].lastOption.foreach {
 	    /* SQL:2008 syntax */
 	    case TakeDrop(Some(ConstColumn(0)),_,_)
 	    	if(!mayLimit0) => // handled in innerBuildSelect
@@ -85,52 +89,45 @@ trait QueryBuilderClause {self: QueryBuilder=>
   protected def maybeLimitNode(
   	takeColumn: Column[Int],
   	dropColumn: Column[Int],
-  	compareColumn: Option[Column[Int]], 
-  	isDrop: Boolean): Option[Column[Int]] = {
+  	compareColumn: Option[Column[Int]], isDrop: Boolean): Option[Column[Int]] = {
   	
-  	if(isDrop){
-  		if(Some(dropColumn) == compareColumn) None else Some(takeColumn)
-  	}
-  	else
-  		if(Some(takeColumn) == compareColumn) Some(dropColumn) else None
+	  	if(isDrop){
+	  		if(Some(dropColumn) == compareColumn) None 
+	  		else Some(takeColumn)
+	  	}
+	  	else if(Some(takeColumn) == compareColumn) Some(dropColumn) 
+	  	else None
   }
   
-  /*
-   * appends a concrete value of type ConstColumn or bound Param 
-   * to a QueryModifier take/drop clause
-   * @compareNode used to calculate limit/offset
-   */
   protected def appendLimitValue(
   	b: SQLBuilder, node: Column[Int], 
   	compareNode: Option[Column[Int]] = None): Unit = {
   	
-  	(node,compareNode) match{
-  		case(x @ ConstColumn(v), None) => b+= v
-  		
-  		case(aCol @ ConstColumn(aVal), bCol @ Some(ConstColumn(bVal)))=>
-  			b+= setColValue(aVal,bVal)
-  			
-  		case(x @ ParameterColumn(idx), None) => b +?= {(p,param)=>
-  			val nodeVal = (
-  				if(idx == -1) param 
-  				else param.asInstanceOf[Product].productElement(idx)
-  			).asInstanceOf[Int]
-  			x.typeMapper(profile).setValue(nodeVal, p)
-  		}
+  	def paramValue(param: Any, idx: Int): Int = (
+  		if(idx == -1) param 
+			else param.asInstanceOf[Product].productElement(idx)
+  	).asInstanceOf[Int]
+  	
+  	def compareValue(a: Int, b: Int): Int = (
+	  	if(a == b) a else if(a > b) a - b else (b - a) + 1
+	  )
+  	
+  	(node, compareNode) match{
+  		case(ConstColumn(v), None) => b+= v
+  		case(ConstColumn(x), Some(ConstColumn(y))) => b+= compareValue(x, y)
   		case(
-  			targCol @ ParameterColumn(aIdx), // i.e. column to set value for
-  			compCol @ Some(ParameterColumn(bIdx)))=>
-  				
+  			x @ ParameterColumn(idx), None) => b +?= {(p,param)=>
+	  			x.typeMapper(profile).setValue(
+	  				paramValue(param, idx), p
+	  			)
+	  		}
+  		case(target @ ParameterColumn(idxA), Some(ParameterColumn(idxB))) => 
   			b +?= {(p,param)=>
-	  			val aVal = (
-	  				if(aIdx == -1) param
-	  				else param.asInstanceOf[Product].productElement(aIdx)
-	  			).asInstanceOf[Int]
-	  			val bVal = (
-	  				if(bIdx == -1) param 
-	  				else param.asInstanceOf[Product].productElement(bIdx)
-	  			).asInstanceOf[Int]
-	      	targCol.typeMapper(profile).setValue(setColValue(aVal,bVal), p)
+	      	target.typeMapper(profile).setValue(
+	      		compareValue(
+	      			paramValue(param, idxA), paramValue(param, idxB)
+	      		), p
+	      	)
 	  		}
   		case _=> throw new SQueryException(s"""
 				values in a take, drop operation cannot be mixed; 
@@ -140,11 +137,6 @@ trait QueryBuilderClause {self: QueryBuilder=>
 			""")
   	}
   	()
-  }
-  private def setColValue(aVal: Int, bVal: Int): Int = {
-  	if(aVal == bVal) aVal
-  	else if(aVal > bVal) aVal - bVal
-		else (bVal - aVal) + 1
   }
   
 }
