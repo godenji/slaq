@@ -52,11 +52,23 @@ final case class TakeDrop(
 	compareNode: Option[Column[Int]] = None) extends QueryModifier with NullaryNode
 	
 object TakeDrop {
-	/**
+	
+	def take(modifiers: List[QueryModifier], node: Column[Int]) = 
+		extract[TakeDrop](modifiers) {
+	    case Some(TakeDrop(None,d,_)) => TakeDrop( Some(node), d, compareNode = d )
+	    case _ => 											 TakeDrop( Some(node), None )
+	  }
+	def drop(modifiers: List[QueryModifier], node: Column[Int]) = 
+		extract[TakeDrop](modifiers) {
+	    case Some(TakeDrop(t,None,_)) => TakeDrop( t, Some(node), compareNode = t )
+	    case _ => 										 	 TakeDrop( None, Some(node) )
+	  }
+	
+	/*
 	 * extracts first modifier of given T and returns it (if exist) along
-	 * 	with remaining modifiers.
+	 * 	with remaining modifiers as (T, List[Others])
 	 */
-	def extract[T <: QueryModifier]
+	private def extract[T <: QueryModifier]
 		(modifiers: List[QueryModifier])(f: Option[T] => T)
 		(implicit m: ClassTag[T]): (T, List[QueryModifier]) = {
   	
