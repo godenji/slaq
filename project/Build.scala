@@ -18,7 +18,7 @@ object ApplicationBuild extends Build
 			organizationName := "ScalaQuery", organization := "org.scalaquery",
 			scalaVersion := scalaRelease,
 			scalacOptions ++= Seq(
-				"-optimise", /* note: tests FAIL with optimise enabled */
+				//"-optimise", /* note: tests FAIL with optimise enabled */
 				"-Yinline-warnings", 
 				"-language:implicitConversions", "-language:postfixOps", 
 				"-language:higherKinds", "-language:existentials",
