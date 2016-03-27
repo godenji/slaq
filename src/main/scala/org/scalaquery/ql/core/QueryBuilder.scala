@@ -112,13 +112,13 @@ extends QueryBuilderAction
   }
 
   protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {
-    case ConstColumn(null) => b += "null"
+    case ConstColumn(null) => b += "NULL"
     
     case ColumnOps.Not(ColumnOps.Is(l, ConstColumn(null)))=> 
-    	b += '('; expr(l, b); b += " is not null)"
+    	b += '('; expr(l, b); b += " IS NOT NULL)"
     	
     case ColumnOps.Not(e) => 
-    	b += "(not "; expr(e, b); b+= ')'
+    	b += "(NOT "; expr(e, b); b+= ')'
     	
     case ColumnOps.InSet(e,seq,tm,bind)=> 
     	if(seq.isEmpty) expr(ConstColumn(false), b) else {
@@ -128,7 +128,7 @@ extends QueryBuilderAction
       	b += "))"
     	}
     case ColumnOps.Is(l, ConstColumn(null)) => 
-    	b += '('; expr(l, b); b += " is null)"
+    	b += '('; expr(l, b); b += " IS NULL)"
     	
     case ColumnOps.Is(l, r) => 
     	b += '('; expr(l, b); b += '='; expr(r, b); b += ')'
@@ -195,7 +195,7 @@ extends QueryBuilderAction
         case ConstColumn(null) =>
         case n => b += " ELSE "; expr(n, b)
       }
-      b += " end)"
+      b += " END)"
       
     case n: NamedColumn[_]=>
     	b += s"${quote(localTableName(n.table))}.${quote(n.name)}"
