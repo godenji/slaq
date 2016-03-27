@@ -53,13 +53,6 @@ class ScalarFunctionTest(tdb: TestDB) extends DBTest(tdb) {
     check(Query(ConstColumn("foo") ++ "bar"), "foobar")
     check(Query(ConstColumn(1) ifNull 42), 1)
     check(Query(ConstColumn[Option[Int]](None) ifNull 42), 42)
-    check(Query(ConstColumn("Foo").toUpperCase), "FOO")
-    check(Query(ConstColumn("Foo").toLowerCase), "foo")
-    check(Query(ConstColumn("  foo  ").ltrim), "foo  ")
-    check(Query(ConstColumn("  foo  ").rtrim), "  foo")
-    check(Query(ConstColumn("  foo  ").trim), "foo")
-    checkIn(Query(Functions.database.toLowerCase), tdb.dbName.toLowerCase, "")
-    checkIn(Query(Functions.user.toLowerCase), tdb.userName.toLowerCase, "")
     check(Query(ConstColumn(8) % 3 ), 2)
     check(Query(ConstColumn(-12.5).abs), 12.5)
     check(Query(ConstColumn(1.9).ceil), 2.0)
@@ -71,9 +64,6 @@ class ScalarFunctionTest(tdb: TestDB) extends DBTest(tdb) {
     check(Query(ConstColumn(1.5).floor), 1.0)
     check(Query(ConstColumn(1.4).floor), 1.0)
     check(Query(ConstColumn(-1.5).floor), -2.0)
-    check(Query(ConstColumn(-10.0).sign), -1)
-    check(Query(Functions.pi.toDegrees), 180.0)
-    check(Query(Functions.pi.toDegrees.toRadians is Functions.pi), true)
 
     val myExpr = SimpleExpression.binary[Int, Int, Int] { (l, r, b, qb) =>
       b += '('

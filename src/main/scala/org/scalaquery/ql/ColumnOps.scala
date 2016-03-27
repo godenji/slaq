@@ -20,7 +20,6 @@ trait ColumnOps[B1, P1] {
     om(Is(leftOperand, Node(e)))
   def isNot[P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Not(Is(leftOperand, Node(e))))
-  
   def =~ [P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
   	om(Is(leftOperand, Node(e)))
   def =! [P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
@@ -34,6 +33,7 @@ trait ColumnOps[B1, P1] {
     om(Relational(">", leftOperand, Node(e)))
   def >= [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Relational(">=", leftOperand, Node(e)))
+    
   def inSet[R](seq: Traversable[B1])(implicit om: OM2Bin[Boolean, P1, R], tm: BaseTM) =
     om(InSet(leftOperand, seq, tm, false))
   def inSetBind[R](seq: Traversable[B1])(implicit om: OM2Bin[Boolean, P1, R], tm: BaseTM) =
@@ -42,12 +42,7 @@ trait ColumnOps[B1, P1] {
     om(Between(leftOperand, start, end))
   def ifNull[B2, P2, R](e: Column[P2])(implicit om: OM2[B2, Boolean, P2, R]): Column[P2] =
     EscFunction[P2]("ifnull", leftOperand, Node(e))(e.typeMapper)
-  def min(implicit om: ToOption, tm: BaseTM) =
-    om(StdFunction[B1]("min", leftOperand))
-  def max(implicit om: ToOption, tm: BaseTM) =
-    om(StdFunction[B1]("max", leftOperand))
 
-  // NumericTypeMapper only
   def + [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
     om(Arith[B1]("+", leftOperand, Node(e)))
   def - [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
@@ -58,24 +53,22 @@ trait ColumnOps[B1, P1] {
     om(Arith[B1]("/", leftOperand, Node(e)))
   def % [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
     om(EscFunction[B1]("mod", leftOperand, Node(e)))
+    
   def abs(implicit om: ToSame, tm: Num) =
     om(EscFunction[B1]("abs", leftOperand))
   def ceil(implicit om: ToSame, tm: Num) =
     om(EscFunction[B1]("ceiling", leftOperand))
   def floor(implicit om: ToSame, tm: Num) =
     om(EscFunction[B1]("floor", leftOperand))
-  def sign[R](implicit om: OM2Bin[Int, P1, R], tm: Num) =
-    om(EscFunction[Int]("sign", leftOperand))
-  def toDegrees(implicit om: ToSame, tm: Num) =
-    om(EscFunction[B1]("degrees", leftOperand))
-  def toRadians(implicit om: ToSame, tm: Num) =
-    om(EscFunction[B1]("radians", leftOperand))
   def avg(implicit om: ToOption, tm: Num) =
     om(StdFunction[B1]("avg", leftOperand))
+  def min(implicit om: ToOption, tm: BaseTM) =
+    om(StdFunction[B1]("min", leftOperand))
+  def max(implicit om: ToOption, tm: BaseTM) =
+    om(StdFunction[B1]("max", leftOperand))
   def sum(implicit om: ToOption, tm: Num) =
     om(StdFunction[B1]("sum", leftOperand))
 
-  // Boolean only
   def &[P2, R](b: ColumnBase[P2])(implicit om: Restr2[Boolean, Boolean, P2, R]) =
     om(And(leftOperand, Node(b)))
   def |[P2, R](b: ColumnBase[P2])(implicit om: Restr2[Boolean, Boolean, P2, R]) =
@@ -83,7 +76,6 @@ trait ColumnOps[B1, P1] {
   def unary_![R](implicit om: Restr1[Boolean, Boolean, R]) =
     om(Not(leftOperand))
 
-  // String only
   def length[R](implicit om: Restr1[String, Int, R]) =
     om(EscFunction[Int]("length", leftOperand))
   def like[P2, R](e: Column[P2])(implicit om: Restr2[String, Boolean, P2, R]) =
@@ -96,16 +88,6 @@ trait ColumnOps[B1, P1] {
     om(new StartsWith(leftOperand, s))
   def endsWith[R](s: String)(implicit om: Restr1[String, Boolean, R]) =
     om(new EndsWith(leftOperand, s))
-  def toUpperCase[R](implicit om: Restr1[String, String, R]) =
-    om(EscFunction[String]("ucase", leftOperand))
-  def toLowerCase[R](implicit om: Restr1[String, String, R]) =
-    om(EscFunction[String]("lcase", leftOperand))
-  def ltrim[R](implicit om: Restr1[String, String, R]) =
-    om(EscFunction[String]("ltrim", leftOperand))
-  def rtrim[R](implicit om: Restr1[String, String, R]) =
-    om(EscFunction[String]("rtrim", leftOperand))
-  def trim[R](implicit om: Restr1[String, String, R]) =
-    om(EscFunction[String]("ltrim", EscFunction[String]("rtrim", leftOperand)))
 }
 
 object ColumnOps {
@@ -124,12 +106,10 @@ object ColumnOps {
 
   case class AsColumnOf[T : TypeMapper](child: Node, typeName: Option[String]) extends Column[T] with UnaryNode
 
-  // Boolean
   case class And(left: Node, right: Node) extends OperatorColumn[Boolean] with SimpleBinaryOperator { val name = "and" }
   case class Or(left: Node, right: Node) extends OperatorColumn[Boolean] with SimpleBinaryOperator { val name = "or" }
   case class Not(child: Node) extends OperatorColumn[Boolean] with UnaryNode
 
-  // String
   case class Like(left: Node, right: Node, esc: Option[Char]) extends OperatorColumn[Boolean] with BinaryNode
   class StartsWith(n: Node, s: String) extends Like(n, ConstColumn(likeEncode(s)+'%'), Some('^'))
   class EndsWith(n: Node, s: String) extends Like(n, ConstColumn('%'+likeEncode(s)), Some('^'))
