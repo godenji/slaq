@@ -99,7 +99,7 @@ extends QueryBuilderAction
           if(pos != 0) b += ','
           pos += 1
           expr(c, b, false, true)
-          if(rename) b += s" as ${quote("c" + pos.toString)}"
+          if(rename) b += s" as ${quote(s"c$pos")}"
         }
       }
       case _ => innerExpr(c, b)
@@ -155,8 +155,6 @@ extends QueryBuilderAction
         if(ch == '\'' || ch == '%' || ch == '_') throw new SQueryException(
         	s"Illegal escape character '$ch' for LIKE expression"
         )
-        // JDBC defines an {escape } syntax but the unescaped version
-        // is understood by more DBs/drivers
         b += s" escape '$ch'"
       }
       b += ')'
@@ -200,25 +198,22 @@ extends QueryBuilderAction
       b += " end)"
       
     case n: NamedColumn[_]=>
-    	b += quote(localTableName(n.table)) += '.' += quote(n.name)
+    	b += s"${quote(localTableName(n.table))}.${quote(n.name)}"
     	
     case HavingColumn(x) => expr(c,b)
     	
     case SubqueryColumn(pos,sq,_)=> 
-    	b += quote(localTableName(sq)) += "." += quote("c" + pos.toString)
+    	b += s"${quote(localTableName(sq))}.${quote(s"c$pos")}"
     	
-    case sq @ Subquery(_,_)=>
-    	b += quote(localTableName(sq)) += ".*"
+    case sq @ Subquery(_,_)=> 
+    	b += s"${quote(localTableName(sq))}.*"
     
     // implicit joins
     case a @ Table.Alias(t: WithOp)=> expr(t.mapOp(_ => a), b)
     case t: Table[_] => expr(Node(t.*), b)
     
     // Union
-    case _ @ Table.Alias(ta: Table.Alias)=>
-    	ta match{
-    		case a @ Table.Alias(t: WithOp)=> expr(t.mapOp(_ => a), b)
-    	}
+    case Table.Alias(ta: Table.Alias)=> expr(ta, b)
     	
     case fk: ForeignKey[_,_] =>
       if(supportsTuples) {
@@ -252,9 +247,7 @@ extends QueryBuilderAction
       	b += s"${quote(base.tableName)} ${quote(name)}"
     case 
     	Subquery(sq: Query[_,_], rename)=>
-      	b += "(";
-      		subQueryBuilderFor(sq).innerBuildSelect(b, rename); b +=
-      	") " += quote(name)
+    		b += s"(${subQueryBuilderFor(sq).innerBuildSelect(b, rename)}) ${quote(name)}"
     case 
     	Subquery(Union(all, sqs), rename) => {
 	      b += s"($lp"
@@ -264,7 +257,7 @@ extends QueryBuilderAction
 	        subQueryBuilderFor(sq).innerBuildSelect(b, first && rename)
 	        first = false
 	      }
-	      b += s")$rp " += quote(name)
+	      b += s")$rp ${quote(name)}"
 	    }
     case j: Join[_,_] => createJoin(j, b)
     case _ => //println(s"table() >> could not match node $t")

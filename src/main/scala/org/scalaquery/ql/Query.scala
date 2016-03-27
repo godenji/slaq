@@ -1,13 +1,9 @@
 package org.scalaquery.ql
 
 import org.scalaquery.SQueryException
-import org.scalaquery.util.{Node, BinaryNode, WithOp, ValueLinearizer}
+import org.scalaquery.util.{Node, WithOp, ValueLinearizer}
 import scala.annotation.unchecked.{uncheckedVariance=> uV}
 
-/**
- * A query monad which contains the AST for a query's projection and 
- * the accumulated restrictions and other modifiers.
- */
 sealed abstract class Query[+P,+U] extends Node {
 	override def toString = "Query"
 	
