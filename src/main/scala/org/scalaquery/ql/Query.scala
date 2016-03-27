@@ -1,6 +1,5 @@
 package org.scalaquery.ql
 
-import org.scalaquery.SQueryException
 import org.scalaquery.util.{Node, ValueLinearizer}
 import scala.annotation.unchecked.{uncheckedVariance=> uV}
 
@@ -73,35 +72,15 @@ sealed abstract class Query[+P,+U] extends Node {
   	new QueryWrap[P,U](unpackable, cond, mod :: others)
   }
   
-  def union[O >: P, T >: U, R](next: Query[O, T])(implicit reify: Reify[O, R]): 
-  	Query[R, U] = union(next, false)
+  def union[O >: P, T >: U, R](right: Query[O, T])(implicit reify: Reify[O, R]): 
+  	Query[R, U] = union(right, false)
 
-  def unionAll[O >: P, T >: U, R](next: Query[O, T])(implicit reify: Reify[O, R]): 
-  	Query[R, U] = union(next, true)
+  def unionAll[O >: P, T >: U, R](right: Query[O, T])(implicit reify: Reify[O, R]): 
+  	Query[R, U] = union(right, true)
 
   private def union[O >: P, T >: U, R]
-  	(next: Query[O, T], all: Boolean)(implicit reify: Reify[P, R]) = {
-  	
-  	def mapper(n: Node) = n match {
-	    case c: Column[_] => c.typeMapper
-	    case SubqueryColumn(_,_,tm) => tm
-	    case _ => throw new SQueryException("Expected Column or SubqueryColumn")
-  	}
-    def f[PP](unpackable: Unpackable[PP, _ <: U], node: Node) = Unpackable(
-  		unpackable.value match {
-	      case t: Table[_] => t.mapOp(_ => Subquery(node, false)).asInstanceOf[PP]
-	      case o =>
-	        val p = Subquery(node, true) // must be defined outside mapOp
-	        var pos = 0
-	        unpackable.mapOp{n=>
-	          pos += 1; SubqueryColumn(pos, p, mapper(n))
-	        }
-	    }, unpackable.unpack
-	  )
-    val r: Unpackable[R, _ <: U] = unpackable.reifiedUnpackable(reify)
-    Query[R, U]( f(r, Union(all, List(this, next))) )
-  }
-  
+  	(right: Query[O, T], all: Boolean)(implicit reify: Reify[P, R]) = 
+  		Union.query(this, right, all)(unpackable, reify)
 }
 
 class QueryWrap[+P,+U](
