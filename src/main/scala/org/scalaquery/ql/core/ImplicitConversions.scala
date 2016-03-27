@@ -5,21 +5,18 @@ import org.scalaquery.util.Node
 
 trait ImplicitConversions[DriverType <: Profile] {
   implicit val scalaQueryDriver: DriverType
-  /*
-   * instances of type Table and Join can be converted to Query 
-   */
+  
   @inline implicit final def table2Query[T <: TableBase[_], U](t: T) = {
-  	Query[T, Nothing](t.mapOp{n=> 
-  		Table.Alias(Node(n))
-  	})(Unpack.unpackTableBase)
+  	Query[T, Nothing](
+  		t.mapOp{n=> Table.Alias(Node(n))}
+  	)(Unpack.unpackTableBase)
   }
 
   @inline implicit final 
   	def baseColumn2ColumnOps[B1 : BaseTypeMapper]
   		(c: Column[B1]): ColumnOps[B1,B1] =
-  			
   		c match {
-		    case o: ColumnOps[_,_] => o//.asInstanceOf[ColumnOps[B1, B1]]
+		    case o: ColumnOps[_,_] => o
 		    case _ => new ColumnOps[B1, B1] {
 		    	protected[this] val leftOperand = Node(c)
 		   	}
@@ -28,9 +25,8 @@ trait ImplicitConversions[DriverType <: Profile] {
   @inline implicit final 
   	def optionColumn2ColumnOps[B1]
   		(c: Column[Option[B1]]): ColumnOps[B1, Option[B1]] =
-  			
   		c match {
-		    case o: ColumnOps[_,_] => o//.asInstanceOf[ColumnOps[B1, Option[B1]]]
+		    case o: ColumnOps[_,_] => o
 		    case _ => new ColumnOps[B1, Option[B1]] {
 		    	protected[this] val leftOperand = Node(c)
 		    }
@@ -62,12 +58,10 @@ trait ImplicitConversions[DriverType <: Profile] {
   		new UpdateInvoker(q, scalaQueryDriver)
   
   @inline implicit final def columnBase2InsertInvoker[T]
-  	(c: ColumnBase[T]) = 
-  		new InsertInvoker(c.toUnpackable, scalaQueryDriver)
+  	(c: ColumnBase[T]) = new InsertInvoker(c.toUnpackable, scalaQueryDriver)
   
   @inline implicit final def unpackable2InsertInvoker[T, U]
-  	(u: Unpackable[T, U]) = 
-  		new InsertInvoker(u, scalaQueryDriver)
+  	(u: Unpackable[T, U]) = new InsertInvoker(u, scalaQueryDriver)
 
   implicit final class NodeLike2Unpackable[T <: ColumnBase[_]](t: T){
   	@inline def toUnpackable[U](implicit unpack: Unpack[T, U]) = 

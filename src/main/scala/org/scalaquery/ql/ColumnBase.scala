@@ -12,9 +12,6 @@ trait ColumnBase[T] extends Node with ValueLinearizer[T] with WithOp {
   override def nodeDelegate: Node = if(op eq null) this else op.nodeDelegate
 }
 
-/**
- * Base classs for columns.
- */
 abstract class Column[T : TypeMapper] extends ColumnBase[T] {
   final val typeMapper = implicitly[TypeMapper[T]]
   def getLinearizedNodes = Vector(Node(this))
@@ -23,17 +20,25 @@ abstract class Column[T : TypeMapper] extends ColumnBase[T] {
     val tmd = typeMapper(profile)
     tmd.nextValueOrElse(tmd.zero, rs)
   }
-  def updateResult(profile:Profile, rs: PositionedResult, value: T) = typeMapper(profile).updateValue(value, rs)
-  final def setParameter(profile:Profile, ps: PositionedParameters, value: Option[T]): Unit = typeMapper(profile).setOption(value, ps)
+  def updateResult(profile:Profile, rs: PositionedResult, value: T): Unit = 
+  	typeMapper(profile).updateValue(value, rs)
+  	
+  final def setParameter(profile:Profile, ps: PositionedParameters, value: Option[T]): 
+  	Unit = typeMapper(profile).setOption(value, ps)
 
-  def getOr[U](n: => U)(implicit ev: Option[U] =:= T): Column[U] = new WrappedColumn[U](this)(typeMapper.getBaseTypeMapper) {
-    override def getResult(profile:Profile, rs: PositionedResult): U = typeMapper(profile).nextValueOrElse(n, rs)
+  def getOr[U](n: => U)(implicit ev: Option[U] =:= T): Column[U] = 
+  	new WrappedColumn[U](this)(typeMapper.getBaseTypeMapper) {
+    	override def getResult(profile:Profile, rs: PositionedResult): U = 
+    		typeMapper(profile).nextValueOrElse(n, rs)
+  	}
+  def get[U](implicit ev: Option[U] =:= T): Column[U] = getOr[U] {
+  	throw new SQueryException(s"Read NULL value for column $this")
   }
-  def get[U](implicit ev: Option[U] =:= T): Column[U] = getOr[U] { throw new SQueryException("Read NULL value for column "+this) }
   final def ~[U](b: Column[U]) = new Projection2[T, U](this, b)
-	def ? : Column[Option[T]] = new WrappedColumn(this)(typeMapper.createOptionTypeMapper)
+	def ? : Column[Option[T]] = new WrappedColumn(this)(
+		typeMapper.createOptionTypeMapper
+	)
 
-  // Functions which don't need an OptionMapper
   def in(e: Query[Column[_], _]) = ColumnOps.In(Node(this), Node(e))
   def notIn(e: Query[Column[_], _]) = ColumnOps.Not(Node(ColumnOps.In(Node(this), Node(e))))
   def count = StdFunction[Int]("count", Node(this))
@@ -41,7 +46,6 @@ abstract class Column[T : TypeMapper] extends ColumnBase[T] {
   def isNotNull = ColumnOps.Not(Node(ColumnOps.Is(Node(this), ConstColumn.NULL)))
   def countDistinct = ColumnOps.CountDistinct(Node(this))
   def asColumnOf[U : TypeMapper]: Column[U] = ColumnOps.AsColumnOf[U](Node(this), None)
-  def asColumnOfType[U : TypeMapper](typeName: String): Column[U] = ColumnOps.AsColumnOf[U](Node(this), Some(typeName))
 
   def asc = new Ordering.Asc(Node(this))
   def desc = new Ordering.Desc(Node(this))
@@ -55,7 +59,6 @@ case class ConstColumn[T : TypeMapper](value: T) extends Column[T] {
   override def toString = s"ConstColumn[${SimpleTypeName.forVal(value)}] $value"
   def bind = new BindColumn(value)
 }
-
 object ConstColumn {
   def NULL = new ConstColumn[Null](null)(TypeMapper.NullTypeMapper)
 }
@@ -102,13 +105,15 @@ class WrappedColumn[T : TypeMapper](parent: ColumnBase[_]) extends Column[T] {
 /**
  * A column which is part of a Table.
  */
-class NamedColumn[T : TypeMapper](val table: Node, val name: String, val options: ColumnOption[T, _]*)
-extends Column[T] {
+class NamedColumn[T : TypeMapper](
+	val table: Node, 
+	val name: String, 
+	val options: ColumnOption[T, _]*) extends Column[T] {
+	
   def nodeChildren = table :: Nil
   override def toString = s"NamedColumn $name"
   override def nodeNamedChildren = (table, "table") :: Nil
 }
-
 object NamedColumn {
-  def unapply[T](n: NamedColumn[T]) = Some((n.table, n.name, n.options))
+  def unapply[T](n: NamedColumn[T]) = Some( (n.table, n.name, n.options) )
 }

@@ -2,13 +2,9 @@ package org.scalaquery.ql
 
 import org.scalaquery.util.{Node, BinaryNode}
 
-/**
- * Marker trait for foreign key and primary key constraints.
- */
-trait Constraint
+sealed trait Constraint
 
-case class PrimaryKey
-	(name: String, columns: IndexedSeq[Node]) extends Constraint
+case class PrimaryKey(name: String, columns: IndexedSeq[Node]) extends Constraint
 
 class ForeignKey[TT <: Table[_], P](
 	val name: String, 
@@ -25,8 +21,8 @@ class ForeignKey[TT <: Table[_], P](
   val targetTable = targetTableUnpackable.value
   val left = Node(unpackp.reify(originalSourceColumns))
   val right = Node(unpackp.reify(originalTargetColumns(targetTable)))
-  override def toString = s"ForeignKey $name"
   
+  override def toString = s"ForeignKey $name"
   /**
    * Needed for JoinBase fkey on clause shortcut (@see def $(..))<br /><br />
    * 	NamingContext() relies on RefId to generate table aliases; since
@@ -67,11 +63,12 @@ object ForeignKeyAction {
 }
 
 class ForeignKeyQuery[TT <: Table[_], U](
-	val fks: List[ForeignKey[TT, _]], override val unpackable: Unpackable[TT, U]) 
-	extends QueryWrap[TT, U](unpackable, fks, Nil) with Constraint {
+	val fks: List[ForeignKey[TT, _]], 
+	override val unpackable: Unpackable[TT, U]
+)
+extends QueryWrap[TT, U](unpackable, fks, Nil) with Constraint {
 	
   override def toString = "ForeignKeyQuery"
-
   /**
    * Combine the constraints of this ForeignKeyQuery with another one with the
    * same target table, leading to a single instance of the target table which

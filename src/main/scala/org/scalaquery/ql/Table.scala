@@ -3,7 +3,7 @@ package org.scalaquery.ql
 import org.scalaquery.SQueryException
 import org.scalaquery.ql.core.{Profile,QueryTemplate,Driver,ColumnOptions}
 import org.scalaquery.session.{PositionedResult, PositionedParameters}
-import org.scalaquery.util.{Node, UnaryNode, BinaryNode, WithOp}
+import org.scalaquery.util.{Node, UnaryNode, WithOp}
 import scala.annotation.unchecked.{uncheckedVariance=> uV}
 
 sealed trait TableBase[T] extends Node with WithOp {
@@ -44,7 +44,7 @@ abstract class Table[T](
     import profile.Implicit._
     Params[P](tm).flatMap{p=> 
     	Query(this).filter{case(t: Table.this.type)=> 
-    		ColumnOps.Is( f(t), p)
+    		ColumnOps.Is(f(t), p)
     	}
     }(profile)
   }
@@ -54,17 +54,16 @@ abstract class Table[T](
       case p:Projection[_] =>
         0 until p.productArity map (n => Node(p.productElement(n)) match {
           case c: NamedColumn[_] => c
-          case c => throw new SQueryException(
-          	s"Cannot use column $c in ${tableName}.* for CREATE TABLE statement"
-          )
+          case c => createTableError(Some(s"column $c"))
         })
       case n:NamedColumn[_] => Iterable(n)
-      case _ => throw new SQueryException(
-      	"Cannot use "+tableName+".* for CREATE TABLE statement"
-      )
+      case _ => createTableError(None)
     }
     f(Node(*))
   }
+	private def createTableError(msg: Option[String]) = throw new SQueryException(
+		s"Cannot use ${msg.getOrElse("")} in ${tableName}.* CREATE TABLE statement"
+	)
 
   def foreignKey[P, PU, TT <: Table[_], U]
     (name: String, sourceColumns: P, targetTable: TT)
@@ -73,7 +72,7 @@ abstract class Table[T](
     	onUpdate: ForeignKeyAction = ForeignKeyAction.NoAction,
       onDelete: ForeignKeyAction = ForeignKeyAction.NoAction
     )
-    (implicit unpack: Unpack[TT, U], unpackp: Unpack[P, PU]):
+    (implicit unpack: Unpack[TT, U], unpackp: Unpack[P, PU]): 
     
     ForeignKeyQuery[TT, U] = {
 	    val mappedTTU = Unpackable(
@@ -102,16 +101,16 @@ abstract class Table[T](
     } yield q
 
   final def foreignKeys: Iterable[ForeignKey[_ <: Table[_], _]] =
-    tableConstraints collect {
-    	case q: ForeignKeyQuery[_,_] => q.fks
-    } flatten
+    tableConstraints.collect{
+    	case q: ForeignKeyQuery[_,_] => q.fks }.flatten
 
   final def primaryKeys: Iterable[PrimaryKey] =
-    tableConstraints collect { case k: PrimaryKey => k }
+    tableConstraints.collect{ case k: PrimaryKey => k }
 
   def index[TT](name: String, on: TT, unique: Boolean = false)
-  	(implicit unpack: Unpack[TT, _]) = 
-  		new Index(name, this, unpack.linearizer(on).getLinearizedNodes, unique)
+  	(implicit unpack: Unpack[TT, _]) = new Index(
+  		name, this, unpack.linearizer(on).getLinearizedNodes, unique
+  	)
 
   def indexes: Iterable[Index] = (for {
       m <- getClass().getMethods.view

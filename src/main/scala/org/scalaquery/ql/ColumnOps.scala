@@ -38,8 +38,8 @@ trait ColumnOps[B1, P1] {
     om(InSet(leftOperand, seq, tm, false))
   def inSetBind[R](seq: Traversable[B1])(implicit om: OM2Bin[Boolean, P1, R], tm: BaseTM) =
     om(InSet(leftOperand, seq, tm, true))
-  def between[P2, P3, R](start: Column[P2], end: Column[P3])(implicit om: OM3[B1, B1, Boolean, P2, P3, R]) =
-    om(Between(leftOperand, start, end))
+  def between[P2, P3, R](start: Column[P2], end: Column[P3])
+  	(implicit om: OM3[B1, B1, Boolean, P2, P3, R]) = om(Between(leftOperand, start, end))
   def ifNull[B2, P2, R](e: Column[P2])(implicit om: OM2[B2, Boolean, P2, R]): Column[P2] =
     EscFunction[P2]("ifnull", leftOperand, Node(e))(e.typeMapper)
 
@@ -91,28 +91,47 @@ trait ColumnOps[B1, P1] {
 }
 
 object ColumnOps {
-  case class In(left: Node, right: Node) extends OperatorColumn[Boolean] with SimpleBinaryOperator { val name = "in" }
+  case class In(left: Node, right: Node) 
+  	extends OperatorColumn[Boolean] with SimpleBinaryOperator { val name = "in" }
 
-  case class Relational(name: String, left: Node, right: Node) extends OperatorColumn[Boolean] with SimpleBinaryOperator
-  case class Arith[T : TypeMapper](name: String, left: Node, right: Node) extends OperatorColumn[T] with SimpleBinaryOperator
+  case class Relational(name: String, left: Node, right: Node) 
+  	extends OperatorColumn[Boolean] with SimpleBinaryOperator
+  	
+  case class Arith[T : TypeMapper](name: String, left: Node, right: Node) 
+  	extends OperatorColumn[T] with SimpleBinaryOperator
 
   case class Is(left: Node, right: Node) extends OperatorColumn[Boolean] with BinaryNode
   case class CountDistinct(child: Node) extends OperatorColumn[Int] with UnaryNode
-  case class InSet[T](child: Node, seq: Traversable[T], tm: TypeMapper[T], bind: Boolean) extends OperatorColumn[Boolean] with UnaryNode
+  
+  case class InSet[T](child: Node, seq: Traversable[T], tm: TypeMapper[T], bind: Boolean) 
+  	extends OperatorColumn[Boolean] with UnaryNode
 
-  case class Between(left: Node, start: Node, end: Node) extends OperatorColumn[Boolean] {
-    def nodeChildren = left :: start :: end :: Nil
+  case class Between(left: Node, start: Node, end: Node) 
+  	extends OperatorColumn[Boolean] {
+    	def nodeChildren = left :: start :: end :: Nil
+  	}
+
+  case class AsColumnOf[T : TypeMapper](child: Node, typeName: Option[String])
+  	extends Column[T] with UnaryNode
+
+  case class And(left: Node, right: Node) 
+  	extends OperatorColumn[Boolean] with SimpleBinaryOperator {
+  	val name = "and" 
   }
-
-  case class AsColumnOf[T : TypeMapper](child: Node, typeName: Option[String]) extends Column[T] with UnaryNode
-
-  case class And(left: Node, right: Node) extends OperatorColumn[Boolean] with SimpleBinaryOperator { val name = "and" }
-  case class Or(left: Node, right: Node) extends OperatorColumn[Boolean] with SimpleBinaryOperator { val name = "or" }
+  case class Or(left: Node, right: Node) 
+  	extends OperatorColumn[Boolean] with SimpleBinaryOperator {
+  	val name = "or"
+  }
   case class Not(child: Node) extends OperatorColumn[Boolean] with UnaryNode
 
-  case class Like(left: Node, right: Node, esc: Option[Char]) extends OperatorColumn[Boolean] with BinaryNode
-  class StartsWith(n: Node, s: String) extends Like(n, ConstColumn(likeEncode(s)+'%'), Some('^'))
-  class EndsWith(n: Node, s: String) extends Like(n, ConstColumn('%'+likeEncode(s)), Some('^'))
+  case class Like(left: Node, right: Node, esc: Option[Char]) 
+  	extends OperatorColumn[Boolean] with BinaryNode
+  	
+  class StartsWith(n: Node, s: String) 
+  	extends Like(n, ConstColumn(likeEncode(s)+'%'), Some('^'))
+  
+  class EndsWith(n: Node, s: String) 
+  	extends Like(n, ConstColumn('%'+likeEncode(s)), Some('^'))
 
   def likeEncode(s: String) = {
     val b = new StringBuilder
