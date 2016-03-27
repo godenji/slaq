@@ -19,8 +19,7 @@ sealed abstract class Query[+P,+U] extends Node {
 
   def nodeChildren = reified :: cond.map(Node.apply) ::: modifiers
   override def nodeNamedChildren = 
-  	(reified, "select") :: 
-  	cond.map(n=> (Node(n), "where")) ::: 
+  	(reified, "select") :: cond.map(n=> (Node(n), "where")) ::: 
   	modifiers.map(o=> (o, "modifier"))
 
   def flatMap[P2,U2](f: P => Query[P2,U2]): Query[P2,U2] = {
@@ -78,34 +77,35 @@ sealed abstract class Query[+P,+U] extends Node {
   	new QueryWrap[P,U](unpackable, cond, mod :: others)
   }
   
-  def union[O >: P, T >: U, R](other: Query[O, T]*)
-  	(implicit reify: Reify[O, R]) = wrap(Union(false, this :: other.toList))
+  def union[O >: P, T >: U, R](next: Query[O, T])(implicit reify: Reify[O, R]): 
+  	Query[R, U] = union(next, false)
 
-  def unionAll[O >: P, T >: U, R](other: Query[O, T]*)
-  	(implicit reify: Reify[O, R]) = wrap(Union(true, this :: other.toList))
+  def unionAll[O >: P, T >: U, R](next: Query[O, T])(implicit reify: Reify[O, R]): 
+  	Query[R, U] = union(next, true)
 
-  private def wrap[R](base: Node)(implicit reify: Reify[P, R]): Query[R, U] = {
-    def f[PP](unpackable: Unpackable[PP, _ <: U]) = 
-    	unpackable.endoMap(v=> v match {
-	      case t:Table[_] =>
-	        t.mapOp(_ => Subquery(base, false)).asInstanceOf[PP]
+  private def union[O >: P, T >: U, R]
+  	(next: Query[O, T], all: Boolean)(implicit reify: Reify[P, R]) = {
+  	
+  	def mapper(n: Node) = n match {
+	    case c: Column[_] => c.typeMapper
+	    case SubqueryColumn(_,_,tm) => tm
+	    case _ => throw new SQueryException("Expected Column or SubqueryColumn")
+  	}
+    def f[PP](unpackable: Unpackable[PP, _ <: U], node: Node) = Unpackable(
+  		unpackable.value match {
+	      case t: Table[_] => t.mapOp(_ => Subquery(node, false)).asInstanceOf[PP]
 	      case o =>
+	        val p = Subquery(node, true) // must be defined outside mapOp
 	        var pos = 0
-	        val p = Subquery(base, true)
-	        unpackable.mapOp{v=>
-	          pos += 1
-	          SubqueryColumn(pos, p, v match {
-	            case c: Column[_] => c.typeMapper
-	            case SubqueryColumn(_,_,tm) => tm
-	            case _ => throw new SQueryException(
-	            	"Expected Column or SubqueryColumn"
-	            )
-	          })
+	        unpackable.mapOp{n=>
+	          pos += 1; SubqueryColumn(pos, p, mapper(n))
 	        }
-	    })
+	    }, unpackable.unpack
+	  )
     val r: Unpackable[R, _ <: U] = unpackable.reifiedUnpackable(reify)
-    Query[R, U](f(r))
+    Query[R, U]( f(r, Union(all, List(this, next))) )
   }
+  
 }
 
 class QueryWrap[+P,+U](
