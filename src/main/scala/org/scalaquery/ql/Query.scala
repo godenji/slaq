@@ -1,7 +1,7 @@
 package org.scalaquery.ql
 
 import org.scalaquery.SQueryException
-import org.scalaquery.util.{Node, WithOp, ValueLinearizer}
+import org.scalaquery.util.{Node, ValueLinearizer}
 import scala.annotation.unchecked.{uncheckedVariance=> uV}
 
 sealed abstract class Query[+P,+U] extends Node {
@@ -124,24 +124,5 @@ object Query extends QueryWrap
 	
 	private def wrapper[P,U](unpack: Unpackable[P,U]) =
 		new QueryWrap[P,U](unpack, Nil, Nil)
-}
-
-case class Subquery(query: Node, rename: Boolean) extends Node {
-  def nodeChildren = query :: Nil
-  override def nodeNamedChildren = (query, "query") :: Nil
-  override def isNamedTable = true
-}
-
-case class SubqueryColumn(
-	pos: Int, subquery: Subquery, typeMapper: TypeMapper[_]) extends Node {
-	
-  def nodeChildren = subquery :: Nil
-  override def nodeNamedChildren = (subquery, "subquery") :: Nil
-  override def toString = s"SubqueryColumn c$pos"
-}
-
-case class Union(all: Boolean, queries: List[Query[_,_]]) extends Node {
-  override def toString = if(all) "Union all" else "Union"
-  def nodeChildren = queries
 }
 
