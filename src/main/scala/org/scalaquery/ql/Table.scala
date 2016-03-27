@@ -72,40 +72,37 @@ abstract class Table[T](
     	onUpdate: ForeignKeyAction = ForeignKeyAction.NoAction,
       onDelete: ForeignKeyAction = ForeignKeyAction.NoAction
     )
-    (implicit unpack: Unpack[TT, U], unpackp: Unpack[P, PU]): 
+    (implicit unpackT: Unpack[TT, U], unpackP: Unpack[P, PU]): 
     
     ForeignKeyQuery[TT, U] = {
-	    val mappedTTU = Unpackable(
-	    	targetTable.mapOp(tt => Table.Alias(Node(tt))), unpack
+	    val targetUnpackable = Unpackable(
+	    	targetTable.mapOp(tt => Table.Alias(Node(tt))), unpackT
 	    )
-	    new ForeignKeyQuery(
-	    	List(new ForeignKey(
-		    	name, this, mappedTTU, targetTable, unpackp,
-		      sourceColumns, targetColumns, onUpdate, onDelete
-	      )),
-	      mappedTTU
+	    val fk = new ForeignKey(
+	    	name, this, targetUnpackable, targetTable, unpackP,
+	      sourceColumns, targetColumns, onUpdate, onDelete
 	    )
+	    new ForeignKeyQuery(List(fk), targetUnpackable)
   }
 
   def primaryKey[TT](name: String, sourceColumns: TT)
   	(implicit unpack: Unpack[TT, _]): PrimaryKey = 
   		PrimaryKey(name, unpack.linearizer(sourceColumns).getLinearizedNodes)
 
-  def tableConstraints: Iterable[Constraint] = 
+  def tableConstraints: Iterator[Constraint] = 
   	for {
-      m <- getClass().getMethods.view
-      if m.getParameterTypes.length == 0 &&
-        (m.getReturnType == classOf[ForeignKeyQuery[_ <: Table[_], _]]
-         || m.getReturnType == classOf[PrimaryKey])
+      m <- getClass().getMethods.iterator
+      if m.getParameterTypes.length == 0 && 
+      	classOf[Constraint].isAssignableFrom(m.getReturnType)
       q = m.invoke(this).asInstanceOf[Constraint]
     } yield q
 
   final def foreignKeys: Iterable[ForeignKey[_ <: Table[_], _]] =
     tableConstraints.collect{
-    	case q: ForeignKeyQuery[_,_] => q.fks }.flatten
+    	case q: ForeignKeyQuery[_,_] => q.fks }.toIndexedSeq.flatten
 
   final def primaryKeys: Iterable[PrimaryKey] =
-    tableConstraints.collect{ case k: PrimaryKey => k }
+    tableConstraints.collect{ case k: PrimaryKey => k }.toIndexedSeq
 
   def index[TT](name: String, on: TT, unique: Boolean = false)
   	(implicit unpack: Unpack[TT, _]) = new Index(
