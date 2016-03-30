@@ -12,23 +12,19 @@ sealed trait TableBase[T] extends Node with WithOp {
 
 abstract class Table[T](
 	val schemaName: Option[String], 
-	val tableName: String
-) extends TableBase[T] with ColumnBase[T] {
+	val tableName: String) extends TableBase[T] with ColumnBase[T] {
 	
 	def this(_tableName: String) = this(None, _tableName)
-	
+  def nodeChildren = Nil
+  override def toString = s"Table $tableName"
+  
   type ProfileType = Profile
   val O: ColumnOptions = ColumnOptions
   
+  def * : ColumnBase[T]
   def column[C : TypeMapper]
 		(n: String, options: ColumnOption[C, ProfileType]*) = 
   		new NamedColumn[C](Node(this), n, options:_*)
-  	
-  final type TableType = T
-  def nodeChildren = Nil
-  override def toString = s"Table $tableName"
-
-  def * : ColumnBase[T]
 	
 	final def join[P <: Table[_], U]
 		(other: P, joinType: JoinType = JoinType.Inner) = { 
@@ -50,6 +46,9 @@ abstract class Table[T](
   }
   
 	def create_* : Iterable[NamedColumn[_]] = {
+		def createTableError(msg: Option[String]) = throw new SQueryException(
+			s"Cannot use ${msg.getOrElse("")} in ${tableName}.* CREATE TABLE statement"
+		)
   	def f(n:Node): Iterable[NamedColumn[_]] = n match {
       case p:Projection[_] =>
         0 until p.productArity map (n => Node(p.productElement(n)) match {
@@ -61,9 +60,6 @@ abstract class Table[T](
     }
     f(Node(*))
   }
-	private def createTableError(msg: Option[String]) = throw new SQueryException(
-		s"Cannot use ${msg.getOrElse("")} in ${tableName}.* CREATE TABLE statement"
-	)
 
   def foreignKey[P, PU, TT <: Table[_], U]
     (name: String, sourceColumns: P, targetTable: TT)
