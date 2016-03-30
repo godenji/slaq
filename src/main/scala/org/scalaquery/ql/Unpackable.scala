@@ -15,4 +15,9 @@ case class Unpackable[T, U](value: T, unpack: Unpack[T, U]) {
   		unpack.reify(value).asInstanceOf[R], 
   		unpack.reifiedUnpack.asInstanceOf[Unpack[R, U]]
   	)
+  	
+  def zip[T2, U2](s2: Unpackable[T2, U2]) = 
+  	Unpackable[(T, T2), (U, U2)](
+  		(value, s2.value), Unpack.unpackTuple2(unpack, s2.unpack)
+  	)
 }
