@@ -1,6 +1,6 @@
 package org.scalaquery.ql
 
-import org.scalaquery.util.{Node, ValueLinearizer}
+import org.scalaquery.util.{BinaryNode, Node, ValueLinearizer}
 import scala.annotation.unchecked.{uncheckedVariance=> uV}
 
 sealed abstract class Query[+P,+U] extends Node {
@@ -49,17 +49,64 @@ sealed abstract class Query[+P,+U] extends Node {
   
   def having[T <: Column[_]](f: P => T)(implicit qc: Queryable[T]): Query[P,U] = {
   	val c = f(unpackable.value)
-  	val conditions = qc(c, cond).map{
-  		case x if x == c => HavingColumn(c)(c.typeMapper)
-  		case x => x
+  	val conditions = qc(c, cond).map{x=>
+  		if(x == c) HavingColumn(c)(c.typeMapper) else x
   	}
     new QueryWrap[P,U](unpackable, conditions, modifiers)
   }
   
-  def exists = StdFunction[Boolean]("exists", map(_ => ConstColumn(1)))
+  def join2[P2, U2, C <: Column[_] : Queryable, R]
+  	(right: Query[P2, U2])(on: (P, P2) => C)
+  	(implicit reify: Reify[(P, P2), R]) = joinPair(right, JoinType.Inner)(on)
+  	
+  def leftJoin2[P2, U2, C <: Column[_] : Queryable, R]
+  	(right: Query[P2, U2])(on: (P, P2) => C)
+  	(implicit reify: Reify[(P, P2), R]) = joinPair(right, JoinType.Left)(on)
+  	
+  def rightJoin2[P2, U2, C <: Column[_] : Queryable, R]
+  	(right: Query[P2, U2])(on: (P, P2) => C)
+  	(implicit reify: Reify[(P, P2), R]) = joinPair(right, JoinType.Right)(on)
+  	
+  def outerJoin2[P2, U2, C <: Column[_] : Queryable, R]
+  	(right: Query[P2, U2])(on: (P, P2) => C)
+  	(implicit reify: Reify[(P, P2), R]) = joinPair(right, JoinType.Outer)(on)
+  
+  private def joinPair[P2, U2, C <: Column[_] : Queryable, R]
+  	(right: Query[P2, U2], joinType: JoinType)
+  	(on: (P, P2) => C)(implicit reify: Reify[(P, P2), R]) = {
+  	
+  	val(u1, u2) = (unpackable, right.unpackable)
+  	val node = Join2(
+  		this, right, Node(on(u1.value, u2.value)), joinType
+  	)
+  	val unpack = u1.zip(u2).asInstanceOf[Unpackable[(P, P2), (U, U2)]]
+  	Join2.query[P, P2, U, U2, R](unpack, reify, node)  
+  }
+  
+  def join3[C <: Column[_] : Queryable](on: P => C) = joinOne(on, JoinType.Inner)
+  def leftJoin3[C <: Column[_]  : Queryable](on: P => C) = joinOne(on, JoinType.Left)
+  def rightJoin3[C <: Column[_] : Queryable](on: P => C) = joinOne(on, JoinType.Right)
+  def outerJoin3[C <: Column[_] : Queryable](on: P => C) = joinOne(on, JoinType.Outer)
+  
+  private def joinOne[C <: Column[_] : Queryable]
+  	(on: P => C, joinType: JoinType = JoinType.Inner) = {
+  	
+  	val upu = unpackable.asInstanceOf[Unpackable[P, U]]
+  	val node = Join2(this, this, Node(on(upu.value)), joinType)
+  	Query[P, U](
+  		Unpackable(upu.mapOp(_ => node), upu.unpack)
+  	)  
+  }
+  
+  def union[P2 >: P, U2 >: U, R](right: Query[P2, U2])
+  	(implicit reify: Reify[P2, R]): Query[R, U] = union(right, false)
 
-  def asColumn(implicit ev: P <:< Column[_]): P =
-  	ev(unpackable.value).mapOp(_=> this).asInstanceOf[P]
+  def unionAll[P2 >: P, U2 >: U, R](right: Query[P2, U2])
+  	(implicit reify: Reify[P2, R]): Query[R, U] = union(right, true)
+
+  private def union[P2 >: P, U2 >: U, R]
+  	(right: Query[P2, U2], all: Boolean)(implicit reify: Reify[P, R]) = 
+  		Union.query(this, right, all)(unpackable, reify)
   
   def take(num: Int): Query[P,U] = take( ConstColumn(num) )
   def drop(num: Int): Query[P,U] = drop( ConstColumn(num) )
@@ -72,15 +119,11 @@ sealed abstract class Query[+P,+U] extends Node {
   	new QueryWrap[P,U](unpackable, cond, mod :: others)
   }
   
-  def union[O >: P, T >: U, R](right: Query[O, T])(implicit reify: Reify[O, R]): 
-  	Query[R, U] = union(right, false)
-
-  def unionAll[O >: P, T >: U, R](right: Query[O, T])(implicit reify: Reify[O, R]): 
-  	Query[R, U] = union(right, true)
-
-  private def union[O >: P, T >: U, R]
-  	(right: Query[O, T], all: Boolean)(implicit reify: Reify[P, R]) = 
-  		Union.query(this, right, all)(unpackable, reify)
+  def exists = 
+  	StdFunction[Boolean]("exists", map(_ => ConstColumn(1)))
+  	
+  def asColumn(implicit ev: P <:< Column[_]): P =
+  	ev(unpackable.value).mapOp(_=> this).asInstanceOf[P]
 }
 
 class QueryWrap[+P,+U](
