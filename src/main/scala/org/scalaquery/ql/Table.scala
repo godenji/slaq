@@ -72,7 +72,7 @@ abstract class Table[T](
     
     ForeignKeyQuery[TT, U] = {
 	    val targetUnpackable = Unpackable(
-	    	targetTable.mapOp(tt => Table.Alias(Node(tt))), unpackT
+	    	targetTable.mapOp(Table.Alias), unpackT
 	    )
 	    val fk = new ForeignKey(
 	    	name, this, targetUnpackable, targetTable, unpackP,

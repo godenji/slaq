@@ -6,11 +6,8 @@ import org.scalaquery.util.Node
 trait ImplicitConversions[DriverType <: Profile] {
   implicit val scalaQueryDriver: DriverType
   
-  @inline implicit final def table2Query[T <: TableBase[_], U](t: T) = {
-  	Query[T, Nothing](
-  		t.mapOp{n=> Table.Alias(Node(n))}
-  	)(Unpack.unpackTableBase)
-  }
+  @inline implicit final def table2Query[T <: TableBase[_], U](t: T) =
+  	Query[T, U](t.mapOp(Table.Alias))(Unpack.unpackTableBase)
 
   @inline implicit final 
   	def baseColumn2ColumnOps[B1 : BaseTypeMapper]
