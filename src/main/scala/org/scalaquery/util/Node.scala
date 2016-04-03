@@ -35,14 +35,15 @@ trait Node {
 
 object Node {
   def apply(o:Any): Node = o match {
-    case null => ConstColumn.NULL
-    case n:Node => n.nodeDelegate
-    case p:Product => new ProductNode { val product = p }
-    case r:AnyRef => throw new SQueryException(
-    	s"Cannot narrow $o of type ${SimpleTypeName.forVal(r)} to Node"
-    )
-    case _ => throw new SQueryException(s"Cannot narrow $o to Node")
+    case null 			=> ConstColumn.NULL
+    case n: Node    => n.nodeDelegate
+    case p: Product => new ProductNode { val product = p }
+    case r: AnyRef  => fail(s"$o of type ${SimpleTypeName.forVal(r)}")
+    case _ => fail(s"$o")
   }
+  private def fail(msg: String) = throw new SQueryException(
+  	s"Cannot narrow $msg to Node"
+  )
 
   final class DumpContext(val out: PrintWriter, val nc: NamingContext)
 }

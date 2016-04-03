@@ -163,5 +163,5 @@ select max(id) into @v from ${quote(seqName)}; return @v; end
 }
 
 class MySQLSQLUtils extends SQLUtils {
-  override def quote(id: String) = '`' + id + '`'
+  override def quote(id: String) = s"`$id`"
 }
