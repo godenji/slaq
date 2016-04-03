@@ -6,106 +6,78 @@ import org.scalaquery.simple.SetParameter
 class PositionedParameters(val ps: PreparedStatement) {
 
   var pos = 0
+  private def apply(f: Int => Unit): Unit = {
+  	val npos = pos + 1
+  	f(npos)
+  	pos = npos
+  }
 
   def >> [T](value: T)(implicit f: SetParameter[T]): Unit = f(value, this)
 
-  def setNull(sqlType: Int)            { val npos = pos + 1; ps.setNull(npos, sqlType);     pos = npos }
-
-  def setBoolean(value: Boolean)       { val npos = pos + 1; ps.setBoolean   (npos, value); pos = npos }
-  def setBlob(value: Blob)             { val npos = pos + 1; ps.setBlob      (npos, value); pos = npos }
-  def setByte(value: Byte)             { val npos = pos + 1; ps.setByte      (npos, value); pos = npos }
-  def setBytes(value: Array[Byte])     { val npos = pos + 1; ps.setBytes     (npos, value); pos = npos }
-  def setClob(value: Clob)             { val npos = pos + 1; ps.setClob      (npos, value); pos = npos }
-  def setDate(value: Date)             { val npos = pos + 1; ps.setDate      (npos, value); pos = npos }
-  def setDouble(value: Double)         { val npos = pos + 1; ps.setDouble    (npos, value); pos = npos }
-  def setFloat(value: Float)           { val npos = pos + 1; ps.setFloat     (npos, value); pos = npos }
-  def setInt(value: Int)               { val npos = pos + 1; ps.setInt       (npos, value); pos = npos }
-  def setLong(value: Long)             { val npos = pos + 1; ps.setLong      (npos, value); pos = npos }
-  def setShort(value: Short)           { val npos = pos + 1; ps.setShort     (npos, value); pos = npos }
-  def setString(value: String)         { val npos = pos + 1; ps.setString    (npos, value); pos = npos }
-  def setTime(value: Time)             { val npos = pos + 1; ps.setTime      (npos, value); pos = npos }
-  def setTimestamp(value: Timestamp)   { val npos = pos + 1; ps.setTimestamp (npos, value); pos = npos }
-  def setBigDecimal(value: BigDecimal) { val npos = pos + 1; ps.setBigDecimal(npos, value.bigDecimal); pos = npos }
-  def setObject(value: AnyRef, sqlType: Int) { val npos = pos + 1; ps.setObject(npos, value, sqlType); pos = npos }
-
-  def setBooleanOption(value: Option[Boolean]) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, Types.BOOLEAN) else ps.setBoolean(npos, value.get)
-    pos = npos
-  }
-  def setBlobOption(value: Option[Blob]) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, Types.BLOB) else ps.setBlob(npos, value.get)
-    pos = npos
-  }
-  def setByteOption(value: Option[Byte]) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, Types.TINYINT) else ps.setByte(npos, value.get)
-    pos = npos
-  }
-  def setBytesOption(value: Option[Array[Byte]]) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, Types.BLOB) else ps.setBytes(npos, value.get)
-    pos = npos
-  }
-  def setClobOption(value: Option[Clob]) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, Types.CLOB) else ps.setClob(npos, value.get)
-    pos = npos
-  }
-  def setDateOption(value: Option[Date]) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, Types.DATE) else ps.setDate(npos, value.get)
-    pos = npos
-  }
-  def setDoubleOption(value: Option[Double]) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, Types.DOUBLE) else ps.setDouble(npos, value.get)
-    pos = npos
-  }
-  def setFloatOption(value: Option[Float]) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, Types.FLOAT) else ps.setFloat(npos, value.get)
-    pos = npos
-  }
-  def setIntOption(value: Option[Int]) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, Types.INTEGER) else ps.setInt(npos, value.get)
-    pos = npos
-  }
-  def setLongOption(value: Option[Long]) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, Types.INTEGER) else ps.setLong(npos, value.get)
-    pos = npos
-  }
-  def setShortOption(value: Option[Short]) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, Types.SMALLINT) else ps.setShort(npos, value.get)
-    pos = npos
-  }
-  def setStringOption(value: Option[String]) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, Types.VARCHAR) else ps.setString(npos, value.get)
-    pos = npos
-  }
-  def setTimeOption(value: Option[Time]) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, Types.TIME) else ps.setTime(npos, value.get)
-    pos = npos
-  }
-  def setTimestampOption(value: Option[Timestamp]) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, Types.TIMESTAMP) else ps.setTimestamp(npos, value.get)
-    pos = npos
-  }
-  def setBigDecimalOption(value: Option[BigDecimal]) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, Types.DECIMAL) else ps.setBigDecimal(npos, value.get.bigDecimal)
-    pos = npos
-  }
-  def setObjectOption(value: Option[AnyRef], sqlType: Int) {
-    val npos = pos + 1
-    if(value eq None) ps.setNull(npos, sqlType) else ps.setObject(npos, value.get, sqlType)
-    pos = npos
-  }
+  def setNull(sqlType: Int)            = apply(ps.setNull      (_, sqlType))
+  def setBlob(value: Blob)             = apply(ps.setBlob      (_, value))
+  def setBoolean(value: Boolean)       = apply(ps.setBoolean   (_, value))
+  def setByte(value: Byte)             = apply(ps.setByte      (_, value))
+  def setBytes(value: Array[Byte])     = apply(ps.setBytes     (_, value))
+  def setClob(value: Clob)             = apply(ps.setClob      (_, value))
+  def setDate(value: Date)             = apply(ps.setDate      (_, value))
+  def setDouble(value: Double)         = apply(ps.setDouble    (_, value))
+  def setFloat(value: Float)           = apply(ps.setFloat     (_, value))
+  def setInt(value: Int)               = apply(ps.setInt       (_, value))
+  def setLong(value: Long)             = apply(ps.setLong      (_, value))
+  def setShort(value: Short)           = apply(ps.setShort     (_, value))
+  def setString(value: String)         = apply(ps.setString    (_, value))
+  def setTime(value: Time)             = apply(ps.setTime      (_, value))
+  def setTimestamp(value: Timestamp)   = apply(ps.setTimestamp (_, value))
+  def setBigDecimal(value: BigDecimal) = apply(ps.setBigDecimal(_, value.bigDecimal))
+  def setObject(value: AnyRef, sqlType: Int) = apply(ps.setObject(_, value, sqlType))
+  
+  def setBlobOption(value: Option[Blob]) = 
+  	value.map(setBlob).getOrElse(setNull(Types.BLOB))
+  
+  def setBooleanOption(value: Option[Boolean]) =
+  	value.map(v=> setBoolean(v)).getOrElse(setNull(Types.BOOLEAN))
+  	
+  def setByteOption(value: Option[Byte]) = 
+  	value.map(setByte).getOrElse(setNull(Types.TINYINT))
+  	
+  def setBytesOption(value: Option[Array[Byte]]) = 
+  	value.map(setBytes).getOrElse(setNull(Types.BLOB))
+  	
+  def setClobOption(value: Option[Clob]) = 
+  	value.map(setClob).getOrElse(setNull(Types.CLOB))
+  	
+  def setDateOption(value: Option[Date]) = 
+  	value.map(setDate).getOrElse(setNull(Types.DATE))
+  	
+  def setDoubleOption(value: Option[Double]) = 
+  	value.map(setDouble).getOrElse(setNull(Types.DOUBLE))
+  	
+  def setFloatOption(value: Option[Float]) = 
+  	value.map(setFloat).getOrElse(setNull(Types.FLOAT))
+  	
+  def setIntOption(value: Option[Int]) = 
+  	value.map(setInt).getOrElse(setNull(Types.INTEGER))
+  	
+  def setLongOption(value: Option[Long]) = 
+  	value.map(setLong).getOrElse(setNull(Types.INTEGER))
+  	
+  def setShortOption(value: Option[Short]) = 
+  	value.map(setShort).getOrElse(setNull(Types.SMALLINT))
+  	
+  def setStringOption(value: Option[String]) = 
+  	value.map(setString).getOrElse(setNull(Types.VARCHAR))
+  	
+  def setTimeOption(value: Option[Time]) = 
+  	value.map(setTime).getOrElse(setNull(Types.TIME))
+  	
+  def setTimestampOption(value: Option[Timestamp]) = 
+  	value.map(setTimestamp).getOrElse(setNull(Types.TIMESTAMP))
+  	
+  def setBigDecimalOption(value: Option[BigDecimal]) = 
+  	value.map(v => setBigDecimal(v.bigDecimal)).
+  	getOrElse(setNull(Types.DECIMAL))
+  	
+  def setObjectOption(value: Option[AnyRef], sqlType: Int) = 
+  	value.map(v => setObject(v, sqlType)).getOrElse(setNull(sqlType))
 }
