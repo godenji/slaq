@@ -40,19 +40,5 @@ class EmbeddingTest(tdb: TestDB) extends DBTest(tdb) {
       ("u2", "p4u2"),
       ("u3", null)
     ), l1)
-
-    val l2 = Q(GetResult { r => (r.nextString, r.view1.to[List](GetResult(_.nextString))) }) + """
-      select u.NAME, (u.r0 + p.r0), p.NAME
-      from (select *, rownum as r0 from USERS order by NAME) u
-        left join (select *, 0 as r0 from POSTS order by NAME) p
-        on u.ID = p.UID
-      order by u.r0
-    """ list;
-    l2 foreach println
-    assertEquals(List(
-      ("u1", List("p1u1", "p2u1", "p3u1")),
-      ("u2", List("p4u2")),
-      ("u3", List())
-    ), l2)
   }
 }

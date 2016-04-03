@@ -127,45 +127,6 @@ sealed abstract class PositionedResult(val rs: ResultSet)
    */
   def close(): Unit
 
-  /**
-   * Create an embedded PositionedResult which extends from the given dataPos
-   * column until the end of this PositionedResult, starts at the current row
-   * and ends when the discriminator predicate (which can read columns starting
-   * at discriminatorPos) returns false or when this PositionedResult ends.
-   */
-  def view(discriminatorPos: Int, dataPos: Int, discriminator: (PositionedResult => Boolean)): PositionedResult = new PositionedResult(rs) {
-    override protected[this] val startPos = dataPos
-    pos = Int.MinValue
-    def close() {}
-    override def nextRow = {
-      def disc = {
-        pos = discriminatorPos
-        val ret = discriminator(this)
-        pos = startPos
-        ret
-      }
-      if(pos == Int.MinValue) disc else {
-        val outerRet = outer.nextRow
-        val ret = outerRet && disc
-        pos = startPos
-        if(!ret && outerRet) outer.rewind
-        ret
-      }
-    }
-  }
-
-  /**
-   * Create an embedded PositionedResult with a single discriminator column
-   * followed by the embedded data, starting at the current position. The
-   * embedded view lasts while the discriminator stays the same. If the first
-   * discriminator value is NULL, the view is empty.
-   */
-  def view1: PositionedResult = {
-    val discPos = pos
-    val disc = nextObject
-    view(discPos, discPos+1, { r => disc != null && disc == r.nextObject })
-  }
-
   final def build[C[_], R](gr: GetResult[R])(implicit canBuildFrom: CanBuildFrom[Nothing, R, C[R]]): C[R] = {
     val b = canBuildFrom()
     while(nextRow) b += gr(this)
