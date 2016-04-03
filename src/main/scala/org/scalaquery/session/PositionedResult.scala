@@ -127,16 +127,18 @@ sealed abstract class PositionedResult(val rs: ResultSet)
    */
   def close(): Unit
 
-  final def build[C[_], R](gr: GetResult[R])(implicit canBuildFrom: CanBuildFrom[Nothing, R, C[R]]): C[R] = {
-    val b = canBuildFrom()
-    while(nextRow) b += gr(this)
-    b.result()
-  }
+  final def build[C[_], R](gr: GetResult[R])
+  	(implicit canBuildFrom: CanBuildFrom[Nothing, R, C[R]]): C[R] = {
+	    val b = canBuildFrom()
+	    while(nextRow) b += gr(this)
+	    b.result()
+	  }
 
   final def to[C[_]] = new To[C]()
 
   final class To[C[_]] private[PositionedResult] () {
-    def apply[R](gr: GetResult[R])(implicit session: Session, canBuildFrom: CanBuildFrom[Nothing, R, C[R]]) =
+    def apply[R](gr: GetResult[R])
+    	(implicit session: Session, canBuildFrom: CanBuildFrom[Nothing, R, C[R]]) =
       build[C, R](gr)
   }
 }
@@ -144,7 +146,8 @@ sealed abstract class PositionedResult(val rs: ResultSet)
 /**
  * A PositionedResult which can be used as a CloseableIterator.
  */
-abstract class PositionedResultIterator[+T](_rs: ResultSet, maxRows: Int) extends PositionedResult(_rs) with CloseableIterator[T] {
+abstract class PositionedResultIterator[+T](_rs: ResultSet, maxRows: Int) 
+	extends PositionedResult(_rs) with CloseableIterator[T] {
 
   private[this] var done = false
   private[this] var count = 0
