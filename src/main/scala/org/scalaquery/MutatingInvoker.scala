@@ -31,12 +31,12 @@ trait MutatingUnitInvoker[R] extends UnitInvoker[R] {
 trait MutatingStatementInvoker[-P,R] extends StatementInvoker[P,R] with MutatingInvoker[P,R] {
 
   protected def updateRowValues(rs: PositionedResult, value: R)
-  protected val mutateConcurrency: ResultSetConcurrency = ResultSetConcurrency.Updatable
-  protected val mutateType: ResultSetType = ResultSetType.Auto
+  protected val concurrency: ResultSetConcurrency = ResultSetConcurrency.Updatable
+  protected val cursor: ResultSetType = ResultSetType.Auto
   protected val previousAfterDelete = false
 
   def mutate(param: P, f: ResultSetMutator[R] => Unit, end: ResultSetMutator[R] => Unit)(implicit session: Session): Unit = {
-    results(param, 0, defaultConcurrency = mutateConcurrency, defaultType = mutateType).fold(
+    results(param, 0, cursor, concurrency).fold(
       _ => throw new SQueryException("Cannot transform an update result"),
       pr => try {
         val rs = pr.rs

@@ -2,84 +2,101 @@ package org.scalaquery.session
 
 import java.sql.{PreparedStatement, Connection, DatabaseMetaData, Statement}
 import org.scalaquery.SQueryException
+import org.scalaquery.session.{
+	ResultSetConcurrency => Concurrency,
+	ResultSetHoldability => Holdability
+}
+import Concurrency._, Holdability._, ResultSetType._
 
 /**
  * A database session which opens a connection and transaction on demand.
  */
 trait Session extends java.io.Closeable { self =>
-
+	
   def conn: Connection
   def metaData: DatabaseMetaData
   def capabilities: DatabaseCapabilities
+  
+  def cursorType: ResultSetType = ResultSetType.Auto
+  def concurrencyType: Concurrency = Concurrency.Auto
+  def holdabilityType: Holdability = Holdability.Auto
 
-  def resultSetType: ResultSetType = ResultSetType.Auto
-  def resultSetConcurrency: ResultSetConcurrency = ResultSetConcurrency.Auto
-  def resultSetHoldability: ResultSetHoldability = ResultSetHoldability.Auto
-
-  final def prepareStatement(sql: String,
-             defaultType: ResultSetType = ResultSetType.ForwardOnly,
-             defaultConcurrency: ResultSetConcurrency = ResultSetConcurrency.ReadOnly,
-             defaultHoldability: ResultSetHoldability = ResultSetHoldability.Default): PreparedStatement = {
-    resultSetHoldability.withDefault(defaultHoldability) match {
-      case ResultSetHoldability.Default =>
-        conn.prepareStatement(sql, resultSetType.withDefault(defaultType).intValue,
-          resultSetConcurrency.withDefault(defaultConcurrency).intValue)
+  final def prepareStatement(
+  	sql: String,
+		cursor: ResultSetType = ForwardOnly,
+		concurrency: Concurrency = ReadOnly,
+		holdability: Holdability = Holdability.Default): PreparedStatement = {
+  	
+    holdabilityType.withDefault(holdability) match {
+      case Holdability.Default =>
+        conn.prepareStatement(sql, cursorType.withDefault(cursor).intValue,
+          concurrencyType.withDefault(concurrency).intValue)
       case h =>
-        conn.prepareStatement(sql, resultSetType.withDefault(defaultType).intValue,
-          resultSetConcurrency.withDefault(defaultConcurrency).intValue,
+        conn.prepareStatement(sql, cursorType.withDefault(cursor).intValue,
+          concurrencyType.withDefault(concurrency).intValue,
           h.intValue)
     }
   }
 
-  final def createStatement(defaultType: ResultSetType = ResultSetType.ForwardOnly,
-             defaultConcurrency: ResultSetConcurrency = ResultSetConcurrency.ReadOnly,
-             defaultHoldability: ResultSetHoldability = ResultSetHoldability.Default): Statement = {
-    resultSetHoldability.withDefault(defaultHoldability) match {
-      case ResultSetHoldability.Default =>
-        conn.createStatement(resultSetType.withDefault(defaultType).intValue,
-          resultSetConcurrency.withDefault(defaultConcurrency).intValue)
+  final def createStatement(
+  	cursor: ResultSetType = ForwardOnly,
+		concurrency: Concurrency = ReadOnly,
+		holdability: Holdability = Holdability.Default): Statement = {
+  	
+    holdabilityType.withDefault(holdability) match {
+      case Holdability.Default =>
+        conn.createStatement(cursorType.withDefault(cursor).intValue,
+          concurrencyType.withDefault(concurrency).intValue)
       case h =>
-        conn.createStatement(resultSetType.withDefault(defaultType).intValue,
-          resultSetConcurrency.withDefault(defaultConcurrency).intValue,
+        conn.createStatement(cursorType.withDefault(cursor).intValue,
+          concurrencyType.withDefault(concurrency).intValue,
           h.intValue)
     }
   }
 
-  final def withPreparedStatement[T](sql: String,
-              defaultType: ResultSetType = ResultSetType.ForwardOnly,
-              defaultConcurrency: ResultSetConcurrency = ResultSetConcurrency.ReadOnly,
-              defaultHoldability: ResultSetHoldability = ResultSetHoldability.Default)(f: (PreparedStatement => T)): T = {
-    val st = prepareStatement(sql, defaultType, defaultConcurrency, defaultHoldability)
+  final def withPreparedStatement[T](
+  	sql: String,
+		cursor: ResultSetType = ForwardOnly,
+		concurrency: Concurrency = ReadOnly,
+		holdability: Holdability = Holdability.Default)(f: PreparedStatement => T): T = {
+  	
+    val st = prepareStatement(sql, cursor, concurrency, holdability)
     try f(st) finally st.close()
   }
 
-  final def withStatement[T](defaultType: ResultSetType = ResultSetType.ForwardOnly,
-              defaultConcurrency: ResultSetConcurrency = ResultSetConcurrency.ReadOnly,
-              defaultHoldability: ResultSetHoldability = ResultSetHoldability.Default)(f: (Statement => T)): T = {
-    val st = createStatement(defaultType, defaultConcurrency, defaultHoldability)
+  final def withStatement[T](
+		cursor: ResultSetType = ForwardOnly,
+		concurrency: Concurrency = ReadOnly,
+		holdability: Holdability = Holdability.Default)(f: Statement => T): T = {
+  	
+    val st = createStatement(cursor, concurrency, holdability)
     try f(st) finally st.close()
   }
 
   def close(): Unit
 
   /**
-   * Call this method within a <em>withTransaction</em> call to roll back the current
-   * transaction after <em>withTransaction</em> returns.
+   * Call this method within a <em>withTransaction</em> call to roll back 
+   * the current transaction after <em>withTransaction</em> returns.
    */
   def rollback(): Unit
 
   /**
-   * Run the supplied function within a transaction. If the function throws an Exception
-   * or the session's rollback() method is called, the transaction is rolled back,
-   * otherwise it is commited when the function returns.
+   * Run the supplied function within a transaction. If the function throws 
+   * an Exception or the session's rollback() method is called, the transaction 
+   * is rolled back, otherwise it is commited when the function returns.
    */
   def withTransaction[T](f: => T): T
 
-  def forParameters(rsType: ResultSetType = resultSetType, rsConcurrency: ResultSetConcurrency = resultSetConcurrency,
-                    rsHoldability: ResultSetHoldability = resultSetHoldability): Session = new Session {
-    override def resultSetType = rsType
-    override def resultSetConcurrency = rsConcurrency
-    override def resultSetHoldability = rsHoldability
+  def forParameters(
+		cursor: ResultSetType = cursorType, 
+		concurrency: Concurrency = concurrencyType,
+		holdability: Holdability = holdabilityType): Session = new Session {
+  	
+    override def cursorType = cursor
+    override def concurrencyType = concurrency
+    override def holdabilityType = holdability
+    
     def conn = self.conn
     def metaData = self.metaData
     def capabilities = self.capabilities
@@ -113,7 +130,9 @@ class BaseSession private[session] (db: Database) extends Session {
   }
 
   def rollback() {
-    if(conn.getAutoCommit) throw new SQueryException("Cannot roll back session in auto-commit mode")
+    if(conn.getAutoCommit) throw new SQueryException(
+    	"Cannot roll back session in auto-commit mode"
+    )
     doRollback = true
   }
 

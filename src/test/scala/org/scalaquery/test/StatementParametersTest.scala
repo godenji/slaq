@@ -54,12 +54,12 @@ class StatementParametersTest(tdb: TestDB) extends DBTest(tdb) {
   }
 
   def pr(msg: String)(implicit ss: Session) = println(
-  	s"$msg: ${ss.resultSetType} ${ss.resultSetConcurrency} ${ss.resultSetHoldability}"
+  	s"$msg: ${ss.cursorType} ${ss.concurrencyType} ${ss.holdabilityType}"
   )
 
   def check(t: ResultSetType, c: ResultSetConcurrency, h: ResultSetHoldability)(implicit ss: Session) {
-    assertEquals(ss.resultSetType, t)
-    assertEquals(ss.resultSetConcurrency, c)
-    assertEquals(ss.resultSetHoldability, h)
+    assertEquals(ss.cursorType, t)
+    assertEquals(ss.concurrencyType, c)
+    assertEquals(ss.holdabilityType, h)
   }
 }

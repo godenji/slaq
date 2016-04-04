@@ -22,12 +22,14 @@ abstract class Database {
   protected[session] var capabilities: DatabaseCapabilities = null
 
   /**
-   * Create a new session. The session needs to be closed explicitly by calling its close() method.
+   * Create a new session. The session needs to be closed explicitly 
+   * by calling its close() method.
    */
   def createSession(): Session = new BaseSession(this)
 
   /**
-   * Run the supplied function with a new session and automatically close the session at the end.
+   * Run the supplied function with a new session and automatically close 
+   * the session at the end.
    */
   def withSession[T](f: Session => T): T = {
     val s = createSession()
@@ -35,9 +37,12 @@ abstract class Database {
   }
 
   /**
-   * Run the supplied function with a new session in a transaction and automatically close the session at the end.
+   * Run the supplied function with a new session in a transaction 
+   * and automatically close the session at the end.
    */
-  def withTransaction[T](f: Session => T): T = withSession {s=> s.withTransaction(f(s))}
+  def withTransaction[T](f: Session => T): T = withSession {
+  	s=> s.withTransaction(f(s))
+  }
 }
 
 /**
@@ -57,13 +62,21 @@ object Database {
    */
   def forName(name: String) = new InitialContext().lookup(name) match {
     case ds: DataSource => forDataSource(ds)
-    case x => throw new SQueryException(s"Expected a DataSource for JNDI name $name, but got $x")
+    case x => throw new SQueryException(
+    	s"Expected a DataSource for JNDI name $name, but got $x"
+    )
   }
 
   /**
    * Create a Database that uses the DriverManager to open new connections.
    */
-  def forURL(url:String, user:String = null, password:String = null, prop: Properties = null, driver:String = null): Database = new Database {
+  def forURL(
+  	url: String, 
+  	user: String = null, 
+  	password: String = null, 
+  	prop: Properties = null, 
+  	driver:String = null): Database = new Database {
+  	
     if(driver ne null) Class.forName(driver)
     val cprop = if(prop.ne(null) && user.eq(null) && password.eq(null)) prop else {
       val p = new Properties(prop)
@@ -72,7 +85,8 @@ object Database {
       p
     }
 
-    protected[session] def createConnection(): Connection = DriverManager.getConnection(url, cprop)
+    protected[session] def createConnection(): Connection = 
+    	DriverManager.getConnection(url, cprop)
   }
 
   /**
@@ -80,7 +94,8 @@ object Database {
    */
   def forURL(url:String, prop: Map[String, String]): Database = {
     val p = new Properties
-    if(prop ne null) for((k,v) <- prop) if(k.ne(null) && v.ne(null)) p.setProperty(k, v)
+    if(prop ne null) 
+    	for((k,v) <- prop) if(k.ne(null) && v.ne(null)) p.setProperty(k, v)
     forURL(url, prop = p)
   }
 }
