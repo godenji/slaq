@@ -1,6 +1,6 @@
 package org.scalaquery.ql
 
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.ql.core.Profile
 import org.scalaquery.session.{PositionedResult, PositionedParameters}
 import org.scalaquery.util.{Node, WithOp, SimpleTypeName, ValueLinearizer}
@@ -32,7 +32,7 @@ abstract class Column[T : TypeMapper] extends ColumnBase[T] {
     		typeMapper(profile).nextValueOrElse(n, rs)
   	}
   def get[U](implicit ev: Option[U] =:= T): Column[U] = getOr[U] {
-  	throw new SQueryException(s"Read NULL value for column $this")
+  	Fail(s"Read NULL value for column $this")
   }
   final def ~[U](b: Column[U]) = new Projection2[T, U](this, b)
 	def ? : Column[Option[T]] = new WrappedColumn(this)(

@@ -2,7 +2,7 @@ package org.scalaquery.ql.core
 
 import annotation.implicitNotFound
 import java.sql.Statement
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.ql.{Query, Unpackable, Unpack}
 import org.scalaquery.session.{Session, PositionedParameters}
 
@@ -68,7 +68,7 @@ class InsertInvoker[T, U] (unpackable: Unpackable[T, U], profile: Profile) {
         for((res, idx) <- st.executeBatch().zipWithIndex) res match {
           case Statement.SUCCESS_NO_INFO => unknown = true
           case Statement.EXECUTE_FAILED =>
-            throw new SQueryException("Failed to insert row #" + (idx+1))
+            Fail("Failed to insert row #" + (idx+1))
           case i => count += i
         }
         if(unknown) None else Some(count)

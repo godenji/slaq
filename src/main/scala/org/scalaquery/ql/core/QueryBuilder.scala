@@ -3,7 +3,7 @@ package org.scalaquery.ql.core
 import scala.collection.mutable.{
 	LinkedHashMap, LinkedHashSet
 }
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.ql._
 import org.scalaquery.util._
 
@@ -149,7 +149,7 @@ extends QueryBuilderAction
     case ColumnOps.Like(l,r,esc)=>
       b += '('; expr(l, b); b += " LIKE "; expr(r, b);
       esc.foreach { ch =>
-        if(ch == '\'' || ch == '%' || ch == '_') throw new SQueryException(
+        if(ch == '\'' || ch == '%' || ch == '_') Fail(
         	s"Illegal escape character '$ch' for LIKE expression"
         )
         b += s" escape '$ch'"
@@ -223,12 +223,12 @@ extends QueryBuilderAction
       }
     case JoinPart(left,right)=>
     	//left.dump("left-dump", nc); right.dump("right-dump", nc)
-    	throw new SQueryException("""
+    	Fail("""
 				Join queries require yield clause to reference a table's
 				star projection or single column"""
     	)
     case _ =>
-    	throw new SQueryException(
+    	Fail(
     		s"Don't know what to do with node `$c` in an expression"
     	)
   }

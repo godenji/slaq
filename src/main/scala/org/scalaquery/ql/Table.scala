@@ -1,6 +1,6 @@
 package org.scalaquery.ql
 
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.ql.core.{Profile,QueryTemplate,Driver,ColumnOptions}
 import org.scalaquery.session.{PositionedResult, PositionedParameters}
 import org.scalaquery.util.{Node, UnaryNode, WithOp}
@@ -45,7 +45,7 @@ abstract class Table[T](
   }
   
 	def create_* : Iterable[NamedColumn[_]] = {
-		def createTableError(msg: Option[String]) = throw new SQueryException(
+		def createTableError(msg: Option[String]) = Fail(
 			s"Cannot use ${msg.getOrElse("")} in ${tableName}.* CREATE TABLE statement"
 		)
   	def f(n:Node): Iterable[NamedColumn[_]] = n match {

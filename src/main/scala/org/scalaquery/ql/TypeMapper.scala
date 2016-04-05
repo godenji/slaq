@@ -4,7 +4,7 @@ import scala.annotation.unchecked.{uncheckedVariance=> uV}
 import java.util.UUID
 import java.sql.{Blob, Clob, Date, Time, Timestamp}
 import org.scalaquery.session.{PositionedParameters, PositionedResult}
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.ql.core.Profile
 /**
  * A (usually implicit) TypeMapper object represents a Scala type that can be
@@ -121,7 +121,7 @@ object TypeMapper {
 
 trait BaseTypeMapper[T] extends TypeMapper[T] {
   def getBaseTypeMapper[U](implicit ev: Option[U] =:= T) =
-    throw new SQueryException("A BaseTypeMapper should not have an Option type")
+    Fail("A BaseTypeMapper should not have an Option type")
 }
 
 abstract class OptionTypeMapper[T](val base: TypeMapper[T]) extends TypeMapper[Option[T]]
@@ -147,7 +147,7 @@ trait TypeMapperDelegate[T] { self =>
    * The default name for the SQL type that is used for column declarations.
    */
   def sqlTypeName: String = TypeMapperDelegate.typeNames.getOrElse(sqlType,
-    throw new SQueryException("No SQL type name found in java.sql.Types for code "+sqlType))
+    Fail("No SQL type name found in java.sql.Types for code "+sqlType))
   /**
    * Set a parameter of the type.
    */

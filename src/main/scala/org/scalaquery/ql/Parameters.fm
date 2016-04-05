@@ -1,7 +1,7 @@
 package org.scalaquery.ql
 
 import java.sql.PreparedStatement
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.ql.core.{Profile,QueryTemplate}
 
 final class Params[P, C](c: C) {
@@ -11,7 +11,7 @@ final class Params[P, C](c: C) {
     profile.createQueryTemplate[P, F](Query(f(c)))
     
   @inline def filter(f: C => Boolean): Params[P, C] = {
-    if(!f(c)) throw new SQueryException("Match failed when unpacking Params")
+    if(!f(c)) Fail("Match failed when unpacking Params")
     else this
   }
   @inline def withFilter(f: C => Boolean): Params[P, C] = filter(f)
@@ -24,7 +24,7 @@ final class LazyParams[P, C](c: C) {
   def map[F](f: C => ColumnBase[F]) = flatMap{v=> Query(f(v))}
   
   def filter(f: C => Boolean): LazyParams[P, C] = {
-    if(!f(c)) throw new SQueryException("Match failed when unpacking Params")
+    if(!f(c)) Fail("Match failed when unpacking Params")
     else this
   }
   def withFilter(f: C => Boolean): LazyParams[P, C] = filter(f)

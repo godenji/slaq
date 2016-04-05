@@ -1,7 +1,7 @@
 package org.scalaquery.session
 
 import java.sql.{PreparedStatement, Connection, DatabaseMetaData, Statement}
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.session.{
 	ResultSetConcurrency => Concurrency,
 	ResultSetHoldability => Holdability
@@ -130,7 +130,7 @@ class BaseSession private[session] (db: Database) extends Session {
   }
 
   def rollback() {
-    if(conn.getAutoCommit) throw new SQueryException(
+    if(conn.getAutoCommit) Fail(
     	"Cannot roll back session in auto-commit mode"
     )
     doRollback = true

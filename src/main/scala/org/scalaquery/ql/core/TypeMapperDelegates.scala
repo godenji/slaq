@@ -1,7 +1,7 @@
 package org.scalaquery.ql.core
 
 import java.sql.{Blob, Clob, Date, Time, Timestamp}
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.ql.TypeMapperDelegate
 import org.scalaquery.session.{PositionedParameters, PositionedResult}
 import java.util.UUID
@@ -46,7 +46,7 @@ object TypeMapperDelegates {
     def nextValue(r: PositionedResult) = r.nextBlob
     def updateValue(v: Blob, r: PositionedResult) = r.updateBlob(v)
     override def value2SQLLiteral(value: Blob) =
-      throw new SQueryException(
+      Fail(
       	"Blob does not have a literal representation"
       )
   }
@@ -68,7 +68,7 @@ object TypeMapperDelegates {
     def nextValue(r: PositionedResult) = r.nextBytes
     def updateValue(v: Array[Byte], r: PositionedResult) = r.updateBytes(v)
     override def value2SQLLiteral(value: Array[Byte]) =
-      throw new SQueryException(
+      Fail(
       	"Array[Byte] does not have a literal representation"
       )
   }
@@ -196,7 +196,7 @@ object TypeMapperDelegates {
     def nextValue(r: PositionedResult) = fromBytes(r.nextBytes())
     def updateValue(v: UUID, r: PositionedResult) = r.updateBytes(toBytes(v))
     override def value2SQLLiteral(value: UUID): String =
-      throw new SQueryException(
+      Fail(
       	"UUID does not support a literal representation"
       )
     def toBytes(uuid: UUID) = if(uuid eq null) null else {

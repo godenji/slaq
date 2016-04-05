@@ -2,7 +2,7 @@ package org.scalaquery.ql.core
 
 import scala.collection.mutable.HashMap
 import java.io.PrintWriter
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.ql._
 import org.scalaquery.util._
 
@@ -35,16 +35,16 @@ class InsertBuilder(val column: Any, val profile: Profile) {
       case n:NamedColumn[_] =>
       	val tmpTable = n.table.asInstanceOf[Table[_]].tableName
         if(table eq null) table = tmpTable
-        else if(table != tmpTable) throw new SQueryException(
+        else if(table != tmpTable) Fail(
         	"Inserts must all be to the same table"
         )
         appendNamedColumn(n, cols, vals)
-      case _ => throw new SQueryException(
+      case _ => Fail(
       	"Cannot use column "+c+" in INSERT statement"
       )
     }
     f(Node(column))
-    if(table eq null) throw new SQueryException("No table to insert into")
+    if(table eq null) Fail("No table to insert into")
     (table, cols, vals)
   }
 

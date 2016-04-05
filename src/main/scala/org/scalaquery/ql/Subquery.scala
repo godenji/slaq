@@ -1,7 +1,7 @@
 package org.scalaquery.ql
 
 import org.scalaquery.util.Node
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 
 case class Subquery(query: Node, rename: Boolean) extends Node {
   def nodeChildren = query :: Nil
@@ -29,7 +29,7 @@ object Union {
 		def mapper(n: Node) = n match {
 	    case c: Column[_] => c.typeMapper
 	    case SubqueryColumn(_,_,tm) => tm
-	    case _ => throw new SQueryException("Expected Column or SubqueryColumn")
+	    case _ => Fail("Expected Column or SubqueryColumn")
   	}
     def f[PP](unpackable: Unpackable[PP, _ <: U], node: Node) = Unpackable(
   		unpackable.value match {

@@ -3,7 +3,7 @@ package org.scalaquery.ql.driver
 import org.scalaquery.ql._
 import org.scalaquery.ql.core._
 import org.scalaquery.util._
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import java.sql.{Timestamp, Time, Date}
 import org.scalaquery.session.{PositionedResult, ResultSetType}
 
@@ -139,7 +139,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
         b+= ") SELECT "; addCopyColumns(b); b+= s""" FROM T WHERE "c0r" > ${d.value}"""
         b+= orderByCor
       case TakeDrop(t,d,_) :: _ => 
-      	throw new SQueryException(s"""
+      	Fail(s"""
 					Only concrete (ConstColumn) values are allowed as params for SQL Server take/drop.
 					The supplied values were $t and $d
 				""")

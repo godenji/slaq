@@ -4,7 +4,7 @@ import java.util.Properties
 import java.sql._
 import javax.sql.DataSource
 import javax.naming.InitialContext
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 
 /**
  * A database instance to which connections can be created.
@@ -62,7 +62,7 @@ object Database {
    */
   def forName(name: String) = new InitialContext().lookup(name) match {
     case ds: DataSource => forDataSource(ds)
-    case x => throw new SQueryException(
+    case x => Fail(
     	s"Expected a DataSource for JNDI name $name, but got $x"
     )
   }

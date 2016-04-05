@@ -1,7 +1,7 @@
 package org.scalaquery.ql.core
 
 import scala.reflect.ClassTag
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.ql._
 import org.scalaquery.util._
 
@@ -129,7 +129,7 @@ trait QueryBuilderClause {self: QueryBuilder=>
 	      		), p
 	      	)
 	  		}
-  		case _=> throw new SQueryException(s"""
+  		case _=> Fail(s"""
 				values in a take, drop operation cannot be mixed; 
 				they must be either ConstColumn[Int] or Param[Int].
 				Supplied node $node and Optional compareNode $compareNode

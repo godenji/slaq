@@ -1,6 +1,6 @@
 package org.scalaquery.ql.driver
 
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.ql._
 import org.scalaquery.ql.core._
 import org.scalaquery.util._
@@ -98,7 +98,7 @@ class SQLiteDDLBuilder(table: Table[_], profile: SQLiteDriver)
     var prevPK: String = null
     for(pk <- table.primaryKeys) {
       if(prevPK eq null) prevPK = pk.name
-      else throw new SQueryException("Table "+table.tableName+" defines multiple primary keys "+prevPK+" and "+pk.name)
+      else Fail("Table "+table.tableName+" defines multiple primary keys "+prevPK+" and "+pk.name)
       b append ","
       addPrimaryKey(pk, b)
     }

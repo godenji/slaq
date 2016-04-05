@@ -2,7 +2,7 @@ package org.scalaquery.ql.core
 
 import scala.collection.mutable.HashMap
 import java.io.PrintWriter
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.ql._
 import org.scalaquery.util.Node
 
@@ -67,7 +67,7 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
     val foreignKeys = table.foreignKeys
     val primaryKeys = table.primaryKeys
     if(primaryKeys.size > 1)
-      throw new SQueryException("Table "+table.tableName+" defines multiple primary keys")
+      Fail("Table "+table.tableName+" defines multiple primary keys")
     new DDL {
       val createPhase1 = Iterable(createTable) ++ primaryKeys.map(createPrimaryKey) ++ createIndexes
       val createPhase2 = foreignKeys.map(createForeignKey)
@@ -137,8 +137,8 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
         else sb append ","
         sb append quote(n.name)
         if(requiredTableName != n.table.asInstanceOf[Table[_]].tableName)
-          throw new SQueryException("All columns in "+typeInfo+" must belong to table "+requiredTableName)
-      case _ => throw new SQueryException("Cannot use column "+c+
+          Fail("All columns in "+typeInfo+" must belong to table "+requiredTableName)
+      case _ => Fail("Cannot use column "+c+
         " in "+typeInfo+" (only named columns are allowed)")
     }
   }

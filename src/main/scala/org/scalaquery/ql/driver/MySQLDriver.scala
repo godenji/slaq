@@ -1,6 +1,6 @@
 package org.scalaquery.ql.driver
 
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.ql._
 import org.scalaquery.ql.core._
 import org.scalaquery.util._
@@ -122,7 +122,7 @@ class MySQLSequenceDDLBuilder[T](seq: Sequence[T], profile: MySQLDriver) extends
     val start = seq._start.getOrElse(if(desc) maxValue else minValue)
     val beforeStart = start - increment
     if(!seq._cycle && (seq._minValue.isDefined && desc || seq._maxValue.isDefined && !desc))
-      throw new SQueryException(
+      Fail(
       	"Sequences of limited size and no CYCLE are not supported by MySQLDriver's sequence emulation"
       )
     val incExpr = if(seq._cycle) {

@@ -1,7 +1,7 @@
 package org.scalaquery.util
 
 import java.io.{PrintWriter, OutputStreamWriter}
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.ql.ConstColumn
 
 /**
@@ -41,9 +41,7 @@ object Node {
     case r: AnyRef  => fail(s"$o of type ${SimpleTypeName.forVal(r)}")
     case _ => fail(s"$o")
   }
-  private def fail(msg: String) = throw new SQueryException(
-  	s"Cannot narrow $msg to Node"
-  )
+  private def fail(msg: String) = Fail(s"Cannot narrow $msg to Node")
 
   final class DumpContext(val out: PrintWriter, val nc: NamingContext)
 }

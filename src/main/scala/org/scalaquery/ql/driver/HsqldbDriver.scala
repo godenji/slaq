@@ -1,7 +1,7 @@
 package org.scalaquery.ql.driver
 
 import java.sql.Types
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.ql._
 import org.scalaquery.ql.core._
 import org.scalaquery.util._
@@ -15,7 +15,7 @@ import org.scalaquery.util._
  * <ul>
  *   <li><code>Sequence.curr</code> to get the current value of a sequence is
  *     not supported by Hsqldb. Trying to generate SQL code which uses this
- *     feature throws a SQueryException.</li>
+ *     feature throws a Fail.</li>
  * </ul>
  * 
  * @author szeiger
@@ -108,7 +108,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     /* Hsqldb uses the SQL:2008 syntax for NEXTVAL */
     case Sequence.Nextval(seq) => b += s"(next value for ${quote(seq.name)})"
 
-    case Sequence.Currval(seq) => throw new SQueryException("Hsqldb does not support CURRVAL")
+    case Sequence.Currval(seq) => Fail("Hsqldb does not support CURRVAL")
 
     case _ => super.innerExpr(c, b)
   }

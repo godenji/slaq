@@ -1,7 +1,7 @@
 package org.scalaquery.ql
 
 import org.scalaquery.util.{Node, BinaryNode}
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 
 object Case {
 	
@@ -30,7 +30,7 @@ object Case {
       		new WhenNode(cond, Node(res)) :: Nil
       	)(tmt.base, tmt)
       case x => 
-      	throw new SQueryException(s"""No "Then" match in case-when clause for $x""")
+      	Fail(s"""No "Then" match in case-when clause for $x""")
     }
   }
 

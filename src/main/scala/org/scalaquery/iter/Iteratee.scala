@@ -1,6 +1,6 @@
 package org.scalaquery.iter
 
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 
 /**
  * An iteratee for DB results.
@@ -8,7 +8,7 @@ import org.scalaquery.SQueryException
 
 sealed trait IterV[E, +A] {
   def runOption: Option[A]
-  def run = runOption.getOrElse(throw new SQueryException("Diverging iteratee"))
+  def run = runOption.getOrElse(Fail("Diverging iteratee"))
   def map[B](f: A => B): IterV[E, B]
   def flatMap[B](f: A => IterV[E, B]): IterV[E, B]
 }

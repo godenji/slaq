@@ -8,7 +8,7 @@
 //import org.scalaquery.session._
 //import org.scalaquery.test.util._
 //import org.scalaquery.test.util.TestDB._
-//import org.scalaquery.SQueryException
+//import org.scalaquery.Fail
 //
 ////object TemplateTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
 //object TemplateTest extends DBTestObject(SQLiteMem)
@@ -51,7 +51,7 @@
 //      } yield(u.*,o.*,u1.*)
 //      println(joins.selectStatement)
 //      println(joins.list)
-//      throw new SQueryException("blah")
+//      Fail("blah")
 //      
 ////      val u1 = for{
 ////      	u <- Users if u.id is (_:Column[Int])

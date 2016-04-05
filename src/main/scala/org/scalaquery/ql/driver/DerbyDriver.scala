@@ -1,6 +1,6 @@
 package org.scalaquery.ql.driver
 
-import org.scalaquery.SQueryException
+import org.scalaquery.Fail
 import org.scalaquery.ql._
 import org.scalaquery.ql.core._
 import org.scalaquery.util._
@@ -15,7 +15,7 @@ import org.scalaquery.util._
  *     will return an empty string instead.</li>
  *   <li><code>Sequence.curr</code> to get the current value of a sequence is
  *     not supported by Derby. Trying to generate SQL code which uses this
- *     feature throws a SQueryException.</li>
+ *     feature throws a Fail.</li>
  *   <li>Sequence cycling is supported but does not conform to SQL:2008
  *     semantics. Derby cycles back to the START value instead of MINVALUE or
  *     MAXVALUE.</li>
@@ -108,7 +108,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
         expr(l, b)
         b += s" as ${mapTypeName(c.typeMapper(profile))}),"
         expr(r, b); b += ")"
-      case _ => throw new SQueryException("Cannot determine type of right-hand side for ifNull")
+      case _ => Fail("Cannot determine type of right-hand side for ifNull")
     }
 
     case c @ BindColumn(v) if b == selectSlot =>
@@ -124,7 +124,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     /* I guess NEXTVAL was too short */
     case Sequence.Nextval(seq) => b += s"(next value for ${quote(seq.name)})"
 
-    case Sequence.Currval(seq) => throw new SQueryException("Derby does not support CURRVAL")
+    case Sequence.Currval(seq) => Fail("Derby does not support CURRVAL")
 
     case EscFunction("database") => b += "''"
 
