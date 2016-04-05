@@ -4,7 +4,6 @@ import org.scalaquery.SQueryException
 import org.scalaquery.ql._
 import org.scalaquery.ql.core._
 import org.scalaquery.util._
-import org.scalaquery.util.SQLBuilder._
 import java.sql.{Timestamp, Time, Date}
 import java.util.UUID
 
@@ -76,7 +75,6 @@ object SQLiteTypeMapperDelegates {
 
 class SQLiteDDLBuilder(table: Table[_], profile: SQLiteDriver) 
 	extends DDLBuilder(table, profile) {
-  import profile.sqlUtils._
 
   protected class SQLiteColumnDDLBuilder(column: NamedColumn[_]) extends ColumnDDLBuilder(column) {
     override protected def appendOptions(sb: StringBuilder) {
@@ -120,8 +118,6 @@ class SQLiteDDLBuilder(table: Table[_], profile: SQLiteDriver)
 
 class SQLiteQueryBuilder(_query: Query[_,_], _nc: NamingContext, parent: Option[QueryBuilder], profile: SQLiteDriver)
 extends QueryBuilder(_query, _nc, parent, profile) {
-
-  import profile.sqlUtils._
 
   override type Self = SQLiteQueryBuilder
   override protected val supportsTuples = false

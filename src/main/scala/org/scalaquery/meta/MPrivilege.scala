@@ -1,6 +1,5 @@
 package org.scalaquery.meta
 
-import java.sql._
 import org.scalaquery.{ResultSetInvoker, UnitInvoker}
 import org.scalaquery.session._
 

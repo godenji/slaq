@@ -6,7 +6,7 @@ import org.scalaquery.session.{
 	ResultSetConcurrency => Concurrency,
 	ResultSetHoldability => Holdability
 }
-import Concurrency._, Holdability._, ResultSetType._
+import Concurrency._, ResultSetType._
 
 /**
  * A database session which opens a connection and transaction on demand.

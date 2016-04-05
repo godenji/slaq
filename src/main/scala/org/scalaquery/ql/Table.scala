@@ -37,7 +37,6 @@ abstract class Table[T](
 	def createFinderBy[P](f: this.type => NamedColumn[P])
   	(implicit profile:Profile, tm: TypeMapper[P]): QueryTemplate[P,T] = {
   	
-    import profile.Implicit._
     Params[P](tm).flatMap{p=> 
     	Query(this).filter{case(t: Table.this.type)=> 
     		ColumnOps.Is(f(t), p)

@@ -3,7 +3,7 @@ package org.scalaquery.ql.core
 import annotation.implicitNotFound
 import java.sql.Statement
 import org.scalaquery.SQueryException
-import org.scalaquery.ql.{ColumnBase, Query, Unpackable, Unpack}
+import org.scalaquery.ql.{Query, Unpackable, Unpack}
 import org.scalaquery.session.{Session, PositionedParameters}
 
 class InsertInvoker[T, U] (unpackable: Unpackable[T, U], profile: Profile) {

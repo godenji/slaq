@@ -1,8 +1,6 @@
 package org.scalaquery.ql.core
 
-import org.scalaquery.ql.{
-	Table, ColumnBase, Sequence, Query, Projection, DDL
-}
+import org.scalaquery.ql.{Table, Sequence, Query, DDL}
 import org.scalaquery.util.{
 	ValueLinearizer, NamingContext, SQLBuilder
 }

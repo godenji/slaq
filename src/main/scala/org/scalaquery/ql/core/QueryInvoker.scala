@@ -5,7 +5,7 @@ import org.scalaquery.{
 	UnitInvokerMixin, MutatingStatementInvoker, MutatingUnitInvoker
 }
 import org.scalaquery.session.{PositionedParameters, PositionedResult}
-import org.scalaquery.ql.{Query, ColumnBase}
+import org.scalaquery.ql.Query
 import org.scalaquery.util.{ValueLinearizer, NamingContext}
 
 class QueryInvoker[Q, R](q: Query[Q, R], profile: Profile)

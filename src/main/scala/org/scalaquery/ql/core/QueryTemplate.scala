@@ -2,7 +2,7 @@ package org.scalaquery.ql.core
 
 import java.sql.PreparedStatement
 import org.scalaquery.MutatingStatementInvoker
-import org.scalaquery.ql.{Query, ColumnBase}
+import org.scalaquery.ql.Query
 import org.scalaquery.session.{PositionedParameters, PositionedResult}
 import org.scalaquery.util.{ValueLinearizer, NamingContext}
 

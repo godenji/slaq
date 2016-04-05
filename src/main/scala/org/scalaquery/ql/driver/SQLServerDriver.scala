@@ -5,7 +5,7 @@ import org.scalaquery.ql.core._
 import org.scalaquery.util._
 import org.scalaquery.SQueryException
 import java.sql.{Timestamp, Time, Date}
-import org.scalaquery.session.{PositionedParameters, PositionedResult, ResultSetType}
+import org.scalaquery.session.{PositionedResult, ResultSetType}
 
 /**
  * ScalaQuery driver for Microsoft SQL Server.
@@ -86,8 +86,6 @@ object SQLServerTypeMapperDelegates {
 
 class SQLServerQueryBuilder(_query: Query[_,_], _nc: NamingContext, parent: Option[QueryBuilder], profile: SQLServerDriver)
 extends QueryBuilder(_query, _nc, parent, profile) {
-
-  import profile.sqlUtils._
 
   override type Self = SQLServerQueryBuilder
   override protected val supportsTuples = false
@@ -210,7 +208,6 @@ extends QueryBuilder(_query, _nc, parent, profile) {
 }
 
 class SQLServerDDLBuilder(table: Table[_], profile: SQLServerDriver) extends DDLBuilder(table, profile) {
-  import profile.sqlUtils._
 
   protected class SQLServerColumnDDLBuilder(column: NamedColumn[_]) extends ColumnDDLBuilder(column) {
     override protected def appendOptions(sb: StringBuilder) {

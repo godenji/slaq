@@ -4,7 +4,6 @@ import java.sql.{ResultSet, Blob, Clob, Date, Time, Timestamp}
 import java.io.Closeable
 import org.scalaquery.simple.GetResult
 import org.scalaquery.util.CloseableIterator
-import org.scalaquery.UnitInvokerMixin
 import collection.generic.CanBuildFrom
 
 /**

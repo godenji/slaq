@@ -1,6 +1,6 @@
 package org.scalaquery.simple
 
-import java.sql.{SQLException, Date, Time, Timestamp}
+import java.sql.{Date, Time, Timestamp}
 import org.scalaquery.SQueryException
 import org.scalaquery.session.PositionedResult
 

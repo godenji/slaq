@@ -6,9 +6,6 @@ import scala.collection.mutable.{
 import org.scalaquery.SQueryException
 import org.scalaquery.ql._
 import org.scalaquery.util._
-import org.scalaquery.session.{
-	PositionedParameters, PositionedResult
-}
 
 class ConcreteQueryBuilder(
 	_query: Query[_,_], 
@@ -236,31 +233,31 @@ extends QueryBuilderAction
     	)
   }
 
-  protected def table(t: Node, name: String, b: SQLBuilder): Unit = t match {
-    case 
-    	Table.Alias(base: Table[_]) =>
-      	base.schemaName.foreach(b += quote(_) += '.')
-      	b += s"${quote(base.tableName)} ${quote(name)}"
-    case 
-    	base: Table[_] =>
-      	base.schemaName.foreach(b += quote(_) += '.')
-      	b += s"${quote(base.tableName)} ${quote(name)}"
-    case 
-    	Subquery(sq: Query[_,_], rename)=>
-    		b += s"(${subQueryBuilderFor(sq).innerBuildSelect(b, rename)}) ${quote(name)}"
-    case 
-    	Subquery(Union(all, sqs), rename) => {
-	      b += s"($lp"
-	      var first = true
-	      for(sq <- sqs) {
-	        if(!first) b += (if(all) s"$rp UNION ALL $lp" else s"$rp UNION $lp")
-	        subQueryBuilderFor(sq).innerBuildSelect(b, first && rename)
-	        first = false
-	      }
-	      b += s")$rp ${quote(name)}"
-	    }
-    case j: Join[_,_] => createJoin(j, b)
-    case _ => //println(s"table() >> could not match node $t")
+  protected def table(table: Node, alias: String, b: SQLBuilder): Unit = {
+  	def show(t: Table[_]) = {
+  		t.schemaName.foreach(b += quote(_) += '.')
+    	b += s"${quote(t.tableName)} ${quote(alias)}"
+  	}
+  	table match {
+	    case Table.Alias(t: Table[_]) => show(t)
+	    case t: Table[_] => show(t)
+	    case 
+	    	Subquery(sq: Query[_,_], rename)=>
+	    		b += s"(${subQueryBuilderFor(sq).innerBuildSelect(b, rename)}) ${quote(alias)}"
+	    case 
+	    	Subquery(Union(all, sqs), rename) => {
+		      b += s"($lp"
+		      var first = true
+		      for(sq <- sqs) {
+		        if(!first) b += (if(all) s"$rp UNION ALL $lp" else s"$rp UNION $lp")
+		        subQueryBuilderFor(sq).innerBuildSelect(b, first && rename)
+		        first = false
+		      }
+		      b += s")$rp ${quote(alias)}"
+		    }
+	    case j: Join[_,_] => createJoin(j, b)
+	    case _ => //println(s"table() >> could not match node $t")
+	  }
   }
   /*
    * hack: SQLite subqueries do not allow nested parens
