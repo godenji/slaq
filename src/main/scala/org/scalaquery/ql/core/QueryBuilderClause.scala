@@ -48,15 +48,15 @@ trait QueryBuilderClause {self: QueryBuilder=>
     	case Nil =>
     	case xs => 
     		b += " ORDER BY "
-    		b.sep(xs, ",")(appendOrdering(_,b))
+    		b.sep(xs, ",")(appendOrdering(_, b))
   	}
 
   protected def appendOrdering(o: Ordering, b: SQLBuilder): Unit = {
     expr(o.by, b, false, true)
-    if(o.isInstanceOf[Ordering.Desc]) b += " desc"
+    if(o.isInstanceOf[Ordering.Desc]) b += " DESC"
     o.nullOrdering match {
-      case Ordering.NullsFirst => b += " nulls first"
-      case Ordering.NullsLast => b += " nulls last"
+      case Ordering.NullsFirst => b += " NULLS FIRST"
+      case Ordering.NullsLast => b += " NULLS LAST"
       case Ordering.NullsDefault =>
     }
   }
