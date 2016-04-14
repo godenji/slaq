@@ -18,8 +18,6 @@ trait ColumnOps[B1, P1] {
 
   def is[P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Is(leftOperand, Node(e)))
-  def isNot[P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
-    om(Not(Is(leftOperand, Node(e))))
   def =~ [P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
   	om(Is(leftOperand, Node(e)))
   def =! [P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
