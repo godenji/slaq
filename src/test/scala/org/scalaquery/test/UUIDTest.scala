@@ -35,12 +35,12 @@ class UUIDTest(tdb: TestDB) extends DBTest(tdb) {
   @Test def test() = db withSession { implicit ss:Session=>
     (T1.ddl ++ T2.ddl).create;
 
-    T2.insert (1, u3)
-    T2.insert (2, u4)
+    T2.insert ((1, u3))
+    T2.insert ((2, u4))
     assertEquals(Set((1,u3), (2,u4)), Query(T2).to[Set]())
 
-    T1 insert (1, u1)
-    T1 insert (2, u2)
+    T1 insert ((1, u1))
+    T1 insert ((2, u2))
     assertEquals(Set((1,u1), (2,u2)), Query(T1).to[Set]())
 
     val q2 = for { t <- T2 if t.id =~ 1 } yield t.data

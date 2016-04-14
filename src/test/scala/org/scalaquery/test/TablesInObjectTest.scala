@@ -6,7 +6,6 @@ import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.driver.H2Driver.Implicit._
 import org.scalaquery.ql.Table
-import org.scalaquery.session._
 
 object TablesInObjectTest {
   def main(args: Array[String]) { new TablesInObjectTest().test1() }

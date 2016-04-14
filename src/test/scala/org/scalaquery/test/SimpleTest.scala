@@ -51,8 +51,8 @@ class SimpleTest(tdb: TestDB) extends DBTest(tdb) {
       println("User for ID 2: "+res)
       assertEquals(User(2,"guest"), res)
 
-      assertEquals(User(2,"guest"), userForIdAndName(2, "guest").first)
-      assertEquals(None, userForIdAndName(2, "foo").firstOption)
+      assertEquals(User(2,"guest"), userForIdAndName((2, "guest")).first)
+      assertEquals(None, userForIdAndName((2, "foo")).firstOption)
 
       println("User 2 with foreach:")
       var s2 = Set[User]()

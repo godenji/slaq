@@ -9,7 +9,6 @@ import org.scalaquery.test.util.TestDB._
 object StatementParametersTest extends DBTestObject(H2Mem)
 
 class StatementParametersTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
 
   @Test def testExplicit() {
     println("*** Explicit ***")

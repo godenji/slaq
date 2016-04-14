@@ -1,7 +1,6 @@
 package org.scalaquery.test.util
 
 import scala.collection.JavaConversions
-import scala.collection.JavaConversions._
 import java.io.{File, IOException, FileInputStream}
 import java.util.Properties
 import org.junit.Assert._
@@ -9,7 +8,6 @@ import org.junit.{Before, After}
 import org.junit.runner.{JUnitCore, RunWith}
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
-import org.scalaquery.session._
 
 @RunWith(classOf[Parameterized])
 abstract class DBTest(testDB: TestDB) {

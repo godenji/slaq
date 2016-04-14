@@ -41,7 +41,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
       ddl.createStatements.foreach(println)
       ddl.create
       println((Users.first ~ Users.last).insertStatement)
-      val ins1 = (Users.first ~ Users.last).insert("Homer", Some("Simpson"))
+      val ins1 = (Users.first ~ Users.last).insert(( "Homer", Some("Simpson") ))
       val ins2 = (Users.first ~ Users.last).insertAll(
         ("Marge", Some("Simpson")), ("Apu", Some("Nahasapeemapetilon")), ("Carl", Some("Carlson")), ("Lenny", Some("Leonard")) )
       val ins3 = Users.first.insertAll("Santa's Little Helper", "Snowball")
@@ -85,8 +85,9 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
       //TODO verifyable non-random test
       for(u <- allUsers
           if u.first != "Apu" & u.first != "Snowball"; i <- 1 to 2)
-        (Orders.userID ~ Orders.product ~ Orders.shipped ~ Orders.rebate).insert(
-          u.id, "Gizmo "+((scala.math.random*10)+1).toInt, i == 2, Some(u.first == "Marge"))
+        (Orders.userID ~ Orders.product ~ Orders.shipped ~ Orders.rebate).insert((
+          u.id, "Gizmo "+((scala.math.random*10)+1).toInt, i == 2, Some(u.first == "Marge")
+        ))
 
       val q3 = for (
         u <- Users if u.last isNotNull;
@@ -193,7 +194,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
 
       val q8 = for(u <- Users if u.last.isNull) yield u.first ~ u.last
       println("q8: " + q8.updateStatement)
-      val updated2 = q8.update("n/a", Some("n/a"))
+      val updated2 = q8.update(("n/a", Some("n/a")))
       println("Updated "+updated2+" row(s)")
       assertEquals(1, updated2)
 

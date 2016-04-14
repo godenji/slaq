@@ -52,8 +52,8 @@ class PagingTest(tdb: TestDB) extends DBTest(tdb) {
       	x <- q1 take fetch drop offset
       } yield x
       println("q5: "+q5.selectStatement)
-      println("    "+q5(5,3).list)
-      assertEquals(4 to 5 toList, q5(5,3).list)
+      println("    "+q5((5,3)).list)
+      assertEquals(4 to 5 toList, q5((5,3)).list)
 
       val q6 = q1 take 0
       println("q6: "+q6.selectStatement)

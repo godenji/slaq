@@ -30,7 +30,7 @@ class InsertTest(tdb: TestDB) extends DBTest(tdb) {
 
     (Src1.ddl ++ Dst1.ddl ++ Dst2.ddl) create
 
-    Src1.insert(1, "A")
+    Src1.insert((1, "A"))
     Src1.insertAll((2, "B"), (3, "C"))
 
     Dst1.insert(Src1)

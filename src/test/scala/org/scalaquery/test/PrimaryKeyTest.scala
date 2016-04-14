@@ -39,6 +39,6 @@ class PrimaryKeyTest(tdb: TestDB) extends DBTest(tdb) {
       (2, 2, "a22")
     )
 
-    assertFail { A.insert(1, 1, "a11-conflict") }
+    assertFail { A.insert((1, 1, "a11-conflict")) }
   }
 }

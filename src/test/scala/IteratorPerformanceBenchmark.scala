@@ -1,7 +1,5 @@
 import collection.mutable.ArrayBuffer
-import org.scalaquery._
 import org.scalaquery.session._
-import org.scalaquery.util._
 import org.scalaquery.ql._
 import org.scalaquery.ql.Table
 import org.scalaquery.ql.driver.H2Driver.Implicit._
@@ -17,7 +15,7 @@ object IteratorPerformanceBenchmark {
       Props.ddl.create
       val count = 10000
       val size = 1000
-      for(i <- 1 to size) Props.insert("k"+i, "v"+i)
+      for(i <- 1 to size) Props.insert( (s"k$i", s"v$i") )
       val inv = Query(Props).invoker
 
       val buf = new ArrayBuffer[(String, String)]
@@ -26,7 +24,7 @@ object IteratorPerformanceBenchmark {
         var i = 0
         while(i < count) { buf.clear; f; i += 1; assert(buf.length == size) }
         val t1 = System.currentTimeMillis()
-        println(s+" ("+count+"x) took "+(t1-t0)+"ms, size = "+buf.length)
+        println(s" (${count}x) took ${t1-t0}ms, size = ${buf.length}")
       }
 
       val repeat = 5

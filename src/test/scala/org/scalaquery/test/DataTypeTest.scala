@@ -23,8 +23,8 @@ class DataTypeTest(tdb: TestDB) extends DBTest(tdb) {
     db withSession { implicit ss:Session=>
       T.ddl.createStatements foreach println
       T.ddl.create;
-      T insert (1, Array[Byte](1,2,3))
-      T insert (2, Array[Byte](4,5))
+      T insert (( 1, Array[Byte](1,2,3) ))
+      T insert (( 2, Array[Byte](4,5) ))
       assertEquals(Set((1,"123"), (2,"45")), Query(T).list.map{ case (id, data) => (id, data.mkString) }.toSet)
     }
   }

@@ -31,7 +31,7 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
     db withSession { implicit ss:Session=>
 
       Users.ddl.create
-      (Users.first ~ Users.last).insert("Homer", "Simpson")
+      (Users.first ~ Users.last).insert(("Homer", "Simpson"))
       /* Using Users.forInsert so that we don't put a NULL value into the ID
        * column. H2 and SQLite allow this but PostgreSQL doesn't. */
       Users.forInsert.insertAll(
