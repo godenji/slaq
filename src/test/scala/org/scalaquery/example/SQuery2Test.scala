@@ -1,6 +1,6 @@
 package org.scalaquery.example
 
-import org.scalaquery.ql.{<|, Query, ColumnBase, Table}
+import org.scalaquery.ql.{Query, ColumnBase, Table}
 import org.scalaquery.ql.core.Driver
 import org.scalaquery.ql.core.Driver.Implicit._
 import org.scalaquery.ql.Table
@@ -42,7 +42,7 @@ object SQuery2Test {
     val q3 = for(u <- Users filter(_.id is 42)) yield u.first ~ u.last
 
     val q4 = for {
-      <|(u, o) <- Users join Orders on (_.id is _.userID)
+      (u, o) <- Users join Orders on (_.id is _.userID)
       _ <- Query orderBy u.last
     } yield u.first ~ o.orderID
 
