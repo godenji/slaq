@@ -15,18 +15,22 @@ trait Node {
   def nodeNamedChildren: Seq[(Node, String)] = 
   	nodeChildren.toStream.zip(Stream.from(0).map(_.toString))
 
-  def dump(dc: Node.DumpContext, prefix: String, name: String) {
-    val (tname, details) = if(isNamedTable) {
-      val (s, newName) = dc.nc.checkNameFor(this)
-      ("<" + s + "> ", newName)
-    } else ("", true)
-    dc.out.println(prefix + name + tname + (if(details) this else "..."))
-    if(details)
-      for((ch, n) <- nodeNamedChildren)
-        ch.dump(dc, prefix + "  ", n+": ")
+  def dump(dc: Node.DumpContext, prefix: String, name: String): Unit = {
+    val (alias, isFresh) = 
+    	if(!isNamedTable) ("", true) else {
+	      val name = dc.nc.aliasOrFresh(this)
+	      (s"<${name.alias}> ", name.isFresh)
+	    }
+    dc.out.println(
+    	s"$prefix$name$alias${if(isFresh) this else "..."}"
+    )
+    if(isFresh)
+    	nodeNamedChildren.foreach{case(ch, n) =>
+    		ch.dump(dc, s"$prefix ", s"$n: ")
+    	}
   }
 
-  final def dump(name: String, nc: NamingContext = NamingContext()) {
+  final def dump(name: String, nc: NamingContext = NamingContext()): Unit = {
     val out = new PrintWriter(new OutputStreamWriter(System.out))
     dump(new Node.DumpContext(out, nc), "", name)
     out.flush()
@@ -34,7 +38,7 @@ trait Node {
 }
 
 object Node {
-  def apply(o:Any): Node = o match {
+  def apply(o: Any): Node = o match {
     case null 			=> ConstColumn.NULL
     case n: Node    => n.nodeDelegate
     case p: Product => new ProductNode { val product = p }

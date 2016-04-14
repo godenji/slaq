@@ -1,57 +1,36 @@
 package org.scalaquery.util
 
 import scala.collection.mutable.HashMap
-import org.scalaquery.ql._
+import org.scalaquery.ql.Table.Name
 
-trait NamingContext {self=>
-  def nameFor(t: Node) = checkNameFor(t)._1
+trait NamingContext { self =>	
+	def aliasOrFresh(n: Node): Name
+  def aliasFor(n: Node): String = aliasOrFresh(n).alias
 
-  def checkNameFor(t: Node): (String, Boolean)
-
-  def overrideName(node: Node, newName: String): NamingContext = 
+  def overrideName(node: Node, freshName: String): NamingContext = 
   	new NamingContext {
-    	def checkNameFor(t: Node) = 
-    		if(t eq node) (newName, false) else 
-    		self.checkNameFor(t)
+    	def aliasOrFresh(n: Node) = {
+    		if(n eq node) Name(freshName, isFresh = false) 
+    		else self.aliasOrFresh(n)
+			}
   	}
 }
 
 object NamingContext {
   def apply() = new NamingContext {
-    private val tnames = new HashMap[RefId[Node], String]
-    private var nextTid = 1
-
-    private def checkNode(t: Node) = tnames.get(RefId(t)) match{
-      case Some(n) => (n,false)
-      case None =>
-        val n = "t" + nextTid
-        //println(s"NamingContext() >> no alias for $t creating $n")
-        nextTid += 1
-        tnames.put(RefId(t), n)
-        (n,true)
+    private val names = new HashMap[RefId[Node], String]
+    private var nextId = 1
+ 
+    def aliasOrFresh(n: Node): Name = {
+    	names.get(RefId(n)) match {
+	      case Some(alias) => Name(alias, isFresh = false)
+	      case None =>
+	        val alias = s"t$nextId"
+	        nextId += 1
+	        //println(s"NamingContext() >> no ref for $n creating $alias")
+	        names.put(RefId(n), alias)
+	        Name(alias, isFresh = true)
+	    }
     }
-    private def matchJoin(n: Node) = n match{
-    	case t: Table[_]=> Some(checkNode(t))
-    	case _=> None
-    }
-    def checkNameFor(t: Node) = t match{
-  		/*
-  		 * TODO: join must have a Table on left or right side so
-  		 * .get is (somewhat) safe here, but safer approach exists
-  		 */
-  		case j:Join[_,_]=> (
-  			matchJoin(j.leftNode) orElse matchJoin(j.rightNode)
-  		).get
-  		/* 
-  		 * join part left Node = concrete Table
-  		 * join part right node = Join[lTable, rTable] 
-  		 */
-  		case JoinPart(left,_)=> checkNode(left)
-  		/*
-  		 * non-join table or select clause column
-  		 */
-  		case _=> checkNode(t)
-    }
-    
   }
 }
