@@ -131,7 +131,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     case _ => super.innerExpr(c, b)
   }
 
-  override protected def table(t: Node, name: String, b: SQLBuilder): Unit = t match {
+  override protected def tableLabel(t: Node, name: String, b: SQLBuilder): Unit = t match {
     /* Derby requires columns of UNION parts to have the same names. If my
      * understanding of SQL:2008 is correct, this is a bug. This behavior
      * would be correct if the CORRESPONDING keyword was used for a UNION.
@@ -141,7 +141,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
       b += "("
       b.sep(sqs, (if(all) " UNION ALL " else " UNION "))(sq => subQueryBuilderFor(sq).innerBuildSelect(b, rename))
       b += s") ${quote(name)}"
-    case _ => super.table(t, name, b)
+    case _ => super.tableLabel(t, name, b)
   }
 }
 

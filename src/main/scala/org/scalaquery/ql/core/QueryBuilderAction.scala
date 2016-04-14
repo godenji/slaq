@@ -45,23 +45,33 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	  }
 	
 	  protected def insertFromClauses() {
-	    var(isFirst,isJoin) = (true,false)
-	    for((name,t) <- new LinkedHashMap ++= localTables) {
-	      if(!parent.map(_.isDeclaredTable(name)).getOrElse(false)) {
-	        if(isFirst) { fromSlot += " FROM "; isFirst = false }
-	        else t match{
-        		case j:Join[_,_] => // don't comma delimit join clauses
-        			isJoin = true
-        			createJoin(j, fromSlot, isFirst = false)
-        		case _ => 
-        			fromSlot += ','
-        	}
-	        if(!isJoin) table(t, name, fromSlot)
-	        declaredTables += name
+	    //println(tableAliases)
+	    tableAliases.zipWithIndex.foreach{case((alias, tr: Table.Ref), i) =>
+	    	val(parentAlias, isFirst) = (
+	    		parent.exists(_.isDeclaredTable(alias)), i == 0
+	    	)
+	      if(!parentAlias) {
+	        if(isFirst) fromSlot += " FROM "
+	        tr.tableJoin.map(createJoin(_, fromSlot, isFirst)).
+	        getOrElse{
+	        	if(!isFirst) fromSlot += ','
+	        	tableLabel(tr.table, alias, fromSlot)
+	        }
+	        declaredTables += alias
 	      }
 	    }
-	    if(fromSlot.isEmpty) 
-	    	scalarFrom.foreach(s=> fromSlot += " FROM " += s)
+	    if(fromSlot.isEmpty) scalarFrom.foreach(s=> fromSlot += " FROM " += s)
+	  }
+	  
+	  private def createJoin(j: Join, b: SQLBuilder, isFirst: Boolean): Unit = {
+	  	val(left, right) = (j.left, j.right)
+	    if(isFirst) tableLabel(left, nc.aliasFor(left), b)
+	    else {
+		    b += s" ${j.joinType.sqlName} JOIN "
+		    tableLabel(right, nc.aliasFor(right), b)
+		    b += " ON "
+		    expr(j.on, b)
+	    }
 	  }
 	}
 	
@@ -120,7 +130,7 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	    nc = nc.overrideName(table, tableName) // Alias table to itself because UPDATE does not support aliases
 	    tableNameSlot += quote(tableName)
 	    appendConditions(b)
-	    if(localTables.size > 1) Fail(
+	    if(tableAliases.size > 1) Fail(
 	    	"An UPDATE statement must not use more than one table at the top level"
 	    )
 	    b.build
@@ -146,7 +156,7 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	    nc = nc.overrideName(delTable, delTableName)
 	    
 	    appendConditions(b)
-	    if(localTables.size > 1) Fail(
+	    if(tableAliases.size > 1) Fail(
 	    	"Conditions of a DELETE statement must not reference other tables"
 	    )
 	    for(qb <- subQueryBuilders.valuesIterator) qb.insertAllFromClauses()

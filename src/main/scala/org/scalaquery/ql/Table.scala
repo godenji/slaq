@@ -4,17 +4,16 @@ import org.scalaquery.Fail
 import org.scalaquery.ql.core.{Profile,QueryTemplate,Driver,ColumnOptions}
 import org.scalaquery.session.{PositionedResult, PositionedParameters}
 import org.scalaquery.util.{Node, UnaryNode, WithOp}
-import scala.annotation.unchecked.{uncheckedVariance=> uV}
-
-sealed trait TableBase[T] extends Node with WithOp {
-  override def isNamedTable = true
-}
 
 abstract class Table[T](
 	val schemaName: Option[String], 
-	val tableName: String) extends TableBase[T] with ColumnBase[T] {
+	val tableName: String, 
+	private var maybeJoin: Option[Join]) extends ColumnBase[T] {
 	
-	def this(_tableName: String) = this(None, _tableName)
+	def this(_tableName: String) = this(None, _tableName, None)
+	
+	def tableJoin = maybeJoin
+	override def isNamedTable = true
   def nodeChildren = Nil
   override def toString = s"Table $tableName"
   
@@ -22,18 +21,21 @@ abstract class Table[T](
   val O: ColumnOptions = ColumnOptions
   
   def * : ColumnBase[T]
-  def column[C : TypeMapper]
-		(n: String, options: ColumnOption[C, ProfileType]*) = 
-  		new NamedColumn[C](Node(this), n, options:_*)
-	
-	final def join[P <: Table[_], U]
-		(other: P, joinType: JoinType = JoinType.Inner) = { 
-			new JoinBase[this.type, P, T, U](this, other, joinType)
+  final def column[C : TypeMapper]
+		(name: String, options: ColumnOption[C, ProfileType]*) = {
+		
+			val node = Node(this) match {
+				case j @ Join(
+					t1 @ Table.Alias(left: Table[_]), 
+					t2 @ Table.Alias(right: Table[_]), _, _) =>
+						
+					List(left, right).foreach(_.maybeJoin = Some(j))
+					Node( if(left.tableName == tableName) t1 else t2 )
+				case x => x
+			}
+  		new NamedColumn[C](node, name, options:_*)
 	}
-	def leftJoin[P <: Table[_], U](other: P) = join(other, JoinType.Left)
-	def rightJoin[P <: Table[_], U](other: P) = join(other, JoinType.Right)
-	def outerJoin[P <: Table[_], U](other: P) = join(other, JoinType.Outer)
-  
+	
 	def createFinderBy[P](f: this.type => NamedColumn[P])
   	(implicit profile:Profile, tm: TypeMapper[P]): QueryTemplate[P,T] = {
   	
@@ -126,54 +128,10 @@ abstract class Table[T](
 object Table {
   def unapply[T](t: Table[T]) = Some(t.tableName)
 
-  final case class Alias(child: Node) extends UnaryNode {
-    override def toString = "Table.Alias"
+  case class Alias(child: Node) extends UnaryNode {
+    override def toString = s"Table.Alias $child"
     override def isNamedTable = true
   }
-}
-
-class JoinBase[+T1 <: Table[_], +T2 <: Table[_], U1, U2]
-	(left: T1, right: T2, joinType: JoinType) {
-			
-  def on[T <: Column[_] : Queryable]
-  	(pred: (T1, T2) => T): Join[T1,T2] = new Join(
-  		left, right, joinType, Node( pred(left, right) )
-  	)
-	/**
-	 * foreign key based ON clause<br /><br />
-	 * example: 'A join B $ (_.fkey)'
-	 * where fkey is B table's foreign key to A
-	 */
-	def $(fn: T2 => ForeignKeyQuery[T1 @uV,U1]): Join[T1,T2] = {
-		val fk = fn(right).fks.head
-		new Join(left, right, joinType, ColumnOps.Is(
-				fk.left, fk.targetColumnsForOriginalTargetTable
-			)
-		)
-	}
-}
-
-final case class Join[+T1 <: Table[_], +T2 <: Table[_]](
-	lt: T1, rt: T2, 
-	val joinType: JoinType, 
-	val on: Node
-) extends TableBase[Nothing] {
-
-	def left  = lt.mapOp{n=> JoinPart(Node(n), Node(this))}
-  def right = rt.mapOp{n=> JoinPart(Node(n), Node(this))}
-  
-  def leftNode = Node(lt)
-  def rightNode = Node(rt)
-  
-  def nodeChildren = leftNode :: rightNode :: Nil
-  override def toString = s"Join(${Node(lt)}, ${Node(rt)})"
-}
-
-object ^ { // Join table extractor; usage: a^b <- A join B on(..)
-	def unapply[T1 <: Table[_], T2 <: Table[_]]
-		(j: Join[T1, T2]): Option[(T1,T2)] = Some( (j.left,j.right) )
-}
-object <| { // Join table extractor; usage: a^b <- A join B on(..)
-	def unapply[T1 <: Table[_], T2 <: Table[_]]
-		(j: Join[T1, T2]): Option[(T1,T2)] = Some( (j.left,j.right) )
+  case class Ref(table: Node, tableJoin: Option[Join])
+  case class Name(alias: String, isFresh: Boolean)
 }

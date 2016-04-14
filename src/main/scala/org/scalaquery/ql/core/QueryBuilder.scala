@@ -1,16 +1,15 @@
 package org.scalaquery.ql.core
 
-import scala.collection.mutable.{
-	LinkedHashMap, LinkedHashSet
-}
+import scala.collection.mutable.{LinkedHashMap, LinkedHashSet}
+
 import org.scalaquery.Fail
 import org.scalaquery.ql._
 import org.scalaquery.util._
 
 class ConcreteQueryBuilder(
-	_query: Query[_,_], 
+	_query: Query[_,_],
 	_nc: NamingContext,
-	parent: Option[QueryBuilder], 
+	parent: Option[QueryBuilder],
 	_profile: Profile
 ) 
 extends QueryBuilder(_query, _nc, parent, _profile) {
@@ -27,9 +26,9 @@ abstract class QueryBuilder(
 	val parent: Option[QueryBuilder],
 	val _profile: Profile
 )
-extends QueryBuilderAction 
-	with QueryBuilderClause {import _profile.sqlUtils._
-  
+extends QueryBuilderAction with QueryBuilderClause {
+	import _profile.sqlUtils._
+	
   final def buildSelect: (SQLBuilder.Result, ValueLinearizer[_]) =
   	SelectBuilder.buildSelect
   	
@@ -43,14 +42,13 @@ extends QueryBuilderAction
   def buildDelete = DeleteBuilder.buildDelete
   
   def insertAllFromClauses(): Unit = FromBuilder.insertAllFromClauses()
-
-  //TODO Pull tables out of subqueries where needed
-  type Self <: QueryBuilder
+	
+	type Self <: QueryBuilder
 
   protected val profile = _profile
   protected val query: Query[_,_] = _query
   protected var nc: NamingContext = _nc
-  protected val localTables = new LinkedHashMap[String, Node]
+  protected val tableAliases = new LinkedHashMap[String, Table.Ref]
   protected val declaredTables = new LinkedHashSet[String]
   protected val subQueryBuilders = new LinkedHashMap[RefId[Query[_,_]], Self]
   protected var fromSlot: SQLBuilder = _
@@ -66,16 +64,21 @@ extends QueryBuilderAction
   protected def createSubQueryBuilder
   	(query: Query[_,_], nc: NamingContext): Self
 
-  protected def localTableName(node: Node) = node match {
-    case JoinPart(left,right) =>
-      localTables(nc.nameFor(right)) = right
-      nc.nameFor(left)
-    case _=>
-      val alias = nc.nameFor(node)
-      //println(s"localTableName() >> node ${node}, alias $alias")
-      localTables(alias) = node
-      alias
-  }
+  private final def tableAlias(node: Node): String = { 
+		val alias = nc.aliasFor(node)
+  	val maybeJoin = node match {
+	    case Table.Alias(t: Table[_]) => t.tableJoin
+	    case _ => None
+	  }
+		val alias2 = 
+			maybeJoin match { // handle left table alias mismatch in on clause of FK join   
+	  		case Some(Join(left, _, on: ForeignKeyQuery[_,_], _))
+	  			if node == left => nc.aliasFor(left)
+	  		case _ => alias
+			}
+		tableAliases.getOrElseUpdate(alias2, Table.Ref(node, maybeJoin))
+		alias2
+	}
 
   def isDeclaredTable(name: String): Boolean = (
   	declaredTables contains name) || parent.map(_.isDeclaredTable(name)
@@ -84,51 +87,53 @@ extends QueryBuilderAction
   protected def subQueryBuilderFor(q: Query[_,_]): Self =
     subQueryBuilders.getOrElseUpdate(RefId(q), createSubQueryBuilder(q, nc))
 
-  def expr(c: Node, b: SQLBuilder): Unit = {
-  	expr(c, b, false, false)
-  }
-
-  protected def expr(c: Node, b: SQLBuilder, rename: Boolean, topLevel: Boolean) {
+  protected def expr(node: Node, b: SQLBuilder, rename: Boolean, topLevel: Boolean) {
     var pos = 0
-    c match {
-      case p: ProductNode => {
-        p.nodeChildren.foreach { c =>
+    def alias(as: String, outer: Boolean): Unit = {
+    	if(rename) b += as
+    	if(outer) pos = 1
+    }
+    node match {
+      case p: ProductNode =>
+      	//println(p)
+	      //p.nodeChildren.foreach(println)
+        p.nodeChildren.zipWithIndex.foreach{case(n,i) =>
           if(pos != 0) b += ','
-          pos += 1
-          expr(c, b, false, true)
-          if(rename) b += s" as ${quote(s"c$pos")}"
-        }
-      }
-      case _ => innerExpr(c, b)
+          if(n.isInstanceOf[Join]) expr(
+      			p.product.productElement(i).asInstanceOf[Table[_]], b
+      		)
+      		else expr(n, b, false, true)
+      		pos += 1
+          alias(s" as ${quote(s"c$pos")}", false)
+    		}
+      case n => innerExpr(n, b)
     }
-    if(rename && pos == 0) {
-      b += s" as ${quote("c1")}"
-      pos = 1
-    }
+    if(pos == 0) alias(s" as ${quote("c1")}", true)
     if(topLevel) this.maxColumnPos = pos
   }
+  def expr(c: Node, b: SQLBuilder): Unit = expr(c, b, false, false)
 
   protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {
     case ConstColumn(null) => b += "NULL"
     
-    case ColumnOps.Not(ColumnOps.Is(l, ConstColumn(null)))=> 
+    case ColumnOps.Not(ColumnOps.Is(l, ConstColumn(null))) => 
     	b += '('; expr(l, b); b += " IS NOT NULL)"
     	
     case ColumnOps.Not(e) => 
     	b += "(NOT "; expr(e, b); b+= ')'
     	
-    case ColumnOps.InSet(e,seq,tm,bind)=> 
+    case ColumnOps.InSet(e,seq,tm,bind) => 
     	if(seq.isEmpty) expr(ConstColumn(false), b) else {
       	b += '('; expr(e, b); b += " IN ("
-      	if(bind) b.sep(seq, ",")(x=> b +?= {(p,param)=> tm(profile).setValue(x, p)})
+      	if(bind) b.sep(seq, ",")(x=> b +?= {(p,param) => tm(profile).setValue(x, p)})
       	else b += seq.map(tm(profile).value2SQLLiteral).mkString(",")
       	b += "))"
     	}
     case ColumnOps.Is(l, ConstColumn(null)) => 
     	b += '('; expr(l, b); b += " IS NULL)"
     	
-    case ColumnOps.Is(l, r) => 
-    	b += '('; expr(l, b); b += '='; expr(r, b); b += ')'
+    case ColumnOps.Is(l, r) =>
+    	b += '('; expr(l, b); b += " = "; expr(r, b); b += ')'
     	
     case EscFunction("concat", l, r) if concatOperator.isDefined=>
       b += '('; expr(l, b); b += concatOperator.get; expr(r, b); b += ')'
@@ -138,15 +143,15 @@ extends QueryBuilderAction
       b += s.name += '('; b.sep(s.nodeChildren, ",")(expr(_, b)); b += ')'
       if(s.scalar) b += '}'
       
-    case SimpleLiteral(w)=> b += w
+    case SimpleLiteral(w) => b += w
     case s: SimpleExpression=> s.toSQL(b, this)
-    case ColumnOps.Between(left,start,end)=>
+    case ColumnOps.Between(left,start,end) =>
     	expr(left, b); b += " BETWEEN "; expr(start, b); b += " AND "; expr(end, b)
     	
     case ColumnOps.CountDistinct(e) => 
     	b += "COUNT(DISTINCT "; expr(e, b); b += ')'
     	
-    case ColumnOps.Like(l,r,esc)=>
+    case ColumnOps.Like(l,r,esc) =>
       b += '('; expr(l, b); b += " LIKE "; expr(r, b);
       esc.foreach { ch =>
         if(ch == '\'' || ch == '%' || ch == '_') Fail(
@@ -156,7 +161,7 @@ extends QueryBuilderAction
       }
       b += ')'
       
-    case a @ ColumnOps.AsColumnOf(ch,name)=>
+    case a @ ColumnOps.AsColumnOf(ch,name) =>
       val tn = name.getOrElse(mapTypeName(a.typeMapper(profile)))
       if(supportsCast)
       	{b += "CAST("; expr(ch, b); b += s" as $tn)"} 
@@ -166,17 +171,19 @@ extends QueryBuilderAction
     case s: SimpleBinaryOperator=>
     	b += '('; expr(s.left, b); b += ' ' += s.name += ' '; expr(s.right, b); b += ')'
     	
-    case q:Query[_,_]=>
+    case q: ForeignKeyQuery[_,_] => q.fks.foreach(expr(_, b))
+    	
+    case q: Query[_,_] =>
     	b += "("; subQueryBuilderFor(q).innerBuildSelect(b, false); b += ")"
     	
-    case c @ ConstColumn(v)=>
+    case c @ ConstColumn(v) =>
     	b += c.typeMapper(profile).value2SQLLiteral(v)
     	
-    case c @ BindColumn(v)=>
-    	b +?= {(p,param)=> c.typeMapper(profile).setValue(v, p)}
+    case c @ BindColumn(v) =>
+    	b +?= {(p,param) => c.typeMapper(profile).setValue(v, p)}
     	
-    case pc @ ParameterColumn(idx)=>
-    	b +?= {(p,param)=>
+    case pc @ ParameterColumn(idx) =>
+    	b +?= {(p,param) =>
       	val v = (
       		if(idx == -1) param 
       		else param.asInstanceOf[Product].productElement(idx)
@@ -185,7 +192,7 @@ extends QueryBuilderAction
     	}
     case c: Case.CaseColumn[_] =>
       b += "(CASE"
-      c.clauses.foldRight(()) {(w,_)=>
+      c.clauses.foldRight(()) {(w,_) =>
         b += " WHEN "; expr(w.left, b); b += " THEN "; expr(w.right, b)
       }
       c.elseClause match {
@@ -194,46 +201,40 @@ extends QueryBuilderAction
       }
       b += " END)"
       
-    case n: NamedColumn[_]=>
-    	b += s"${quote(localTableName(n.table))}.${quote(n.name)}"
+    case n: NamedColumn[_] =>
+    	b += s"${quote(tableAlias(n.table))}.${quote(n.name)}"
     	
     case HavingColumn(x) => expr(c,b)
     	
-    case SubqueryColumn(pos,sq,_)=> 
-    	b += s"${quote(localTableName(sq))}.${quote(s"c$pos")}"
+    case SubqueryColumn(pos,sq,_) => 
+    	b += s"${quote(tableAlias(sq))}.${quote(s"c$pos")}"
     	
-    case sq @ Subquery(_,_)=> 
-    	b += s"${quote(localTableName(sq))}.*"
+    case sq @ Subquery(_,_) => 
+    	b += s"${quote(tableAlias(sq))}.*"
     
     // implicit joins
-    case a @ Table.Alias(t: WithOp)=> expr(t.mapOp(_ => a), b)
+    case a @ Table.Alias(t: WithOp) => expr(t.mapOp(_ => a), b)
     case t: Table[_] => expr(Node(t.*), b)
     
     // Union
-    case Table.Alias(ta: Table.Alias)=> expr(ta, b)
+    case Table.Alias(ta: Table.Alias) => expr(ta, b)
     	
     case fk: ForeignKey[_,_] =>
       if(supportsTuples) {
-        b += "(("; expr(fk.left, b); b += ")=("; expr(fk.right, b); b += "))"
+        b += "(("; expr(fk.left, b); b += ") = ("; expr(fk.right, b); b += "))"
       } else {
         val cols = fk.linearizedSourceColumns zip fk.linearizedTargetColumns
         b += "("
-        b.sep(cols, " AND "){ case (l,r) => expr(l, b); b += "="; expr(r, b) }
+        b.sep(cols, " AND "){ case (l,r) => expr(l, b); b += " = "; expr(r, b) }
         b += ")"
       }
-    case JoinPart(left,right)=>
-    	//left.dump("left-dump", nc); right.dump("right-dump", nc)
-    	Fail("""
-				Join queries require yield clause to reference a table's
-				star projection or single column"""
-    	)
-    case _ =>
+    case _ => 
     	Fail(
     		s"Don't know what to do with node `$c` in an expression"
     	)
   }
 
-  protected def table(table: Node, alias: String, b: SQLBuilder): Unit = {
+  protected def tableLabel(table: Node, alias: String, b: SQLBuilder): Unit = {
   	def show(t: Table[_]) = {
   		t.schemaName.foreach(b += quote(_) += '.')
     	b += s"${quote(t.tableName)} ${quote(alias)}"
@@ -242,7 +243,7 @@ extends QueryBuilderAction
 	    case Table.Alias(t: Table[_]) => show(t)
 	    case t: Table[_] => show(t)
 	    case 
-	    	Subquery(sq: Query[_,_], rename)=>
+	    	Subquery(sq: Query[_,_], rename) =>
 	    		b += s"(${subQueryBuilderFor(sq).innerBuildSelect(b, rename)}) ${quote(alias)}"
 	    case 
 	    	Subquery(Union(all, sqs), rename) => {
@@ -255,8 +256,7 @@ extends QueryBuilderAction
 		      }
 		      b += s")$rp ${quote(alias)}"
 		    }
-	    case j: Join[_,_] => createJoin(j, b)
-	    case _ => //println(s"table() >> could not match node $t")
+	    case _ => println(s"tableLabel() >> could not match node $table")
 	  }
   }
   /*
@@ -271,31 +271,5 @@ extends QueryBuilderAction
 		case driver.SQLiteDriver => ("","")
 		case _=> ("(",")")
 	}
-
-  /*
-   * Join takes the following forms:
-   * 	1) Join[tleft,tRight] i.e. first join is between 2 tables
-   * 	2) Join[tLeft, Join[tleft,tRight]]
-   * 	3) Join[Join[tleft,tRight], tRight]
-   */
-  protected def createJoin(j: Join[_,_], b: SQLBuilder, isFirst: Boolean = true) {
-    val(left,right) = (j.leftNode, j.rightNode)
-    //println(s"left = ${left}; right = ${right}")
-    
-    // FROM table precedes join clause
-    if(isFirst) table(left, nc.nameFor(left), b)
-    b += s" ${j.joinType.sqlName} JOIN "
-    
-    // and JOIN tables come after join clause
-    if(!isFirst) matchNode(left,b)
-    matchNode(right,b)
-    
-    b += " ON "
-    expr(j.on, b)
-  }
-  private def matchNode(n: Node, b: SQLBuilder) = n match{
-  	case t: Table[_]=> Some(table(n, nc.nameFor(n), b))
-  	case _=> None
-  }
   
 }
