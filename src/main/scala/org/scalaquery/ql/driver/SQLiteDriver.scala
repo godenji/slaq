@@ -156,13 +156,13 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     case StdFunction("exists", q: Query[_,_]) =>
       // SQLite doesn't like double parens around the sub-expression
       b += "exists"; expr(q, b)
-    case EscFunction("ucase", ch) => b += "upper("; expr(ch, b); b += ')'
-    case EscFunction("lcase", ch) => b += "lower("; expr(ch, b); b += ')'
+    case EscFunction("ucase", ch, _) => b += "upper("; expr(ch, b); b += ')'
+    case EscFunction("lcase", ch, _) => b += "lower("; expr(ch, b); b += ')'
     case EscFunction("mod", l, r) => b += '('; expr(l, b); b += '%'; expr(r, b); b += ')'
-    case EscFunction("ceiling", ch) => b += "round("; expr(ch, b); b += "+0.5)"
-    case EscFunction("floor", ch) => b += "round("; expr(ch, b); b += "-0.5)"
-    case EscFunction("user") => b += "''"
-    case EscFunction("database") => b += "''"
+    case EscFunction("ceiling", ch, _) => b += "round("; expr(ch, b); b += "+0.5)"
+    case EscFunction("floor", ch, _) => b += "round("; expr(ch, b); b += "-0.5)"
+    case EscFunction("user", _, _) => b += "''"
+    case EscFunction("database", _, _) => b += "''"
     case s: SimpleFunction if s.scalar && s.name != "concat" =>
       /* The SQLite JDBC driver does not support ODBC {fn ...} escapes, so we try
        * unescaped function calls by default */

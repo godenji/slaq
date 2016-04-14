@@ -111,22 +111,12 @@ extends QueryBuilder(_query, _nc, parent, profile) {
       case _ => Fail("Cannot determine type of right-hand side for ifNull")
     }
 
-    case c @ BindColumn(v) if b == selectSlot =>
-      /* The Derby embedded driver has a bug (DERBY-4671) which results in a
-       * NullPointerException when using bind variables in a SELECT clause.
-       * This should be fixed in Derby 10.6.1.1. The workaround is to add an
-       * explicit type annotation (in the form of a CAST expression). */
-      val tmd = c.typeMapper(profile)
-      b += "cast("
-      b +?= { (p, param) => tmd.setValue(v, p) }
-      b += s" as ${mapTypeName(tmd)})"
-
     /* I guess NEXTVAL was too short */
     case Sequence.Nextval(seq) => b += s"(next value for ${quote(seq.name)})"
 
     case Sequence.Currval(seq) => Fail("Derby does not support CURRVAL")
 
-    case EscFunction("database") => b += "''"
+    case EscFunction("database", _, _) => b += "''"
 
     case _ => super.innerExpr(c, b)
   }
