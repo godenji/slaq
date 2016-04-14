@@ -8,6 +8,11 @@ import org.scalaquery.util._
 trait QueryBuilderAction {self: QueryBuilder=>
 	import _profile.sqlUtils._
 	
+	private val declaredTables = new LinkedHashSet[String]
+	final def isDeclaredTable(name: String): Boolean = ( 
+		declaredTables.exists(_ == name) || parent.exists(_.isDeclaredTable(name))
+	)
+	
 	object SelectBuilder{
 		def buildSelect: (SQLBuilder.Result, ValueLinearizer[_]) = {
 	    val b = new SQLBuilder

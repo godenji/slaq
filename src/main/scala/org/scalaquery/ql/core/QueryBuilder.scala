@@ -49,7 +49,6 @@ extends QueryBuilderAction with QueryBuilderClause {
   protected val query: Query[_,_] = _query
   protected var nc: NamingContext = _nc
   protected val tableAliases = new LinkedHashMap[String, Table.Ref]
-  protected val declaredTables = new LinkedHashSet[String]
   protected val subQueryBuilders = new LinkedHashMap[RefId[Query[_,_]], Self]
   protected var fromSlot: SQLBuilder = _
   protected var selectSlot: SQLBuilder = _
@@ -79,10 +78,6 @@ extends QueryBuilderAction with QueryBuilderClause {
 		tableAliases.getOrElseUpdate(alias2, Table.Ref(node, maybeJoin))
 		alias2
 	}
-
-  def isDeclaredTable(name: String): Boolean = (
-  	declaredTables contains name) || parent.map(_.isDeclaredTable(name)
-  ).getOrElse(false)
   
   protected def subQueryBuilderFor(q: Query[_,_]): Self =
     subQueryBuilders.getOrElseUpdate(RefId(q), createSubQueryBuilder(q, nc))
@@ -135,7 +130,7 @@ extends QueryBuilderAction with QueryBuilderClause {
     case ColumnOps.Is(l, r) =>
     	b += '('; expr(l, b); b += " = "; expr(r, b); b += ')'
     	
-    case EscFunction("concat", l, r) if concatOperator.isDefined=>
+    case EscFunction("concat", l, r) if concatOperator.isDefined =>
       b += '('; expr(l, b); b += concatOperator.get; expr(r, b); b += ')'
       
     case s: SimpleFunction =>
@@ -246,7 +241,7 @@ extends QueryBuilderAction with QueryBuilderClause {
 	    	Subquery(sq: Query[_,_], rename) =>
 	    		b += s"(${subQueryBuilderFor(sq).innerBuildSelect(b, rename)}) ${quote(alias)}"
 	    case 
-	    	Subquery(Union(all, sqs), rename) => {
+	    	Subquery(Union(all, sqs), rename) =>
 		      b += s"($lp"
 		      var first = true
 		      for(sq <- sqs) {
@@ -255,7 +250,6 @@ extends QueryBuilderAction with QueryBuilderClause {
 		        first = false
 		      }
 		      b += s")$rp ${quote(alias)}"
-		    }
 	    case _ => println(s"tableLabel() >> could not match node $table")
 	  }
   }
