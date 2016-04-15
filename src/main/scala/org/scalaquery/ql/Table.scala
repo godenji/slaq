@@ -25,12 +25,19 @@ abstract class Table[T](
 		(name: String, options: ColumnOption[C, ProfileType]*) = {
 		
 			val node = Node(this) match {
+				// if node delegate is a join then store join ref in target tables
 				case j @ Join(
 					t1 @ Table.Alias(left: Table[_]), 
 					t2 @ Table.Alias(right: Table[_]), _, _) =>
 						
 					List(left, right).foreach(_.maybeJoin = Some(j))
-					Node( if(left.tableName == tableName) t1 else t2 )
+					Node(
+						if(left.tableName == tableName) t1 else t2
+					)
+				// if node delegate is not a join then unset existing join ref
+				case ta @ Table.Alias(t: Table[_]) if t.tableJoin.isDefined =>
+					t.maybeJoin = None
+					ta
 				case x => x
 			}
   		new NamedColumn[C](node, name, options:_*)
