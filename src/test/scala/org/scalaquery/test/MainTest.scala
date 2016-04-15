@@ -43,13 +43,15 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
       println((Users.first ~ Users.last).insertStatement)
       val ins1 = (Users.first ~ Users.last).insert(( "Homer", Some("Simpson") ))
       val ins2 = (Users.first ~ Users.last).insertAll(
-        ("Marge", Some("Simpson")), ("Apu", Some("Nahasapeemapetilon")), ("Carl", Some("Carlson")), ("Lenny", Some("Leonard")) )
+        ("Marge", Some("Simpson")), ("Apu", Some("Nahasapeemapetilon")), 
+        ("Carl", Some("Carlson")), ("Lenny", Some("Leonard"))
+      )
       val ins3 = Users.first.insertAll("Santa's Little Helper", "Snowball")
       val total = for(i2 <- ins2; i3 <- ins3) yield ins1 + i2 + i3
       println("Inserted "+total.getOrElse("<unknown>")+" users")
       /* All test DBs seem to report the actual number of rows.
        * None would also be an acceptable result here. */
-      assertEquals(Some(7), total)
+      assertTrue(total == Some(7) || total == None)
 
       val q1 = for(u <- Users) yield u.id ~ u.first ~ u.last
       println("q1: " + q1.selectStatement)
