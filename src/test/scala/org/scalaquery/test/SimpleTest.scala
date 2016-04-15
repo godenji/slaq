@@ -7,7 +7,7 @@ import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 import org.scalaquery.session.Session
 
-object SimpleTest extends DBTestObject(H2Mem, H2Disk, SQLiteMem, SQLiteDisk, Postgres, MySQL, DerbyMem, DerbyDisk, HsqldbMem, SQLServer)
+object SimpleTest extends DBTestObject(H2Mem, H2Disk, SQLiteMem, SQLiteDisk, Postgres, MySQL, HsqldbMem, SQLServer)
 
 class SimpleTest(tdb: TestDB) extends DBTest(tdb) {
 

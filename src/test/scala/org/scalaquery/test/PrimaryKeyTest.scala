@@ -11,7 +11,7 @@ import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object PrimaryKeyTest extends DBTestObject(H2Mem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLiteMem, SQLServer)
+object PrimaryKeyTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem, SQLiteMem, SQLServer)
 
 class PrimaryKeyTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._

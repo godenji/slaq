@@ -10,7 +10,7 @@ import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
 object PagingTest extends DBTestObject(
-	H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer
+	H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem, SQLServer
 )
 
 class PagingTest(tdb: TestDB) extends DBTest(tdb) {

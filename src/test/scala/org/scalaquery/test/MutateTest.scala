@@ -9,7 +9,7 @@ import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object MutateTest extends DBTestObject(H2Mem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
+object MutateTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem, SQLServer)
 
 class MutateTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._

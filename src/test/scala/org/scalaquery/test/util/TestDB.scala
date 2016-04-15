@@ -4,7 +4,7 @@ import java.util.Properties
 import java.sql.SQLException
 import org.scalaquery.ql.core.Profile
 import org.scalaquery.ql.driver.{
-	H2Driver, SQLiteDriver, PostgresDriver, MySQLDriver, DerbyDriver, HsqldbDriver, SQLServerDriver
+	H2Driver, SQLiteDriver, PostgresDriver, MySQLDriver, HsqldbDriver, SQLServerDriver
 }
 import org.scalaquery.ResultSetInvoker
 import org.scalaquery.session._
@@ -161,21 +161,6 @@ class ExternalTestDB(confName: String, val driver: Profile) extends TestDB(confN
   }
 }
 
-abstract class DerbyDB(confName: String) extends TestDB(confName) {
-  System.setProperty("derby.stream.error.method", classOf[DerbyDB].getName + ".DEV_NULL")
-  val jdbcDriver = "org.apache.derby.jdbc.EmbeddedDriver"
-  val driver = DerbyDriver
-  override def userName = "APP"
-  override def getLocalTables(implicit session: Session): List[String] = {
-    val tables = ResultSetInvoker[(String,String,String)](_.conn.getMetaData().getTables(null, "APP", null, null))
-    tables.list.map(_._3).sorted
-  }
-}
-
-object DerbyDB {
-  val DEV_NULL = new java.io.OutputStream { def write(b: Int) {} };
-}
-
 abstract class HsqlDB(confName: String) extends TestDB(confName) {
   val jdbcDriver = "org.hsqldb.jdbcDriver"
   val driver = HsqldbDriver
@@ -224,27 +209,6 @@ object TestDB {
     new SQLiteTestDB("jdbc:sqlite:"+TestDBOptions.testDBPath+"/"+prefix+".db", "sqlitedisk") {
       override val dbName = prefix
       override def cleanUp() = deleteDBFiles(prefix)
-    }
-  }
-
-  def DerbyMem(to: DBTestObject) = new DerbyDB("derbymem") {
-    override val dbName = "test1"
-    val url = "jdbc:derby:memory:"+dbName+";create=true"
-    override def cleanUp() = {
-      val dropUrl = "jdbc:derby:memory:"+dbName+";drop=true"
-      try { Database.forURL(dropUrl, driver = jdbcDriver) withSession { s:Session => s.conn } }
-      catch { case e: SQLException => }
-    }
-  }
-
-  def DerbyDisk(to: DBTestObject) = new DerbyDB("derbydisk") {
-    override val dbName = "derby-"+to.testClassName
-    val url = "jdbc:derby:"+TestDBOptions.testDBPath+"/"+dbName+";create=true"
-    override def cleanUp() = {
-      val dropUrl = "jdbc:derby:"+TestDBOptions.testDBPath+"/"+dbName+";shutdown=true"
-      try { Database.forURL(dropUrl, driver = jdbcDriver) withSession { s:Session => s.conn } }
-      catch { case e: SQLException => }
-      deleteDBFiles(dbName)
     }
   }
 

@@ -6,14 +6,13 @@ import org.junit.runner.JUnitCore
 import org.scalaquery.ql._
 import org.scalaquery.ql.core.QueryBuilder
 import org.scalaquery.ql.TypeMapper._
-import org.scalaquery.ql.driver.DerbyDriver
 import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 import org.scalaquery.util.{SQLBuilder, BinaryNode, Node}
 import java.sql.{Time, Date, Timestamp}
 
-object ScalarFunctionTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLServer)
+object ScalarFunctionTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem, SQLServer)
 
 class ScalarFunctionTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._

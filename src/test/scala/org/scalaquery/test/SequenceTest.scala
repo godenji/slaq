@@ -5,13 +5,13 @@ import org.junit.Assert._
 import org.scalaquery.ql._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.ql.driver.{
-	H2Driver, MySQLDriver, DerbyDriver
+	H2Driver, MySQLDriver
 }
 import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object SequenceTest extends DBTestObject(H2Mem, Postgres, MySQL, DerbyMem, HsqldbMem)
+object SequenceTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem)
 
 class SequenceTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
@@ -58,18 +58,10 @@ class SequenceTest(tdb: TestDB) extends DBTest(tdb) {
     assertEquals(List(1, 2, 3, 4, 5), values(s1))
     assertEquals(List(3, 4, 5, 6, 7), values(s2))
     assertEquals(List(3, 5, 7, 9, 11), values(s3))
-    if(tdb.driver != H2Driver) {
-      // H2 does not support MINVALUE, MAXVALUE and CYCLE
-      if(tdb.driver != DerbyDriver) {
-        // Cycling is broken in Derby. It cycles to the start value instead of min or max
-        assertEquals(List(3, 4, 5, 2, 3), values(s4))
-        assertEquals(List(3, 2, 5, 4, 3), values(s5))
-      }
-      if(tdb.driver != MySQLDriver) {
-        // MySQL sequence emulation does not support non-cycling limited sequences
-        assertEquals(List(3, 4, 5), values(s6, 3))
-        assertFail(values(s6, 1, false))
-      }
+    if(tdb.driver != MySQLDriver) {
+      // MySQL sequence emulation does not support non-cycling limited sequences
+      assertEquals(List(3, 4, 5), values(s6, 3))
+      assertFail(values(s6, 1, false))
     }
   }
 }

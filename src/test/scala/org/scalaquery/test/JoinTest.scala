@@ -11,33 +11,35 @@ import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object JoinTest extends DBTestObject(H2Mem, Postgres, MySQL, DerbyMem, HsqldbMem, SQLiteMem, SQLServer)
+object JoinTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem, SQLiteMem, SQLServer)
 
-class JoinTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
-
-  object Categories extends Table[(Int, String)]("categories") {
-    def id = column[Int]("id")
+  case class Categories(id: Int, name: String)
+  object Categories extends Table[Categories]("cats") {
+    def id = column[Int]("id", O PrimaryKey)
     def name = column[String]("name")
-    def * = id ~ name
+    def * = id ~ name <> (Categories.apply _, Categories.unapply _)
   }
-
-  object Posts extends Table[(Int, String, Int)]("posts") {
+  case class Posts(id: Int, title: String, category: Int)
+  object Posts extends Table[Posts]("posts") {
     def id = column[Int]("id", O PrimaryKey, O AutoInc)
     def title = column[String]("title")
     def category = column[Int]("category")
-    def * = id ~ title ~ category
+    //def catsFk = foreignKey("catsFk", category, Categories)(_.id)
+    def * = id ~ title ~ category <> (Posts.apply _, Posts.unapply _)
   }
+  
+class JoinTest(tdb: TestDB) extends DBTest(tdb) {
+  import tdb.driver.Implicit._
 
   @Test def test(): Unit = db withSession { implicit ss:Session=>
 
     (Categories.ddl ++ Posts.ddl) create
 
     Categories insertAll (
-      (1, "Scala"),
-      (2, "ScalaQuery"),
-      (3, "Windows"),
-      (4, "Software")
+      Categories(1, "Scala"),
+      Categories(2, "ScalaQuery"),
+      Categories(3, "Windows"),
+      Categories(4, "Software")
     )
     Posts.title ~ Posts.category insertAll (
       ("Test Post", -1),
@@ -56,8 +58,8 @@ class JoinTest(tdb: TestDB) extends DBTest(tdb) {
     q1.foreach(x => println("  "+x))
     assertEquals(List((2,1), (3,2), (4,3), (5,2)), q1.map(p => p._1 ~ p._2).list)
 
-    val q2 = for {
-      <|(c,p) <- Categories join Posts on (_.id is _.category)
+		val q2 = for {
+      (c,p) <- Categories join Posts on (_.id is _.category)
       _ <- Query orderBy p.id
     } yield p.id ~ c.id ~ c.name ~ p.title
     echo("Explicit inner join: "+q2.selectStatement)
@@ -65,7 +67,7 @@ class JoinTest(tdb: TestDB) extends DBTest(tdb) {
     assertEquals(List((2,1), (3,2), (4,3), (5,2)), q2.map(p => p._1 ~ p._2).list)
 
     val q3 = for {
-      <|(c,p) <- Categories leftJoin Posts on (_.id is _.category)
+      (c,p) <- Categories leftJoin Posts on (_.id is _.category)
       _ <- Query orderBy p.id.nullsFirst
     } yield p.id ~ c.id ~ c.name ~ p.title
     println("Left outer join (nulls first): "+q3.selectStatement)
@@ -73,7 +75,7 @@ class JoinTest(tdb: TestDB) extends DBTest(tdb) {
     assertEquals(List((0,4), (2,1), (3,2), (4,3), (5,2)), q3.map(p => p._1 ~ p._2).list)
 
     val q3b = for {
-      <|(c,p) <- Categories leftJoin Posts on (_.id is _.category)
+      (c,p) <- Categories leftJoin Posts on (_.id is _.category)
       _ <- Query orderBy p.id.nullsLast
     } yield p.id ~ c.id ~ c.name ~ p.title
     println("Left outer join (nulls last): "+q3b.selectStatement)
@@ -82,7 +84,7 @@ class JoinTest(tdb: TestDB) extends DBTest(tdb) {
 
     if(tdb.driver != SQLiteDriver) { // SQLite does not support right and full outer joins
       val q4 = for {
-        <|(c,p) <- Categories rightJoin Posts on (_.id is _.category)
+        (c,p) <- Categories rightJoin Posts on (_.id is _.category)
         _ <- Query orderBy p.id
       } yield p.id ~ c.id ~ c.name ~ p.title
       echo("Right outer join: "+q4.selectStatement)
