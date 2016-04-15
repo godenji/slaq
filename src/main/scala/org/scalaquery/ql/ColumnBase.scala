@@ -46,6 +46,8 @@ abstract class Column[T : TypeMapper] extends ColumnBase[T] {
   def isNotNull = ColumnOps.Not(Node(ColumnOps.Is(Node(this), ConstColumn.NULL)))
   def countDistinct = ColumnOps.CountDistinct(Node(this))
   def asColumnOf[U : TypeMapper]: Column[U] = ColumnOps.AsColumnOf[U](Node(this), None)
+  def asColumnOfType[U : TypeMapper](typeName: String): Column[U] = 
+  	ColumnOps.AsColumnOf[U](Node(this), Some(typeName))
 
   def asc = new Ordering.Asc(Node(this))
   def desc = new Ordering.Desc(Node(this))

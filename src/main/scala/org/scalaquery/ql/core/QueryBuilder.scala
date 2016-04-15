@@ -56,7 +56,6 @@ extends QueryBuilderAction with QueryBuilderClause {
 
   protected val scalarFrom: Option[String] = None
   protected val supportsTuples = true
-  protected val supportsCast = true
   protected val concatOperator: Option[String] = None
 
   protected def createSubQueryBuilder
@@ -157,10 +156,7 @@ extends QueryBuilderAction with QueryBuilderClause {
       
     case a @ ColumnOps.AsColumnOf(ch,name) =>
       val tn = name.getOrElse(mapTypeName(a.typeMapper(profile)))
-      if(supportsCast)
-      	{b += "CAST("; expr(ch, b); b += s" as $tn)"} 
-      else
-      	{b += "{fn convert("; expr(ch, b); b += s", $tn)}"}
+      b += "cast("; expr(ch, b); b += s" as $tn)"
       
     case s: SimpleBinaryOperator=>
     	b += '('; expr(s.left, b); b += ' ' += s.name += ' '; expr(s.right, b); b += ')'
