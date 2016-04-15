@@ -70,24 +70,11 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   import profile.sqlUtils._
 
   override type Self = DerbyQueryBuilder
-  override protected val mayLimit0 = false
   override protected val scalarFrom = Some("sysibm.sysdummy1")
   override protected val supportsTuples = false
 
   protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
     new DerbyQueryBuilder(query, nc, Some(this), profile)
-
-  override protected def expr(c: Node, b: SQLBuilder, rename: Boolean, topLevel: Boolean): Unit = {
-    c match {
-      /* Convert proper BOOLEANs which should be returned from a SELECT
-       * statement into pseudo-boolean SMALLINT values 1 and 0 */
-      case c: Column[_] if topLevel && !rename && b == selectSlot && c.typeMapper(profile) == profile.typeMapperDelegates.booleanTypeMapperDelegate =>
-        b += "case when "
-        innerExpr(c, b)
-        b += " then 1 else 0 end"
-      case _ => super.expr(c, b, rename, topLevel)
-    }
-  }
 
   override protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {
     /* Create TRUE and FALSE values because Derby lacks boolean literals */

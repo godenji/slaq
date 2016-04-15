@@ -63,10 +63,6 @@ trait QueryBuilderClause {self: QueryBuilder=>
 
   protected def appendLimitClause(b: SQLBuilder): Unit = 
   	queryModifiers[TakeDrop].lastOption.foreach {
-	    /* SQL:2008 syntax */
-	    case TakeDrop(Some(ConstColumn(0)),_,_)
-	    	if(!mayLimit0) => // handled in innerBuildSelect
-	    		
 	    case TakeDrop(Some(t), Some(d), compareNode) =>
 	    	val compFn = maybeLimitNode(t,d,compareNode,_:Boolean)
 	    	appendLimitValue(b+= " OFFSET ", d, compFn(true)) 

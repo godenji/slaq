@@ -54,7 +54,6 @@ extends QueryBuilderAction with QueryBuilderClause {
   protected var selectSlot: SQLBuilder = _
   protected var maxColumnPos = 0
 
-  protected val mayLimit0 = true
   protected val scalarFrom: Option[String] = None
   protected val supportsTuples = true
   protected val supportsCast = true

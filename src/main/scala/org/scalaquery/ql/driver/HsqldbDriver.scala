@@ -83,7 +83,6 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   import profile.sqlUtils._
 
   override type Self = HsqldbQueryBuilder
-  override protected val mayLimit0 = false
   override protected val scalarFrom = Some("(VALUES (0))")
   override protected val concatOperator = Some("||")
 
@@ -114,7 +113,6 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   }
 
   override protected def appendLimitClause(b: SQLBuilder) = queryModifiers[TakeDrop].lastOption.foreach {
-    case TakeDrop(Some(ConstColumn(0)),_,_) => () // handled in innerBuildSelect
     case TakeDrop(Some(t), Some(d), compareNode) =>
     	val compFn = maybeLimitNode(t,d,compareNode,_:Boolean)
     	appendLimitValue(b+=" LIMIT ", t, compFn(false))

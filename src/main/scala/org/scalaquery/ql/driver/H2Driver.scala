@@ -26,7 +26,6 @@ class H2QueryBuilder(_query: Query[_,_], _nc: NamingContext, parent: Option[Quer
 
 
   override type Self = H2QueryBuilder
-  override protected val mayLimit0 = false
   override protected val concatOperator = Some("||")
 
   protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
@@ -39,7 +38,6 @@ class H2QueryBuilder(_query: Query[_,_], _nc: NamingContext, parent: Option[Quer
   }
 
   override protected def appendLimitClause(b: SQLBuilder) = queryModifiers[TakeDrop].lastOption.foreach {
-    case TakeDrop(Some(ConstColumn(0)),_,_) => () // handled in innerBuildSelect
     case TakeDrop(Some(t), Some(d), compareNode) => 
     	val compFn = maybeLimitNode(t,d,compareNode,_:Boolean)
     	appendLimitValue(b+=" LIMIT ", t, compFn(false))

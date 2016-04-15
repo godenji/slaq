@@ -26,20 +26,16 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	  }
 	
 	  def innerBuildSelect(b: SQLBuilder, rename: Boolean): Unit = {
-	    def inner = {
-	      selectSlot = b.createSlot
-	      selectSlot += "SELECT "
-	      expr(query.reified, selectSlot, rename, true)
-	      fromSlot = b.createSlot
-	      appendClauses(b)
-	    }
-	    if(!mayLimit0) {
-	      queryModifiers[TakeDrop] match {
-	        case TakeDrop(Some(ConstColumn(0)),_,_) :: _=>
-	        	b += "SELECT * FROM ("; inner; b += ") t0 WHERE 1=0"
-	        case _=> inner
-	      }
-	    } else inner
+	  	val takeNone = queryModifiers[TakeDrop] match {
+        case TakeDrop(Some(ConstColumn(0)),_,_) :: _ => true
+        case _ => false
+	  	}
+      selectSlot = b.createSlot
+      selectSlot += "SELECT "
+      expr(query.reified, selectSlot, rename, true)
+      fromSlot = b.createSlot
+      if(takeNone) b += " WHERE 1=0"
+      else appendClauses(b)
 	  }
 	}
 	
