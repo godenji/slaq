@@ -21,13 +21,11 @@ object ApplicationBuild extends Build
 			scalaVersion := scalaRelease,
 			scalacOptions ++= Seq(
 				//"-optimise", /* note: tests FAIL with optimise enabled */
-				//"-unchecked", "-deprecation", "-feature",
-				"-Yinline-warnings", 
-        "-Ywarn-unused-import",
+				"-unchecked", "-deprecation", "-feature",
+				"-Yinline-warnings", "-Ywarn-unused-import",
 				"-language:implicitConversions", "-language:postfixOps", 
-				"-language:higherKinds", "-language:existentials",
-				// compile fails unless disable these inherited defaults
-				"-Yno-adapted-args:false", "-Xfatal-warnings:false"
+				"-language:higherKinds", "-language:existentials"
+				//"-Yno-adapted-args:false", "-Xfatal-warnings:false"
 			),
 			description := "A type-safe database API for Scala",
 			homepage := Some(url("http://scalaquery.org/")),
