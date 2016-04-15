@@ -70,11 +70,11 @@ object ~ {
 }
 
 <#list 2..22 as i>
-final class Projection${i}[<#list 1..i as j>T${j}<#if i != j>,</#if></#list>](
+final case class Projection${i}[<#list 1..i as j>T${j}<#if i != j>,</#if></#list>](
 <#list 1..i as j>
-  override val _${j}: Column[T${j}]<#if i != j>,</#if>
+  val _${j}: Column[T${j}]<#if i != j>,</#if>
 </#list>)
-extends Tuple${i}(<#list 1..i as j>_${j}<#if i != j>,</#if></#list>) with Projection[(<#list 1..i as j>T${j}<#if i != j>,</#if></#list>)] {
+extends Product${i}[<#list 1..i as j>Column[T${j}]<#if i != j>,</#if></#list>] with Projection[(<#list 1..i as j>T${j}<#if i != j>,</#if></#list>)] {
   <#if i != 22>def ~[U](c: Column[U]) = new Projection${i+1}(<#list 1..i as j>_${j},</#list>c)</#if>
   def getResult(profile:Profile, rs: PositionedResult) = (
 <#list 1..i as j>
