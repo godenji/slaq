@@ -1,5 +1,6 @@
 package org.scalaquery.test
 
+import scala.language.reflectiveCalls
 import scala.collection.mutable.ArrayBuffer
 import org.junit.Test
 import org.junit.Assert._

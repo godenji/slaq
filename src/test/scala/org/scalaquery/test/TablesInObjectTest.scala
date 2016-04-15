@@ -1,5 +1,6 @@
 package org.scalaquery.test
 
+import scala.language.reflectiveCalls
 import org.junit.{AfterClass, BeforeClass, Test}
 import org.junit.Assert._
 import org.scalaquery.ql._
