@@ -74,8 +74,8 @@ trait Invoker[-P, +R] { self =>
     /**
      * Execute the statement and return a fully materialized collection.
      */
-    def apply[RR >: R](param: P)(implicit session: Session, canBuildFrom: CanBuildFrom[Nothing, RR, C[RR]]) =
-      build[C[RR]](param)(session, canBuildFrom)
+    def apply[RR >: R]()(implicit session: Session, canBuildFrom: CanBuildFrom[Nothing, RR, C[RR]]) =
+      build[C[RR]](().asInstanceOf[P])(session, canBuildFrom)
   }
 
   /**
