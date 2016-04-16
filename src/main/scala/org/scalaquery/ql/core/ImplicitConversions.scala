@@ -10,24 +10,16 @@ trait ImplicitConversions[DriverType <: Profile] {
   	Query[T, U](t.mapOp(Table.Alias))(Unpack.unpackTable)
 
   @inline implicit final 
-  	def baseColumn2ColumnOps[B1 : BaseTypeMapper]
-  		(c: Column[B1]): ColumnOps[B1,B1] =
-  		c match {
-		    case o: ColumnOps[_,_] => o
-		    case _ => new ColumnOps[B1, B1] {
-		    	protected[this] val leftOperand = Node(c)
-		   	}
-  		}
+  	def column2ColumnOps[B1 : BaseTypeMapper](c: Column[B1]): 
+  		ColumnOps[B1,B1] = new ColumnOps[B1, B1] {
+	    	protected[this] val leftOperand = Node(c)
+	   	}
 
   @inline implicit final 
-  	def optionColumn2ColumnOps[B1]
-  		(c: Column[Option[B1]]): ColumnOps[B1, Option[B1]] =
-  		c match {
-		    case o: ColumnOps[_,_] => o
-		    case _ => new ColumnOps[B1, Option[B1]] {
-		    	protected[this] val leftOperand = Node(c)
-		    }
-		  }
+  	def optionColumn2ColumnOps[B1](c: Column[Option[B1]]): 
+  		ColumnOps[B1, Option[B1]] = new ColumnOps[B1, Option[B1]] {
+	    	protected[this] val leftOperand = Node(c)
+	    }
 
   @inline implicit final def column2OptionColumn[T : BaseTypeMapper]
   	(c: Column[T]): Column[Option[T]] = c.?
