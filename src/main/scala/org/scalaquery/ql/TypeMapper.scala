@@ -27,15 +27,18 @@ import org.scalaquery.ql.core.Profile
  * </pre></code>
  */
 sealed trait TypeMapper[-T] extends (Profile => TypeMapperDelegate[T @uV]) { self =>
-  def createOptionTypeMapper: OptionTypeMapper[T @uV] = new OptionTypeMapper[T @uV](self) {
-    def apply(profile:Profile) = self(profile).createOptionTypeMapperDelegate
-    def getBaseTypeMapper[U](implicit ev: Option[U] =:= Option[T @uV]): TypeMapper[U] = self.asInstanceOf[TypeMapper[U]]
-  }
+  def createOptionTypeMapper: OptionTypeMapper[T @uV] = 
+  	new OptionTypeMapper[T @uV](self) {
+	    def apply(profile:Profile) = self(profile).createOptionTypeMapperDelegate
+	    def getBaseTypeMapper[U](implicit ev: Option[U] =:= Option[T @uV]): TypeMapper[U] = 
+	    	self.asInstanceOf[TypeMapper[U]]
+	  }
   def getBaseTypeMapper[U](implicit ev: Option[U] =:= T @uV): TypeMapper[U]
 }
 
 object TypeMapper {
-  @inline implicit final def typeMapper2OptionTypeMapper[T](implicit t: TypeMapper[T]): OptionTypeMapper[T] = t.createOptionTypeMapper
+  @inline implicit final def typeMapper2OptionTypeMapper[T](implicit t: TypeMapper[T]): 
+  	OptionTypeMapper[T] = t.createOptionTypeMapper
 
   import godenji.iso.macros._
   implicit final def mappableType[T <: MappedToBase]
@@ -126,10 +129,6 @@ trait BaseTypeMapper[T] extends TypeMapper[T] {
 
 abstract class OptionTypeMapper[T](val base: TypeMapper[T]) extends TypeMapper[Option[T]]
 
-/**
- * Adding this marker trait to a TypeMapper makes the type eligible for
- * numeric operators.
- */
 trait NumericTypeMapper
 
 trait TypeMapperDelegate[T] { self =>
@@ -146,8 +145,9 @@ trait TypeMapperDelegate[T] { self =>
   /**
    * The default name for the SQL type that is used for column declarations.
    */
-  def sqlTypeName: String = TypeMapperDelegate.typeNames.getOrElse(sqlType,
-    Fail("No SQL type name found in java.sql.Types for code "+sqlType))
+  def sqlTypeName: String = TypeMapperDelegate.typeNames.getOrElse(sqlType, Fail(
+  	s"No SQL type name found in java.sql.Types for code $sqlType"
+  ))
   /**
    * Set a parameter of the type.
    */
@@ -164,8 +164,12 @@ trait TypeMapperDelegate[T] { self =>
    * Update a column of the type in a mutable result set.
    */
   def updateValue(v: T, r: PositionedResult): Unit
-  def nextValueOrElse(d: =>T, r: PositionedResult) = { val v = nextValue(r); if(r.rs wasNull) d else v }
-  def nextOption(r: PositionedResult): Option[T] = { val v = nextValue(r); if(r.rs wasNull) None else Some(v) }
+  def nextValueOrElse(d: =>T, r: PositionedResult) = {
+  	val v = nextValue(r); if(r.rs wasNull) d else v
+  }
+  def nextOption(r: PositionedResult): Option[T] = {
+  	val v = nextValue(r); if(r.rs wasNull) None else Some(v)
+  }
   def updateOption(v: Option[T], r: PositionedResult): Unit = v match {
     case Some(s) => updateValue(s, r)
     case None => r.updateNull()
@@ -173,17 +177,20 @@ trait TypeMapperDelegate[T] { self =>
   def value2SQLLiteral(value: T): String = value.toString
   def nullable = false
 
-  def createOptionTypeMapperDelegate: TypeMapperDelegate[Option[T]] = new TypeMapperDelegate[Option[T]] {
-    def zero = None
-    def sqlType = self.sqlType
-    override def sqlTypeName = self.sqlTypeName
-    def setValue(v: Option[T], p: PositionedParameters) = self.setOption(v, p)
-    def setOption(v: Option[Option[T]], p: PositionedParameters) = self.setOption(v.getOrElse(None), p)
-    def nextValue(r: PositionedResult) = self.nextOption(r)
-    def updateValue(v: Option[T], r: PositionedResult) = self.updateOption(v, r)
-    override def value2SQLLiteral(value: Option[T]): String = value.map(self.value2SQLLiteral).getOrElse("null")
-    override def nullable = true
-  }
+  def createOptionTypeMapperDelegate: TypeMapperDelegate[Option[T]] = 
+  	new TypeMapperDelegate[Option[T]] {
+	    def zero = None
+	    def sqlType = self.sqlType
+	    override def sqlTypeName = self.sqlTypeName
+	    def setValue(v: Option[T], p: PositionedParameters) = self.setOption(v, p)
+	    def setOption(v: Option[Option[T]], p: PositionedParameters) = 
+	    	self.setOption(v.getOrElse(None), p)
+	    def nextValue(r: PositionedResult) = self.nextOption(r)
+	    def updateValue(v: Option[T], r: PositionedResult) = self.updateOption(v, r)
+	    override def value2SQLLiteral(value: Option[T]): String = 
+	    	value.map(self.value2SQLLiteral).getOrElse("null")
+	    override def nullable = true
+	  }
 }
 
 object TypeMapperDelegate {
@@ -192,8 +199,10 @@ object TypeMapperDelegate {
     yield f.get(null).asInstanceOf[Int] -> f.getName)
 }
 
-abstract class MappedTypeMapper[T,U](implicit tm: TypeMapper[U]) extends TypeMapper[T] { self =>
-  def map(t: T): U
+abstract class MappedTypeMapper[T,U](implicit tm: TypeMapper[U]) 
+	extends TypeMapper[T] { self =>
+  
+	def map(t: T): U
   def comap(u: U): T
 
   def sqlType: Option[Int] = None
@@ -210,15 +219,16 @@ abstract class MappedTypeMapper[T,U](implicit tm: TypeMapper[U]) extends TypeMap
     def setOption(v: Option[T], p: PositionedParameters) = tmd.setOption(v.map(map _), p)
     def nextValue(r: PositionedResult) = comap(tmd.nextValue(r))
     def updateValue(v: T, r: PositionedResult) = tmd.updateValue(map(v), r)
-    override def value2SQLLiteral(value: T) = self.value2SQLLiteral(value).getOrElse(tmd.value2SQLLiteral(map(value)))
+    override def value2SQLLiteral(value: T) = 
+    	self.value2SQLLiteral(value).getOrElse(tmd.value2SQLLiteral(map(value)))
     override def nullable = self.nullable.getOrElse(tmd.nullable)
   }
 }
 
 object MappedTypeMapper {
-  def base[T, U](tmap: T => U, tcomap: U => T)(implicit tm: TypeMapper[U]): BaseTypeMapper[T] =
-    new MappedTypeMapper[T, U] with BaseTypeMapper[T] {
-      def map(t: T) = tmap(t)
-      def comap(u: U) = tcomap(u)
+  def base[T, U](to: T => U, from: U => T)(implicit tm: TypeMapper[U]): 
+  	BaseTypeMapper[T] = new MappedTypeMapper[T, U] with BaseTypeMapper[T] {
+      def map(t: T) = to(t)
+      def comap(u: U) = from(u)
     }
 }
