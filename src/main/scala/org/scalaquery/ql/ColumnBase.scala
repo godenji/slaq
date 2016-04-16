@@ -3,16 +3,18 @@ package org.scalaquery.ql
 import org.scalaquery.Fail
 import org.scalaquery.ql.core.Profile
 import org.scalaquery.session.{PositionedResult, PositionedParameters}
-import org.scalaquery.util.{Node, WithOp, SimpleTypeName, ValueLinearizer}
+import org.scalaquery.util.{
+	Node, UnaryNode, WithOp, SimpleTypeName, ValueLinearizer
+}
 
 /**
- * Common base trait for columns, tables and projections (but not unions and joins).
+ * Common base trait for columns, tables, and projections
  */
 trait ColumnBase[T] extends Node with ValueLinearizer[T] with WithOp {
   override def nodeDelegate: Node = if(op eq null) this else op.nodeDelegate
 }
 
-abstract class Column[T : TypeMapper] extends ColumnBase[T] {
+sealed abstract class Column[T : TypeMapper] extends ColumnBase[T] {
   final val typeMapper = implicitly[TypeMapper[T]]
   def getLinearizedNodes = Vector(Node(this))
   def getAllColumnTypeMappers = Vector(typeMapper)
@@ -45,9 +47,9 @@ abstract class Column[T : TypeMapper] extends ColumnBase[T] {
   def isNull = ColumnOps.Is(Node(this), ConstColumn.NULL)
   def isNotNull = ColumnOps.Not(Node(ColumnOps.Is(Node(this), ConstColumn.NULL)))
   def countDistinct = ColumnOps.CountDistinct(Node(this))
-  def asColumnOf[U : TypeMapper]: Column[U] = ColumnOps.AsColumnOf[U](Node(this), None)
+  def asColumnOf[U : TypeMapper]: Column[U] = AsColumnOf[U](Node(this), None)
   def asColumnOfType[U : TypeMapper](typeName: String): Column[U] = 
-  	ColumnOps.AsColumnOf[U](Node(this), Some(typeName))
+  	AsColumnOf[U](Node(this), Some(typeName))
 
   def asc = new Ordering.Asc(Node(this))
   def desc = new Ordering.Desc(Node(this))
@@ -82,7 +84,14 @@ case class ParameterColumn[T : TypeMapper](idx: Int) extends Column[T] {
 }
 
 /**
- * Wrapper for group by having column
+ * A column which gets created as the result of applying an operator.
+ */
+abstract class OperatorColumn[T : TypeMapper] extends Column[T] {
+  protected[this] val leftOperand: Node = Node(this)
+}
+
+/**
+ * A column representing a group by having clause
  */
 case class HavingColumn[T : TypeMapper](val c: Column[_]) extends Column[T] {
   def nodeChildren = Nil
@@ -90,11 +99,19 @@ case class HavingColumn[T : TypeMapper](val c: Column[_]) extends Column[T] {
 }
 
 /**
- * A column which gets created as the result of applying an operator.
+ * A column representing a case/when/end condition
  */
-abstract class OperatorColumn[T : TypeMapper] extends Column[T] {
-  protected[this] val leftOperand: Node = Node(this)
+abstract class CaseColumn[T : TypeMapper](
+	val clauses: List[Case.WhenNode], 
+	val elseClause: Node) extends Column[T] {
+  def nodeChildren = elseClause :: clauses
 }
+
+/**
+ * A column that can be converted from one sql type to another
+ */
+case class AsColumnOf[T : TypeMapper](child: Node, typeName: Option[String])
+	extends Column[T] with UnaryNode
 
 /**
  * A WrappedColumn can be used to change a column's nullValue.

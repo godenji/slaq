@@ -71,7 +71,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     case EscFunction("concat", l, r) => b += "concat("; expr(l, b); b += ','; expr(r, b); b += ')'
     case Sequence.Nextval(seq) => b += s"${quote(seq.name + "_nextval")}()"
     case Sequence.Currval(seq) => b += s"${quote(seq.name + "_currval")}()"
-    case a @ ColumnOps.AsColumnOf(ch,name) =>
+    case a @ AsColumnOf(ch,name) =>
       val tn = name.getOrElse(mapTypeName(a.typeMapper(profile)))
     	b += "{fn convert("; expr(ch, b); b += s", $tn)}"
     case _ => super.innerExpr(c, b)

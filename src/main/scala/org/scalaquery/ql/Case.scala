@@ -5,16 +5,7 @@ import org.scalaquery.Fail
 
 object Case {
 	
-  class WhenNode(
-  	val left: Node, 
-  	val right: Node) extends BinaryNode
-
-  abstract class CaseColumn[T : TypeMapper](
-  	val clauses: List[WhenNode], 
-  	val elseClause: Node) extends Column[T] {
-  	
-    def nodeChildren = elseClause :: clauses
-  }
+  class WhenNode(val left: Node, val right: Node) extends BinaryNode
 
   def If[C <: Column[_] : 
   	Queryable](cond: C) = new UntypedWhen(Node(cond))

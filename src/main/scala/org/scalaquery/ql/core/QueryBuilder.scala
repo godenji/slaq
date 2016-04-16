@@ -154,7 +154,7 @@ extends QueryBuilderAction with QueryBuilderClause {
       }
       b += ')'
       
-    case a @ ColumnOps.AsColumnOf(ch,name) =>
+    case a @ AsColumnOf(ch,name) =>
       val tn = name.getOrElse(mapTypeName(a.typeMapper(profile)))
       b += "cast("; expr(ch, b); b += s" as $tn)"
       
@@ -180,7 +180,7 @@ extends QueryBuilderAction with QueryBuilderClause {
       	)
       	pc.typeMapper(profile).setValue(v, p)
     	}
-    case c: Case.CaseColumn[_] =>
+    case c: CaseColumn[_] =>
       b += "(CASE"
       c.clauses.foldRight(()) {(w,_) =>
         b += " WHEN "; expr(w.left, b); b += " THEN "; expr(w.right, b)

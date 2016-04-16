@@ -78,7 +78,7 @@
 //      }
 //      s"$like ${escape.mkString})"
 //    
-//    case a @ Cols.AsColumnOf(ch, name) =>
+//    case a @ AsColumnOf(ch, name) =>
 //      val tn = name.getOrElse(mapTypeName( a.typeMapper(profile) ))
 //      val expr = apply(ch)
 //      if(supportsCast) s"CAST(${expr} as $tn)" else s"{fn convert($expr, $tn)}"

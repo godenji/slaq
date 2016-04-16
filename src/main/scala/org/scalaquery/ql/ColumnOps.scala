@@ -109,9 +109,6 @@ object ColumnOps {
     	def nodeChildren = left :: start :: end :: Nil
   	}
 
-  case class AsColumnOf[T : TypeMapper](child: Node, typeName: Option[String])
-  	extends Column[T] with UnaryNode
-
   case class And(left: Node, right: Node) 
   	extends OperatorColumn[Boolean] with SimpleBinaryOperator {
   	val name = "and" 
