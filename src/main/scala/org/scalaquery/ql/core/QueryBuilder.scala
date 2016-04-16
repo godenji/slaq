@@ -6,18 +6,19 @@ import org.scalaquery.Fail
 import org.scalaquery.ql._
 import org.scalaquery.util._
 
-class ConcreteQueryBuilder(
+/**
+ * generic query builder (benchmarking and statement verification)
+ */
+final class GenericQueryBuilder[T](
 	_query: Query[_,_],
 	_nc: NamingContext,
-	parent: Option[QueryBuilder],
-	_profile: Profile
-) 
-extends QueryBuilder(_query, _nc, parent, _profile) {
+	_parent: Option[QueryBuilder],
+	_profile: T)(implicit ev: T =:= Profile) 
+	extends QueryBuilder(_query, _nc, _parent, _profile) {
 	
   type Self = QueryBuilder
-  protected def createSubQueryBuilder(
-  	query: Query[_,_], nc: NamingContext) = 
-  		new ConcreteQueryBuilder(query, nc, Some(this), profile)
+  protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) = 
+		new GenericQueryBuilder(query, nc, Some(this), profile)
 }
 
 abstract class QueryBuilder(
@@ -42,6 +43,9 @@ extends QueryBuilderAction with QueryBuilderClause {
   def buildDelete = DeleteBuilder.buildDelete
   
   def insertAllFromClauses(): Unit = FromBuilder.insertAllFromClauses()
+
+  protected def createSubQueryBuilder
+  	(query: Query[_,_], nc: NamingContext): Self
 	
 	type Self <: QueryBuilder
 
@@ -57,9 +61,6 @@ extends QueryBuilderAction with QueryBuilderClause {
   protected val scalarFrom: Option[String] = None
   protected val supportsTuples = true
   protected val concatOperator: Option[String] = None
-
-  protected def createSubQueryBuilder
-  	(query: Query[_,_], nc: NamingContext): Self
 
   private final def tableAlias(node: Node): String = { 
 		val alias = nc.aliasFor(node)

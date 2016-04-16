@@ -13,7 +13,7 @@ trait Profile {
   	QueryTemplate[P,R] = new QueryTemplate[P,R](query, this)
   	
   def createQueryBuilder(query: Query[_,_], nc: NamingContext): 
-  	QueryBuilder = new ConcreteQueryBuilder(query, nc, None, this)
+  	QueryBuilder = new GenericQueryBuilder(query, nc, None, this)
 
   val Implicit: ImplicitT
   val typeMapperDelegates: TypeMapperDelegatesT

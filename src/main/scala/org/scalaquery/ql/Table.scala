@@ -1,9 +1,9 @@
 package org.scalaquery.ql
 
 import org.scalaquery.Fail
-import org.scalaquery.ql.core.{Profile,QueryTemplate,Driver,ColumnOptions}
 import org.scalaquery.session.{PositionedResult, PositionedParameters}
 import org.scalaquery.util.{Node, UnaryNode}
+import core.{Profile, QueryTemplate, ColumnOptions}
 
 abstract class Table[T](
 	val schemaName: Option[String], 
@@ -44,7 +44,7 @@ abstract class Table[T](
 	}
 	
 	def createFinderBy[P](f: this.type => NamedColumn[P])
-  	(implicit profile:Profile, tm: TypeMapper[P]): QueryTemplate[P,T] = {
+  	(implicit profile: Profile, tm: TypeMapper[P]): QueryTemplate[P,T] = {
   	
     Params[P](tm).flatMap{p=> 
     	Query(this).filter{case(t: Table.this.type)=> 

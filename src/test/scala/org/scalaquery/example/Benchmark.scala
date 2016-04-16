@@ -1,8 +1,7 @@
 package org.scalaquery.example
 
 import org.scalaquery.ql.Query
-import org.scalaquery.ql.core.Driver
-import org.scalaquery.ql.core.Driver.Implicit._
+import org.scalaquery.ql.driver.{Driver}, Driver.Implicit._
 import org.scalaquery.ql.Table
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.util.NamingContext
