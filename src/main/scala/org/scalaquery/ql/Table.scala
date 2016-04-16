@@ -3,7 +3,7 @@ package org.scalaquery.ql
 import org.scalaquery.Fail
 import org.scalaquery.session.{PositionedResult, PositionedParameters}
 import org.scalaquery.util.{Node, UnaryNode}
-import core.{Profile, QueryTemplate, ColumnOptions}
+import core.{Profile, QueryTemplate, ColumnOption, ColumnOptions}
 
 abstract class Table[T](
 	val schemaName: Option[String], 

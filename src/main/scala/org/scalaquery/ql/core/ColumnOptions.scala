@@ -1,7 +1,5 @@
 package org.scalaquery.ql.core
 
-import org.scalaquery.ql.{ColumnOption=> _ColumnOption}
-
 class ColumnOptions {
   val NotNull 		= ColumnOption.NotNull
   val Nullable 		= ColumnOption.Nullable
@@ -12,14 +10,15 @@ class ColumnOptions {
 }
 object ColumnOptions extends ColumnOptions
 
+abstract class ColumnOption[+T, -P]
 object ColumnOption {
-  case object NotNull 		extends _ColumnOption[Nothing, Profile]
-  case object Nullable 		extends _ColumnOption[Nothing, Profile]
-  case object PrimaryKey 	extends _ColumnOption[Nothing, Profile]
-  case object AutoInc 		extends _ColumnOption[Nothing, Profile]
+  case object NotNull 		extends ColumnOption[Nothing, Profile]
+  case object Nullable 		extends ColumnOption[Nothing, Profile]
+  case object PrimaryKey 	extends ColumnOption[Nothing, Profile]
+  case object AutoInc 		extends ColumnOption[Nothing, Profile]
   case class Default[T](val defaultValue: T) 
-  	extends _ColumnOption[T, Profile]
+  	extends ColumnOption[T, Profile]
   
   case class DBType(val dbType: String) 
-  	extends _ColumnOption[Nothing, Profile]
+  	extends ColumnOption[Nothing, Profile]
 }

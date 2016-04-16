@@ -110,7 +110,7 @@ class WrappedColumn[T : TypeMapper](parent: ColumnBase[_]) extends Column[T] {
 final class NamedColumn[T : TypeMapper](
 	val table: Node, 
 	val name: String, 
-	val options: ColumnOption[T, _]*) extends Column[T] {
+	val options: core.ColumnOption[T, _]*) extends Column[T] {
 	
   def nodeChildren = table :: Nil
   override def toString = s"NamedColumn $name"
