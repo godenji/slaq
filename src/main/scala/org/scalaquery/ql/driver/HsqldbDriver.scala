@@ -26,7 +26,7 @@ class HsqldbDriver extends Profile { self =>
   type TypeMapperDelegatesT = HsqldbTypeMapperDelegates
 
   val Implicit = new ImplicitConversions[HsqldbDriver] {
-    implicit val scalaQueryDriver = self
+    implicit val driverType = self
   }
 
   val typeMapperDelegates = new HsqldbTypeMapperDelegates

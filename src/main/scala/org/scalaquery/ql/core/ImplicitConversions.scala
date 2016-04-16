@@ -4,7 +4,7 @@ import org.scalaquery.ql._
 import org.scalaquery.util.Node
 
 trait ImplicitConversions[DriverType <: Profile] {
-  implicit val scalaQueryDriver: DriverType
+  implicit val driverType: DriverType
   
   @inline implicit final def table2Query[T <: Table[_], U](t: T) =
   	Query[T, U](t.mapOp(Table.Alias))(Unpack.unpackTable)
@@ -40,25 +40,25 @@ trait ImplicitConversions[DriverType <: Profile] {
 
   @inline implicit final
   	def query2QueryInvoker[T, U](q: Query[T, U]): QueryInvoker[T, U] = 
-  		new QueryInvoker(q, scalaQueryDriver)
+  		new QueryInvoker(q, driverType)
   
   @inline implicit final 
   	def query2DeleteInvoker[T](q: Query[Table[T], T]): 
-  		DeleteInvoker[T] = new DeleteInvoker(q, scalaQueryDriver)
+  		DeleteInvoker[T] = new DeleteInvoker(q, driverType)
   
   @inline implicit final def productQuery2UpdateInvoker[T]
   	(q: Query[ColumnBase[T], T]): 
-  		UpdateInvoker[T] = new UpdateInvoker(q, scalaQueryDriver)
+  		UpdateInvoker[T] = new UpdateInvoker(q, driverType)
   
   @inline implicit final def namedColumnQuery2UpdateInvoker[T]
   	(q: Query[_ <: NamedColumn[T], T]): UpdateInvoker[T] = 
-  		new UpdateInvoker(q, scalaQueryDriver)
+  		new UpdateInvoker(q, driverType)
   
   @inline implicit final def columnBase2InsertInvoker[T]
-  	(c: ColumnBase[T]) = new InsertInvoker(c.toUnpackable, scalaQueryDriver)
+  	(c: ColumnBase[T]) = new InsertInvoker(c.toUnpackable, driverType)
   
   @inline implicit final def unpackable2InsertInvoker[T, U]
-  	(u: Unpackable[T, U]) = new InsertInvoker(u, scalaQueryDriver)
+  	(u: Unpackable[T, U]) = new InsertInvoker(u, driverType)
 
   implicit final class NodeLike2Unpackable[T <: ColumnBase[_]](t: T){
   	@inline def toUnpackable[U](implicit unpack: Unpack[T, U]) = 

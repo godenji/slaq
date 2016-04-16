@@ -10,7 +10,7 @@ class H2Driver extends Profile { self =>
   type TypeMapperDelegatesT = TypeMapperDelegates
 
   val Implicit = new ImplicitConversions[H2Driver] {
-    implicit val scalaQueryDriver = self
+    implicit val driverType = self
   }
 
   val typeMapperDelegates = new TypeMapperDelegates {}
