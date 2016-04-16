@@ -12,7 +12,7 @@ import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object ForeignKeyTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem, SQLServer)
+object ForeignKeyTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 
 class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._

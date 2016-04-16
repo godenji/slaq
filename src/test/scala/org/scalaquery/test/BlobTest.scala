@@ -10,7 +10,7 @@ import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 import org.scalaquery.session.Session
 
-object BlobTest extends DBTestObject(H2Mem, /* SQLiteMem, Postgres, HsqldbMem, */ MySQL, SQLServer)
+object BlobTest extends DBTestObject(H2Mem, /* SQLiteMem, Postgres, HsqldbMem, */ MySQL)
 
 class BlobTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._

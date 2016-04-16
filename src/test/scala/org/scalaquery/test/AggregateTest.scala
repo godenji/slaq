@@ -10,7 +10,7 @@ import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object AggregateTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem, SQLServer)
+object AggregateTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 
 class AggregateTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._

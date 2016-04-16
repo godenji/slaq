@@ -14,7 +14,7 @@ import org.scalaquery.session.Session
 import java.sql.SQLException
 
 object MetaTest extends DBTestObject(
-	H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem, SQLServer
+	H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem
 )
 
 class MetaTest(tdb: TestDB) extends DBTest(tdb) {

@@ -9,7 +9,7 @@ import org.scalaquery.test.util.TestDB._
 import java.util.UUID
 import org.scalaquery.session.Session
 
-object UUIDTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem, SQLServer)
+object UUIDTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 
 class UUIDTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._

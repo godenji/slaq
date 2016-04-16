@@ -32,7 +32,7 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	  	}
       selectSlot = b.createSlot
       selectSlot += "SELECT "
-      expr(query.reified, selectSlot, rename, true)
+      expr(query.reified, selectSlot, rename)
       fromSlot = b.createSlot
       if(takeNone) b += " WHERE 1=0"
       else appendClauses(b)

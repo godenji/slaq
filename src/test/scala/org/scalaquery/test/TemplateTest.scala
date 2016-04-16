@@ -10,7 +10,7 @@
 //import org.scalaquery.test.util.TestDB._
 //import org.scalaquery.Fail
 //
-////object TemplateTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem, SQLServer)
+////object TemplateTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 //object TemplateTest extends DBTestObject(SQLiteMem)
 //
 //class TemplateTest(tdb: TestDB) extends DBTest(tdb) {

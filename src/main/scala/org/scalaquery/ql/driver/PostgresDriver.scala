@@ -74,7 +74,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     	case Nil =>
     	case xs =>
     		b += " GROUP BY "
-    		b.sep(xs, ",")(x=> expr(x.by, b, false, true))
+    		b.sep(xs, ",")(x=> expr(x.by, b, false))
     		
     		// existing groupBy columns
     		val groupCols = xs.collect(_.by match{
@@ -115,7 +115,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
 				n.options.exists(_ == ColumnOption.PrimaryKey) && 
 				!groupCols.exists(_ == n.name)
 			)
-  		{b += ","; expr(n,b,false,true)}
+  		{b += ","; expr(n,b,false)}
   	}
   	def matchTable(n: Node) = n match{
   		case ta @ Table.Alias(t) => 
@@ -136,7 +136,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
 						}
 					case n=>
 						//println(s"inner fallback $n")
-						b += ","; expr(n,b,false,true)
+						b += ","; expr(n,b,false)
 				}}
 	  	case _:Table[_] | _:Table.Alias => matchTable(node)
 			case _=> //println(s"outer fallback $node")

@@ -12,7 +12,7 @@ import org.scalaquery.test.util.TestDB._
 import org.scalaquery.util.{SQLBuilder, BinaryNode, Node}
 import java.sql.{Time, Date, Timestamp}
 
-object ScalarFunctionTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem, SQLServer)
+object ScalarFunctionTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 
 class ScalarFunctionTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._

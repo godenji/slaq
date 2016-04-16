@@ -11,7 +11,7 @@ import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object JoinTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem, SQLiteMem, SQLServer)
+object JoinTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem, SQLiteMem)
 
   case class Categories(id: Int, name: String)
   object Categories extends Table[Categories]("cats") {

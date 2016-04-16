@@ -4,7 +4,7 @@ import java.util.Properties
 import java.sql.SQLException
 import org.scalaquery.ql.core.Profile
 import org.scalaquery.ql.driver.{
-	H2Driver, SQLiteDriver, PostgresDriver, MySQLDriver, HsqldbDriver, SQLServerDriver
+	H2Driver, SQLiteDriver, PostgresDriver, MySQLDriver, HsqldbDriver
 }
 import org.scalaquery.ResultSetInvoker
 import org.scalaquery.session._
@@ -221,13 +221,5 @@ object TestDB {
 
   def MySQL(to: DBTestObject) = new ExternalTestDB("mysql", MySQLDriver) {
     override def userName = super.userName + "@localhost"
-  }
-
-  def SQLServer(to: DBTestObject) = new ExternalTestDB("sqlserver", SQLServerDriver) {
-    val defaultSchema = TestDBOptions.get(confName, "defaultSchema").getOrElse("")
-    override def getLocalTables(implicit session: Session): List[String] = {
-      val tables = ResultSetInvoker[(String,String,String)](_.conn.getMetaData().getTables(dbName, defaultSchema, null, null))
-      tables.list.map(_._3).sorted
-    }
   }
 }

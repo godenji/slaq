@@ -80,7 +80,7 @@ extends QueryBuilderAction with QueryBuilderClause {
   protected def subQueryBuilderFor(q: Query[_,_]): Self =
     subQueryBuilders.getOrElseUpdate(RefId(q), createSubQueryBuilder(q, nc))
 
-  protected def expr(node: Node, b: SQLBuilder, rename: Boolean, topLevel: Boolean) {
+  protected def expr(node: Node, b: SQLBuilder, rename: Boolean) {
     var pos = 0
     def alias(as: String, outer: Boolean): Unit = {
     	if(rename) b += as
@@ -95,16 +95,15 @@ extends QueryBuilderAction with QueryBuilderClause {
           if(n.isInstanceOf[Join]) expr(
       			p.product.productElement(i).asInstanceOf[Table[_]], b
       		)
-      		else expr(n, b, false, true)
+      		else expr(n, b, false)
       		pos += 1
           alias(s" as ${quote(s"c$pos")}", false)
     		}
       case n => innerExpr(n, b)
     }
     if(pos == 0) alias(s" as ${quote("c1")}", true)
-    if(topLevel) this.maxColumnPos = pos
   }
-  def expr(c: Node, b: SQLBuilder): Unit = expr(c, b, false, false)
+  def expr(c: Node, b: SQLBuilder): Unit = expr(c, b, false)
 
   protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {
     case ConstColumn(null) => b += "NULL"

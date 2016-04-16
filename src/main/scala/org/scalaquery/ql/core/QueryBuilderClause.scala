@@ -31,7 +31,7 @@ trait QueryBuilderClause {self: QueryBuilder=>
     	case Nil =>
     	case xs => 
     		b += " GROUP BY "
-    		b.sep(xs, ",")(x=> expr(x.by, b, false, true))
+    		b.sep(xs, ",")(x=> expr(x.by, b, false))
   	}
 
   protected def appendHavingConditions(b: SQLBuilder): Unit = {
@@ -52,7 +52,7 @@ trait QueryBuilderClause {self: QueryBuilder=>
   	}
 
   protected def appendOrdering(o: Ordering, b: SQLBuilder): Unit = {
-    expr(o.by, b, false, true)
+    expr(o.by, b, false)
     if(o.isInstanceOf[Ordering.Desc]) b += " DESC"
     o.nullOrdering match {
       case Ordering.NullsFirst => b += " NULLS FIRST"

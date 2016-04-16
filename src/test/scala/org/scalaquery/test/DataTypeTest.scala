@@ -8,7 +8,7 @@ import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 import org.scalaquery.session.Session
 
-object DataTypeTest extends DBTestObject(H2Mem, SQLiteMem, HsqldbMem, MySQL, Postgres, SQLServer)
+object DataTypeTest extends DBTestObject(H2Mem, SQLiteMem, HsqldbMem, MySQL, Postgres)
 
 class DataTypeTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
