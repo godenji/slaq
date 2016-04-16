@@ -4,7 +4,7 @@ import org.scalaquery.ql.{Query,Table}
 import org.scalaquery.session.{PositionedParameters, Session}
 import org.scalaquery.util.NamingContext
 
-class DeleteInvoker[T](
+final class DeleteInvoker[T](
 	query: Query[_ <: Table[T], T], profile: Profile) {
 
   protected lazy val built = 

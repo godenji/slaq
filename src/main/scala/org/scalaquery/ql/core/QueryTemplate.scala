@@ -6,7 +6,7 @@ import org.scalaquery.ql.Query
 import org.scalaquery.session.{PositionedParameters, PositionedResult}
 import org.scalaquery.util.{ValueLinearizer, NamingContext}
 
-class QueryTemplate[P, R](query: Query[_,R], profile: Profile) 
+final class QueryTemplate[P, R](query: Query[_,R], profile: Profile) 
 	extends MutatingStatementInvoker[P, R] {
 
   protected lazy val (built, lin) = 

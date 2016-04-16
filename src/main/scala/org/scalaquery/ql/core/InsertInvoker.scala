@@ -6,7 +6,7 @@ import org.scalaquery.Fail
 import org.scalaquery.ql.{Query, Unpackable, Unpack}
 import org.scalaquery.session.{Session, PositionedParameters}
 
-class InsertInvoker[T, U] (unpackable: Unpackable[T, U], profile: Profile) {
+final class InsertInvoker[T, U] (unpackable: Unpackable[T, U], profile: Profile) {
 
   lazy val insertStatement = profile.buildInsertStatement(unpackable.value)
   

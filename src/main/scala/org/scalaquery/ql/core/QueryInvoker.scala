@@ -8,7 +8,7 @@ import org.scalaquery.session.{PositionedParameters, PositionedResult}
 import org.scalaquery.ql.Query
 import org.scalaquery.util.{ValueLinearizer, NamingContext}
 
-class QueryInvoker[Q, R](q: Query[Q, R], profile: Profile)
+final class QueryInvoker[Q, R](q: Query[Q, R], profile: Profile)
   extends MutatingStatementInvoker[Unit, R] 
 	with UnitInvokerMixin[R] with MutatingUnitInvoker[R] {
 

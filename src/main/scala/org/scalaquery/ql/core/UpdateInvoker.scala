@@ -4,7 +4,7 @@ import org.scalaquery.ql.{Query, ColumnBase}
 import org.scalaquery.session.{Session, PositionedParameters}
 import org.scalaquery.util.NamingContext
 
-class UpdateInvoker[T](
+final class UpdateInvoker[T](
 	query: Query[_ <: ColumnBase[T], T], profile: Profile) {
 
   protected lazy val built = 
