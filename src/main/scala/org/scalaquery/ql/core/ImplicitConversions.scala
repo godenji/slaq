@@ -6,8 +6,9 @@ import org.scalaquery.util.Node
 trait ImplicitConversions[DriverType <: Profile] {
   implicit val driverType: DriverType
   
-  @inline implicit final def table2Query[T <: Table[_], U](t: T) =
-  	Query[T, U](t.mapOp(Table.Alias))(Unpack.unpackTable)
+  @inline implicit final 
+  	def table2Query[T <: Table[_], U](t: T): Query[T, U] =
+  		Query[T, U](t.mapOp(Table.Alias))(Unpack.unpackTable)
 
   @inline implicit final 
   	def column2ColumnOps[B1 : BaseTypeMapper](c: Column[B1]): 
@@ -25,9 +26,9 @@ trait ImplicitConversions[DriverType <: Profile] {
   	(c: Column[T]): Column[Option[T]] = c.?
 
   @inline implicit final def value2ConstColumn[T : TypeMapper]
-  	(v: T) = new ConstColumn[T](v)
+  	(v: T): ConstColumn[T] = new ConstColumn[T](v)
 
-  @inline implicit final 
+  @inline implicit final
   	def column2Ordering(c: Column[_]): Ordering = Ordering.Asc(Node(c))
 
   @inline implicit final
@@ -47,13 +48,15 @@ trait ImplicitConversions[DriverType <: Profile] {
   		new UpdateInvoker(q, driverType)
   
   @inline implicit final def columnBase2InsertInvoker[T]
-  	(c: ColumnBase[T]) = new InsertInvoker(c.toUnpackable, driverType)
+  	(c: ColumnBase[T]): InsertInvoker[ColumnBase[T], T] = 
+  		new InsertInvoker(c.toUnpackable, driverType)
   
   @inline implicit final def unpackable2InsertInvoker[T, U]
-  	(u: Unpackable[T, U]) = new InsertInvoker(u, driverType)
+  	(u: Unpackable[T, U]): InsertInvoker[T, U] = 
+  		new InsertInvoker(u, driverType)
 
   implicit final class NodeLike2Unpackable[T <: ColumnBase[_]](t: T){
-  	@inline def toUnpackable[U](implicit unpack: Unpack[T, U]) = 
-  		new Unpackable[T, U](t, unpack)
+  	@inline def toUnpackable[U](implicit unpack: Unpack[T, U]):
+  		Unpackable[T, U] = new Unpackable[T, U](t, unpack)
   }
 }
