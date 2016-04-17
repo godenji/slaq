@@ -45,13 +45,15 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	    for(qb <- subQueryBuilders.valuesIterator) qb.insertAllFromClauses()
 	  }
 	
-	  protected def insertFromClauses() {
+	  protected def insertFromClauses(): Unit = {
 	    //println(tableAliases)
+	    val currentSelect = selectSlot.build.sql
 	    tableAliases.zipWithIndex.foreach{case((alias, tr: Table.Ref), i) =>
-	    	val(parentAlias, isFirst) = (
-	    		parent.exists(_.isDeclaredTable(alias)), i == 0
+	    	val(hasParentAlias, isFirst) = (
+	    		parent.exists(_.isDeclaredTable(alias)), 
+	    		i == 0 || (i == 1 && currentSelect == "SELECT 1") // i.e. where exists
 	    	)
-	      if(!parentAlias) {
+	      if(!hasParentAlias) {
 	        if(isFirst) fromSlot += " FROM "
 	        tr.tableJoin.map(createJoin(_, fromSlot, isFirst)).
 	        getOrElse{
