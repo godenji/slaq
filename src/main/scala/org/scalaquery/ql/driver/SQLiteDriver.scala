@@ -120,7 +120,6 @@ class SQLiteQueryBuilder(_query: Query[_,_], _nc: NamingContext, parent: Option[
 extends QueryBuilder(_query, _nc, parent, profile) {
 
   override type Self = SQLiteQueryBuilder
-  override protected val supportsTuples = false
   override protected val concatOperator = Some("||")
 
   protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
@@ -153,8 +152,13 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   }
 
   override protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {
+  	case fk: ForeignKey[_,_] =>
+      val cols = fk.linearizedSourceColumns.zip(fk.linearizedTargetColumns)
+      b += "("
+      b.sep(cols, " AND "){case(l,r) => expr(l, b); b += " = "; expr(r, b)}
+      b += ")"
     case StdFunction("exists", q: Query[_,_]) =>
-      // SQLite doesn't like double parens around the sub-expression
+      // SQLite rejects double parens around sub-expression
       b += "exists"; expr(q, b)
     case EscFunction("ucase", ch, _) => b += "upper("; expr(ch, b); b += ')'
     case EscFunction("lcase", ch, _) => b += "lower("; expr(ch, b); b += ')'
