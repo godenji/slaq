@@ -25,7 +25,7 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
       def * = id.? ~ first ~ last <> (User, User.unapply _)
       def forInsert = first ~ last <>
         ({ (f, l) => User(None, f, l) }, { u:User => Some((u.first, u.last)) })
-      val findByID = createFinderBy(_.id)
+      val findByID = this.createFinderBy(_.id)
     }
 
     db withSession { implicit ss:Session=>

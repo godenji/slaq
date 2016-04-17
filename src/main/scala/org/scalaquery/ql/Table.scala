@@ -42,16 +42,6 @@ abstract class Table[T](
 		}
 		new NamedColumn[C](node, name, options:_*)
 	}
-	
-	def createFinderBy[P](f: this.type => NamedColumn[P])
-  	(implicit profile: Profile, tm: TypeMapper[P]): QueryTemplate[P,T] = {
-  	
-    Params[P](tm).flatMap{p=> 
-    	Query(this).filter{case(t: Table.this.type)=> 
-    		ColumnOps.Is(f(t), p)
-    	}
-    }(profile)
-  }
   
 	def create_* : Iterable[NamedColumn[_]] = {
 		def createTableError(msg: Option[String]) = Fail(

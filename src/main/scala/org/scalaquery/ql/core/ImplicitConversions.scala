@@ -55,8 +55,19 @@ trait ImplicitConversions[DriverType <: Profile] {
   	(u: Unpackable[T, U]): InsertInvoker[T, U] = 
   		new InsertInvoker(u, driverType)
 
-  implicit final class NodeLike2Unpackable[T <: ColumnBase[_]](t: T){
+  implicit final class NodeLike2Unpackable[T <: ColumnBase[_]](t: T) {
   	@inline def toUnpackable[U](implicit unpack: Unpack[T, U]):
   		Unpackable[T, U] = new Unpackable[T, U](t, unpack)
   }
+  
+  implicit final class TableQueryExtensions[T <: Table[_]](t: T) {
+  	@inline def createFinderBy[P](f: T => NamedColumn[P])
+  		(implicit profile: Profile, tm: TypeMapper[P]) : QueryTemplate[P,T] = {
+  		
+  		Params[P](tm).flatMap{p=> 
+	    	table2Query(t).filter(t=> ColumnOps.Is(f(t), p))
+	    }(profile)
+  	}
+  }
+  
 }
