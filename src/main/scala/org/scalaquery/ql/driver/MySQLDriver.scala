@@ -67,14 +67,14 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
     new MySQLQueryBuilder(query, nc, Some(this), profile)
 
-  override protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {
+  override protected def show(c: Node, b: SQLBuilder): Unit = c match {
     case EscFunction("concat", l, r) => b += "concat("; expr(l, b); b += ','; expr(r, b); b += ')'
     case Sequence.Nextval(seq) => b += s"${quote(seq.name + "_nextval")}()"
     case Sequence.Currval(seq) => b += s"${quote(seq.name + "_currval")}()"
     case a @ AsColumnOf(ch,name) =>
       val tn = name.getOrElse(mapTypeName(a.typeMapper(profile)))
     	b += "{fn convert("; expr(ch, b); b += s", $tn)}"
-    case _ => super.innerExpr(c, b)
+    case _ => super.show(c, b)
   }
   
   override protected def appendLimitClause(b: SQLBuilder) = queryModifiers[TakeDrop].lastOption.foreach {

@@ -89,7 +89,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
     new HsqldbQueryBuilder(query, nc, Some(this), profile)
 
-  override protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {
+  override protected def show(c: Node, b: SQLBuilder): Unit = c match {
 
     case c @ ConstColumn(v: String) if v ne null =>
       /* Hsqldb treats string literals as type CHARACTER and pads them with
@@ -97,19 +97,17 @@ extends QueryBuilder(_query, _nc, parent, profile) {
        * VARCHAR. The length is only 16M instead of 2^31-1 in order to leave
        * enough room for concatenating strings (which extends the size even if
        * it is not needed). */
-      if(c.typeMapper(profile).sqlType == Types.CHAR) super.innerExpr(c, b)
+      if(c.typeMapper(profile).sqlType == Types.CHAR) super.show(c, b)
       else {
         b += "cast("
-        super.innerExpr(c, b)
+        super.show(c, b)
         b += " as varchar(16777216))"
       }
 
     /* Hsqldb uses the SQL:2008 syntax for NEXTVAL */
     case Sequence.Nextval(seq) => b += s"(next value for ${quote(seq.name)})"
-
     case Sequence.Currval(seq) => Fail("Hsqldb does not support CURRVAL")
-
-    case _ => super.innerExpr(c, b)
+    case _ => super.show(c, b)
   }
 
   override protected def appendLimitClause(b: SQLBuilder) = queryModifiers[TakeDrop].lastOption.foreach {

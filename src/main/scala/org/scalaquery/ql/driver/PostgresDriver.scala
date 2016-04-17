@@ -52,10 +52,10 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
     new PostgresQueryBuilder(query, nc, Some(this), profile)
   
-  override protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {
+  override protected def show(c: Node, b: SQLBuilder): Unit = c match {
     case Sequence.Nextval(seq) => b += s"nextval('${seq.name}')"
     case Sequence.Currval(seq) => b += s"currval('${seq.name}')"
-    case _ => super.innerExpr(c, b)
+    case _ => super.show(c, b)
   }
 
   override protected def appendLimitClause(b: SQLBuilder) = queryModifiers[TakeDrop].lastOption.foreach {

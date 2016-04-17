@@ -59,7 +59,6 @@ extends QueryBuilderAction with QueryBuilderClause {
   protected var maxColumnPos = 0
 
   protected val scalarFrom: Option[String] = None
-  protected val supportsTuples = true
   protected val concatOperator: Option[String] = None
 
   private final def tableAlias(node: Node): String = { 
@@ -81,7 +80,7 @@ extends QueryBuilderAction with QueryBuilderClause {
   protected def subQueryBuilderFor(q: Query[_,_]): Self =
     subQueryBuilders.getOrElseUpdate(RefId(q), createSubQueryBuilder(q, nc))
 
-  protected def expr(node: Node, b: SQLBuilder, rename: Boolean) {
+  protected def expr(node: Node, b: SQLBuilder, rename: Boolean): Unit = {
     var pos = 0
     def alias(as: String, outer: Boolean): Unit = {
     	if(rename) b += as
@@ -100,50 +99,59 @@ extends QueryBuilderAction with QueryBuilderClause {
       		pos += 1
           alias(s" as ${quote(s"c$pos")}", false)
     		}
-      case n => innerExpr(n, b)
+      case n => show(n, b)
     }
     if(pos == 0) alias(s" as ${quote("c1")}", true)
   }
   def expr(c: Node, b: SQLBuilder): Unit = expr(c, b, false)
+  
+  protected def show(c: Node, b: SQLBuilder): Unit = c match {
+	  case c: Query[_,_]        => show(c, b)
+  	case c: OperatorColumn[_] => show(c, b)
+  	case c: Column[_]         => show(c, b)    
+    case t: Table[_] => expr(Node(t.*), b)
+    case ta @ Table.Alias(t: Table[_]) => expr(t.mapOp(_ => ta), b)
+    case Table.Alias(ta: Table.Alias) => expr(ta, b) // Union
+    case sq @ Subquery(_,_) => b += s"${quote(tableAlias(sq))}.*"
+    case SubqueryColumn(pos,q,_) => b += s"${quote(tableAlias(q))}.${quote(s"c$pos")}"	
+    case SimpleLiteral(w) => b += w
+    case _ =>
+    	Fail(s"Don't know what to do with node `$c` in an expression")
+  }
+  
+  /*
+   * Query show
+   */
+  private final def show(c: Query[_,_], b: SQLBuilder): Unit = c match {
+  	case q: ForeignKeyQuery[_,_] => q.fks.foreach(show(_, b))
+    case q =>
+    	b += "("; subQueryBuilderFor(q).innerBuildSelect(b, false); b += ")"
+  }
 
-  protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {
-    case ConstColumn(null) => b += "NULL"
+  /*
+   * OperatorColumn show
+   */
+  private final def show[T](c: OperatorColumn[T], b: SQLBuilder): Unit = c match {
+    case ColumnOps.Is(l, ConstColumn(null)) => b += '('; expr(l, b); b += " IS NULL)"
+    case ColumnOps.Is(l,r) => b += '('; expr(l, b); b += " = "; expr(r, b); b += ')'
+  	case ColumnOps.Not(
+  		ColumnOps.Is(l, ConstColumn(null))) => b += '('; expr(l, b); b += " IS NOT NULL)"
+    case ColumnOps.Not(e) => b += "(NOT "; expr(e, b); b+= ')'
     
-    case ColumnOps.Not(ColumnOps.Is(l, ConstColumn(null))) => 
-    	b += '('; expr(l, b); b += " IS NOT NULL)"
-    	
-    case ColumnOps.Not(e) => 
-    	b += "(NOT "; expr(e, b); b+= ')'
-    	
+    case fk: ForeignKey[_,_] =>
+      b += "(("; expr(fk.left, b); b += ") = ("; expr(fk.right, b); b += "))"
+      
     case ColumnOps.InSet(e,seq,tm,bind) => 
-    	if(seq.isEmpty) expr(ConstColumn(false), b) else {
+    	if(seq.isEmpty) show(ConstColumn(false), b) else {
       	b += '('; expr(e, b); b += " IN ("
       	if(bind) b.sep(seq, ",")(x=> b +?= {(p,param) => tm(profile).setValue(x, p)})
       	else b += seq.map(tm(profile).value2SQLLiteral).mkString(",")
       	b += "))"
     	}
-    case ColumnOps.Is(l, ConstColumn(null)) => 
-    	b += '('; expr(l, b); b += " IS NULL)"
-    	
-    case ColumnOps.Is(l, r) =>
-    	b += '('; expr(l, b); b += " = "; expr(r, b); b += ')'
-    	
-    case EscFunction("concat", l, r) if concatOperator.isDefined =>
-      b += '('; expr(l, b); b += concatOperator.get; expr(r, b); b += ')'
-      
-    case s: SimpleFunction =>
-      if(s.scalar) b += "{fn "
-      b += s.name += '('; b.sep(s.nodeChildren, ",")(expr(_, b)); b += ')'
-      if(s.scalar) b += '}'
-      
-    case SimpleLiteral(w) => b += w
-    case s: SimpleExpression=> s.toSQL(b, this)
     case ColumnOps.Between(left,start,end) =>
     	expr(left, b); b += " BETWEEN "; expr(start, b); b += " AND "; expr(end, b)
     	
-    case ColumnOps.CountDistinct(e) => 
-    	b += "COUNT(DISTINCT "; expr(e, b); b += ')'
-    	
+    case ColumnOps.CountDistinct(e) => b += "COUNT(DISTINCT "; expr(e, b); b += ')'
     case ColumnOps.Like(l,r,esc) =>
       b += '('; expr(l, b); b += " LIKE "; expr(r, b);
       esc.foreach { ch =>
@@ -153,21 +161,26 @@ extends QueryBuilderAction with QueryBuilderClause {
         b += s" escape '$ch'"
       }
       b += ')'
+    	
+    case EscFunction("concat", l, r) if concatOperator.isDefined =>
+      b += '('; expr(l, b); b += concatOperator.get; expr(r, b); b += ')'
       
-    case a @ AsColumnOf(ch,name) =>
-      val tn = name.getOrElse(mapTypeName(a.typeMapper(profile)))
-      b += "cast("; expr(ch, b); b += s" as $tn)"
+    case s: SimpleFunction =>
+      if(s.scalar) b += "{fn "
+      b += s.name += '('; b.sep(s.nodeChildren, ",")(expr(_, b)); b += ')'
+      if(s.scalar) b += '}'
       
+    case s: SimpleExpression=> s.toSQL(b, this)
     case s: SimpleBinaryOperator=>
-    	b += '('; expr(s.left, b); b += ' ' += s.name += ' '; expr(s.right, b); b += ')'
-    	
-    case q: ForeignKeyQuery[_,_] => q.fks.foreach(expr(_, b))
-    	
-    case q: Query[_,_] =>
-    	b += "("; subQueryBuilderFor(q).innerBuildSelect(b, false); b += ")"
-    	
-    case c @ ConstColumn(v) =>
-    	b += c.typeMapper(profile).value2SQLLiteral(v)
+    	b += '('; expr(s.left, b); b += s" ${s.name} "; expr(s.right, b); b += ')'
+  }
+  
+  /*
+   * Column show
+   */
+  private final def show[T](c: Column[T], b: SQLBuilder): Unit = c match {
+    case n: NamedColumn[_] =>
+    	b += s"${quote(tableAlias(n.table))}.${quote(n.name)}"
     	
     case c @ BindColumn(v) =>
     	b +?= {(p,param) => c.typeMapper(profile).setValue(v, p)}
@@ -178,8 +191,16 @@ extends QueryBuilderAction with QueryBuilderClause {
       		if(idx == -1) param 
       		else param.asInstanceOf[Product].productElement(idx)
       	)
-      	pc.typeMapper(profile).setValue(v, p)
+      	pc.typeMapper(profile).setValue(v.asInstanceOf[T], p)
     	}
+    	
+  	case ConstColumn(null) => b += "NULL"
+    case c @ ConstColumn(v) => b += c.typeMapper(profile).value2SQLLiteral(v)
+    case HavingColumn(x) => expr(c,b)
+    case a @ AsColumnOf(ch,name) =>
+      val tn = name.getOrElse(mapTypeName(a.typeMapper(profile)))
+      b += "cast("; expr(ch, b); b += s" as $tn)"
+      
     case c: CaseColumn[_] =>
       b += "(CASE"
       c.clauses.foldRight(()) {(w,_) =>
@@ -190,38 +211,9 @@ extends QueryBuilderAction with QueryBuilderClause {
         case n => b += " ELSE "; expr(n, b)
       }
       b += " END)"
-      
-    case n: NamedColumn[_] =>
-    	b += s"${quote(tableAlias(n.table))}.${quote(n.name)}"
-    	
-    case HavingColumn(x) => expr(c,b)
-    	
-    case SubqueryColumn(pos,sq,_) => 
-    	b += s"${quote(tableAlias(sq))}.${quote(s"c$pos")}"
-    	
-    case sq @ Subquery(_,_) => 
-    	b += s"${quote(tableAlias(sq))}.*"
     
-    // implicit joins
-    case ta @ Table.Alias(t: Table[_]) => expr(t.mapOp(_ => ta), b)
-    case t: Table[_] => expr(Node(t.*), b)
-    
-    // Union
-    case Table.Alias(ta: Table.Alias) => expr(ta, b)
-    	
-    case fk: ForeignKey[_,_] =>
-      if(supportsTuples) {
-        b += "(("; expr(fk.left, b); b += ") = ("; expr(fk.right, b); b += "))"
-      } else {
-        val cols = fk.linearizedSourceColumns zip fk.linearizedTargetColumns
-        b += "("
-        b.sep(cols, " AND "){ case (l,r) => expr(l, b); b += " = "; expr(r, b) }
-        b += ")"
-      }
-    case _ => 
-    	Fail(
-    		s"Don't know what to do with node `$c` in an expression"
-    	)
+    // Column is sealed, these nodes don't generate sql 
+    case _: OperatorColumn[_] | _: WrappedColumn[_] =>
   }
 
   protected def tableLabel(table: Node, alias: String, b: SQLBuilder): Unit = {

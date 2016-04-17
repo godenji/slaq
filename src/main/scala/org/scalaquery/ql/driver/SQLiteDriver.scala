@@ -151,7 +151,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     case _ =>
   }
 
-  override protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {
+  override protected def show(c: Node, b: SQLBuilder): Unit = c match {
   	case fk: ForeignKey[_,_] =>
       val cols = fk.linearizedSourceColumns.zip(fk.linearizedTargetColumns)
       b += "("
@@ -159,7 +159,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
       b += ")"
     case StdFunction("exists", q: Query[_,_]) =>
       // SQLite rejects double parens around sub-expression
-      b += "exists"; expr(q, b)
+      b += "exists"; show(q, b)
     case EscFunction("ucase", ch, _) => b += "upper("; expr(ch, b); b += ')'
     case EscFunction("lcase", ch, _) => b += "lower("; expr(ch, b); b += ')'
     case EscFunction("mod", l, r) => b += '('; expr(l, b); b += '%'; expr(r, b); b += ')'
@@ -173,6 +173,6 @@ extends QueryBuilder(_query, _nc, parent, profile) {
       b += s.name += '('
       b.sep(s.nodeChildren, ",")(expr(_, b))
       b += ")"
-    case _ => super.innerExpr(c, b)
+    case _ => super.show(c, b)
   }
 }

@@ -31,10 +31,10 @@ class H2QueryBuilder(_query: Query[_,_], _nc: NamingContext, parent: Option[Quer
   protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
     new H2QueryBuilder(query, nc, Some(this), profile)
 
-  override protected def innerExpr(c: Node, b: SQLBuilder): Unit = c match {
+  override protected def show(c: Node, b: SQLBuilder): Unit = c match {
     case Sequence.Nextval(seq) => b += s"nextval(schema(), '${seq.name}')"
     case Sequence.Currval(seq) => b += s"currval(schema(), '${seq.name}')"
-    case _ => super.innerExpr(c, b)
+    case _ => super.show(c, b)
   }
 
   override protected def appendLimitClause(b: SQLBuilder) = queryModifiers[TakeDrop].lastOption.foreach {
