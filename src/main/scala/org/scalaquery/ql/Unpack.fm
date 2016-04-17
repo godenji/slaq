@@ -1,7 +1,7 @@
 package org.scalaquery.ql
 
 import scala.annotation.implicitNotFound
-import org.scalaquery.util.{Node, ValueLinearizer, ProductLinearizer, WithOp}
+import org.scalaquery.util.{Node, ValueLinearizer, ProductLinearizer}
 
 /**
  * A type class that encodes the unpacking `Packed => Unpacked` of a
