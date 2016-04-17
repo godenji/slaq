@@ -3,7 +3,7 @@ package org.scalaquery.ql
 import org.scalaquery.Fail
 import org.scalaquery.session.{PositionedResult, PositionedParameters}
 import org.scalaquery.util.{Node, UnaryNode}
-import core.{Profile, QueryTemplate, ColumnOption, ColumnOptions}
+import core.{Profile, ColumnOption, ColumnOptions}
 
 abstract class Table[T](
 	val schemaName: Option[String], 
@@ -108,15 +108,15 @@ abstract class Table[T](
       if m.getReturnType == classOf[Index] && m.getParameterTypes.length == 0
     } yield m.invoke(this).asInstanceOf[Index])
 
-  def getLinearizedNodes = *.getLinearizedNodes
+  final def getLinearizedNodes = *.getLinearizedNodes
   
-  def getResult(profile:Profile, rs: PositionedResult) = 
+  final def getResult(profile:Profile, rs: PositionedResult) = 
   	*.getResult(profile, rs)
   	
-  def updateResult(profile:Profile, rs: PositionedResult, value: T) =
+  final def updateResult(profile:Profile, rs: PositionedResult, value: T) =
   	*.updateResult(profile, rs, value)
   	
-  def setParameter(profile:Profile, ps: PositionedParameters, value: Option[T]) = 
+  final def setParameter(profile:Profile, ps: PositionedParameters, value: Option[T]) = 
   	*.setParameter(profile, ps, value)
 	
 	def ddl(implicit profile: ProfileType): DDL = profile.buildTableDDL(this)

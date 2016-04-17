@@ -16,13 +16,13 @@ trait ColumnBase[T] extends Node with ValueLinearizer[T] with WithOp {
 
 sealed abstract class Column[T : TypeMapper] extends ColumnBase[T] {
   final val typeMapper = implicitly[TypeMapper[T]]
-  def getLinearizedNodes = Vector(Node(this))
-  def getAllColumnTypeMappers = Vector(typeMapper)
+	final def getAllColumnTypeMappers = Vector(typeMapper)
+  final def getLinearizedNodes = Vector(Node(this))
   def getResult(profile:Profile, rs: PositionedResult): T = {
     val tmd = typeMapper(profile)
     tmd.nextValueOrElse(tmd.zero, rs)
   }
-  def updateResult(profile:Profile, rs: PositionedResult, value: T): Unit = 
+  final def updateResult(profile:Profile, rs: PositionedResult, value: T): Unit = 
   	typeMapper(profile).updateValue(value, rs)
   	
   final def setParameter(profile:Profile, ps: PositionedParameters, value: Option[T]): 

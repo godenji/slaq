@@ -15,7 +15,7 @@ trait ValueLinearizer[T] {
   def getLinearizedNodes: IndexedSeq[Node]
 }
 
-class ProductLinearizer
+final class ProductLinearizer
 	(sub: IndexedSeq[ValueLinearizer[_]]) extends ValueLinearizer[Product] {
 
   def getLinearizedNodes: IndexedSeq[Node] =
