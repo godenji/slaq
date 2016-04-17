@@ -1,6 +1,5 @@
 package org.scalaquery.ql
 
-import scala.annotation.unchecked.{uncheckedVariance=> uV}
 import java.util.UUID
 import java.sql.{Blob, Clob, Date, Time, Timestamp}
 import org.scalaquery.session.{PositionedParameters, PositionedResult}
@@ -26,14 +25,14 @@ import org.scalaquery.ql.core.Profile
  * }
  * </pre></code>
  */
-sealed trait TypeMapper[-T] extends (Profile => TypeMapperDelegate[T @uV]) { self =>
-  def createOptionTypeMapper: OptionTypeMapper[T @uV] = 
-  	new OptionTypeMapper[T @uV](self) {
+sealed trait TypeMapper[T] extends (Profile => TypeMapperDelegate[T]) { self =>
+  def createOptionTypeMapper: OptionTypeMapper[T] = 
+  	new OptionTypeMapper[T](self) {
 	    def apply(profile:Profile) = self(profile).createOptionTypeMapperDelegate
-	    def getBaseTypeMapper[U](implicit ev: Option[U] =:= Option[T @uV]): TypeMapper[U] = 
+	    def getBaseTypeMapper[U](implicit ev: Option[U] =:= Option[T]): TypeMapper[U] = 
 	    	self.asInstanceOf[TypeMapper[U]]
 	  }
-  def getBaseTypeMapper[U](implicit ev: Option[U] =:= T @uV): TypeMapper[U]
+  def getBaseTypeMapper[U](implicit ev: Option[U] =:= T): TypeMapper[U]
 }
 
 object TypeMapper {
