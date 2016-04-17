@@ -203,7 +203,7 @@ extends QueryBuilderAction with QueryBuilderClause {
     	b += s"${quote(tableAlias(sq))}.*"
     
     // implicit joins
-    case a @ Table.Alias(t: WithOp) => expr(t.mapOp(_ => a), b)
+    case ta @ Table.Alias(t: Table[_]) => expr(t.mapOp(_ => ta), b)
     case t: Table[_] => expr(Node(t.*), b)
     
     // Union
