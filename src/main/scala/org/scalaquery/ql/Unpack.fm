@@ -33,13 +33,6 @@ sealed trait Unpack[-P,U] {
 }
 
 object Unpack extends UnpackLowPriority {
-  def unpackValueLinearizer[T <: ValueLinearizer[_] with WithOp, U] = { 
-  	new Unpack[T, U] {
-    	def linearizer(from: Packed): ValueLinearizer[_] = from
-    	def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
-  	}
-  }
-  
   def unpackTable[T <: Table[_], U]: Unpack[T, U] = {
   	new Unpack[T, U] {
 	    def linearizer(from: Packed): ValueLinearizer[_] = from
