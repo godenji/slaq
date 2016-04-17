@@ -27,11 +27,14 @@ class CountTest(tdb: TestDB) extends DBTest(tdb) {
     println("q1: "+q1.selectStatement)
     assertEquals(5, q1.first)
     
-//    val q2 = for{
-//    	t1 <- TestTable
-//    	if t1.id is (TestTable.filter(_.id > 1).map(_.id).asColumn)
-//    } yield t1
-//    println("q2: "+q2.selectStatement)
-//    assert(false)
+    val q2 = TestTable.map(_.id.count)
+    q2.dump("q2: ")
+    println("q2: "+q2.selectStatement)
+    assertEquals(5, q2.first)
+
+    val q3 = TestTable.filter(_.id < 3).map(_.id.count)
+    q3.dump("q3: ")
+    println("q3: "+q3.selectStatement)
+    assertEquals(2, q3.first)
   }
 }

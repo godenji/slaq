@@ -225,9 +225,6 @@ extends QueryBuilderAction with QueryBuilderClause {
 	    case Table.Alias(t: Table[_]) => show(t)
 	    case t: Table[_] => show(t)
 	    case 
-	    	Subquery(sq: Query[_,_], rename) =>
-	    		b += s"(${subQueryBuilderFor(sq).innerBuildSelect(b, rename)}) ${quote(alias)}"
-	    case 
 	    	Subquery(Union(all, sqs), rename) =>
 		      b += s"($lp"
 		      var first = true
