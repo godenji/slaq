@@ -1,6 +1,6 @@
 package org.scalaquery.ql.core
 
-import scala.collection.mutable.{LinkedHashMap, LinkedHashSet}
+import scala.collection.mutable.LinkedHashMap
 
 import org.scalaquery.Fail
 import org.scalaquery.ql._
@@ -88,7 +88,7 @@ extends QueryBuilderAction with QueryBuilderClause {
 	  case c: Query[_,_]        => show(c, b)
   	case c: OperatorColumn[_] => show(c, b)
   	case c: Column[_]         => show(c, b)    
-    case t: Table[_] => expr(Node(t.*), b)
+    case t: Table[_]          => expr(Node(t.*), b)
     case ta @ Table.Alias(t: Table[_]) => expr(t.mapOp(_ => ta), b)
     case Table.Alias(ta: Table.Alias) => expr(ta, b) // Union
     case sq @ Subquery(_,_) => b += s"${quote(tableAlias(sq))}.*"
