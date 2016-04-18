@@ -8,10 +8,27 @@ import org.scalaquery.util._
 trait QueryBuilderAction {self: QueryBuilder=>
 	import _profile.sqlUtils._
 	
-	private val declaredTables = new LinkedHashSet[String]
+  private[this] val tableAliases = new LinkedHashMap[String, Table.Ref]
+	private[this] val declaredTables = new LinkedHashSet[String]
 	final def isDeclaredTable(name: String): Boolean = ( 
 		declaredTables.exists(_ == name) || parent.exists(_.isDeclaredTable(name))
 	)
+
+  protected[this] final def tableAlias(node: Node): String = { 
+		val alias = nc.aliasFor(node)
+  	val maybeJoin = node match {
+	    case Table.Alias(t: Table[_]) => t.tableJoin
+	    case _ => None
+	  }
+		val alias2 = 
+			maybeJoin match { // handle left table alias mismatch in on clause of FK join   
+	  		case Some(Join(left, _, on: ForeignKeyQuery[_,_], _))
+	  			if node == left => nc.aliasFor(left)
+	  		case _ => alias
+			}
+		tableAliases.getOrElseUpdate(alias2, Table.Ref(node, maybeJoin))
+		alias2
+	}
 	
 	object SelectBuilder{
 		def buildSelect: (SQLBuilder.Result, ValueLinearizer[_]) = {
@@ -45,7 +62,7 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	    for(qb <- subQueryBuilders.valuesIterator) qb.insertAllFromClauses()
 	  }
 	
-	  protected def insertFromClauses(): Unit = {
+	  private[this] def insertFromClauses(): Unit =  {
 	    //println(tableAliases)
 	    val(currentSelect, numAliases) = (
 	    	selectSlot.build.sql, tableAliases.size
@@ -68,7 +85,7 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	    if(fromSlot.isEmpty) scalarFrom.foreach(s=> fromSlot += " FROM " += s)
 	  }
 	  
-	  private def createJoin( // numAliases == 1 == single column selected in query
+	  private[this] def createJoin( // numAliases == 1 == single column selected in query
 	  	j: Join, b: SQLBuilder, isFirst: Boolean, numAliases: Int): Unit = {
 	  	
 	    if(isFirst) tableLabel(j.left, nc.aliasFor(j.left), b)

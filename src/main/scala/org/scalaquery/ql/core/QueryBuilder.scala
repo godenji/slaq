@@ -52,31 +52,13 @@ extends QueryBuilderAction with QueryBuilderClause {
 
   protected val profile = _profile
   protected val query: Query[_,_] = _query
-  protected var nc: NamingContext = _nc
-  protected val tableAliases = new LinkedHashMap[String, Table.Ref]
   protected val subQueryBuilders = new LinkedHashMap[RefId[Query[_,_]], Self]
+  protected val scalarFrom: Option[String] = None
+  protected val concatOperator: Option[String] = None
+	protected var nc: NamingContext = _nc
   protected var fromSlot: SQLBuilder = _
   protected var selectSlot: SQLBuilder = _
   protected var maxColumnPos = 0
-
-  protected val scalarFrom: Option[String] = None
-  protected val concatOperator: Option[String] = None
-
-  private final def tableAlias(node: Node): String = { 
-		val alias = nc.aliasFor(node)
-  	val maybeJoin = node match {
-	    case Table.Alias(t: Table[_]) => t.tableJoin
-	    case _ => None
-	  }
-		val alias2 = 
-			maybeJoin match { // handle left table alias mismatch in on clause of FK join   
-	  		case Some(Join(left, _, on: ForeignKeyQuery[_,_], _))
-	  			if node == left => nc.aliasFor(left)
-	  		case _ => alias
-			}
-		tableAliases.getOrElseUpdate(alias2, Table.Ref(node, maybeJoin))
-		alias2
-	}
 
   protected def expr(node: Node, b: SQLBuilder, rename: Boolean): Unit = {
     var pos = 0
@@ -91,7 +73,7 @@ extends QueryBuilderAction with QueryBuilderClause {
         p.nodeChildren.zipWithIndex.foreach{case(n,i) =>
           if(pos != 0) b += ','
           if(n.isInstanceOf[Join]) show(
-      			p.product.productElement(i).asInstanceOf[Table[_]], b
+      			p.product.productElement(i).asInstanceOf[Table[_]].*, b
       		)
       		else expr(n, b, false)
       		pos += 1

@@ -11,7 +11,7 @@ object Benchmark {
   val COUNT = 20000
   val PRE_COUNT = 2000
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     for(i <- 0 to COUNT) test1(i == 0)
     val t0 = System.nanoTime()
     for(i <- 0 to COUNT) test1(false)
