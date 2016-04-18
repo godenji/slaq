@@ -11,7 +11,8 @@ import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object JoinTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem, SQLiteMem)
+//object JoinTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem, SQLiteMem)
+object JoinTest extends DBTestObject(H2Mem)
 
   case class Categories(id: Int, name: String)
   object Categories extends Table[Categories]("cats") {
@@ -62,7 +63,7 @@ class JoinTest(tdb: TestDB) extends DBTest(tdb) {
       (c,p) <- Categories join Posts on (_.id is _.category)
       _ <- Query orderBy p.id
     } yield p.id ~ c.id ~ c.name ~ p.title
-    echo("Explicit inner join: "+q2.selectStatement)
+    println("Explicit inner join: "+q2.selectStatement)
     q2.foreach(x => println("  "+x))
     assertEquals(List((2,1), (3,2), (4,3), (5,2)), q2.map(p => p._1 ~ p._2).list)
 
@@ -87,9 +88,17 @@ class JoinTest(tdb: TestDB) extends DBTest(tdb) {
         (c,p) <- Categories rightJoin Posts on (_.id is _.category)
         _ <- Query orderBy p.id
       } yield p.id ~ c.id ~ c.name ~ p.title
-      echo("Right outer join: "+q4.selectStatement)
+      println("Right outer join: "+q4.selectStatement)
       q4.foreach(x => println("  "+x))
       assertEquals(List((1,0), (2,1), (3,2), (4,3), (5,2)), q4.map(p => p._1 ~ p._2).list)
     }
+    
+    val q5 = for {
+      (c,p) <- Categories join Posts on (_.id is _.category)
+      _ <- Query orderBy p.id
+    } yield p.id
+    println("Inner join (single selected column): "+q5.selectStatement)
+    q5.foreach(x => println("  "+x))
+    assertEquals(List(2,3,4,5), q5.list)
   }
 }

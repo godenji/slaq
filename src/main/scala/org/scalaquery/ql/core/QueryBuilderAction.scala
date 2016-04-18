@@ -47,7 +47,9 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	
 	  protected def insertFromClauses(): Unit = {
 	    //println(tableAliases)
-	    val currentSelect = selectSlot.build.sql
+	    val(currentSelect, numAliases) = (
+	    	selectSlot.build.sql, tableAliases.size
+	    )
 	    tableAliases.zipWithIndex.foreach{case((alias, tr: Table.Ref), i) =>
 	    	val(hasParentAlias, isFirst) = (
 	    		parent.exists(_.isDeclaredTable(alias)), 
@@ -55,7 +57,7 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	    	)
 	      if(!hasParentAlias) {
 	        if(isFirst) fromSlot += " FROM "
-	        tr.tableJoin.map(createJoin(_, fromSlot, isFirst)).
+	        tr.tableJoin.map(createJoin(_, fromSlot, isFirst, numAliases)).
 	        getOrElse{
 	        	if(!isFirst) fromSlot += ','
 	        	tableLabel(tr.table, alias, fromSlot)
@@ -66,12 +68,13 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	    if(fromSlot.isEmpty) scalarFrom.foreach(s=> fromSlot += " FROM " += s)
 	  }
 	  
-	  private def createJoin(j: Join, b: SQLBuilder, isFirst: Boolean): Unit = {
-	  	val(left, right) = (j.left, j.right)
-	    if(isFirst) tableLabel(left, nc.aliasFor(left), b)
-	    else {
+	  private def createJoin( // numAliases == 1 == single column selected in query
+	  	j: Join, b: SQLBuilder, isFirst: Boolean, numAliases: Int): Unit = {
+	  	
+	    if(isFirst) tableLabel(j.left, nc.aliasFor(j.left), b)
+	    if(!isFirst || numAliases == 1) {
 		    b += s" ${j.joinType.sqlName} JOIN "
-		    tableLabel(right, nc.aliasFor(right), b)
+		    tableLabel(j.right, nc.aliasFor(j.right), b)
 		    b += " ON "
 		    expr(j.on, b)
 	    }
