@@ -1,12 +1,13 @@
 package org.scalaquery.example
 
+import scala.language.postfixOps
 import org.scalaquery.ql.{Query, ColumnBase, Table}
 import org.scalaquery.ql.driver.{Driver}, Driver.Implicit._
 import org.scalaquery.ql.Table
 import org.scalaquery.util.NamingContext
 
-object SQuery2Test {
-  def main(args: Array[String]) {
+object StatementVerify {
+  def main(args: Array[String]): Unit = {
 
     object Users extends Table[(Int, String, String)]("users") {
       def id = column[Int]("id")
@@ -46,22 +47,31 @@ object SQuery2Test {
     } yield u.first ~ o.orderID
 
     val q5 = for (
-      o <- for ( o <- Orders if o.orderID in (for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max) ) yield o.orderID;
+      o <-
+      	for( o <- Orders if o.orderID in (
+      		for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max
+      	)) yield o.orderID;
       _ <- Query orderBy o
     ) yield o
 
-    val q6a = for (
-      o <- (for ( o <- Orders if o.orderID in (for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max) ) yield o.orderID);
+    val q6a = 
+    	for( o <- (for ( o <- Orders if o.orderID in (
+    		for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max
+    	)) yield o.orderID);
       _ <- Query orderBy o
     ) yield o
 
-    val q6b = for (
-      o <- (for ( o <- Orders if o.orderID in (for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max) ) yield o.orderID ~ o.userID);
+    val q6b = 
+    	for( o <- (for ( o <- Orders if o.orderID in (
+    		for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max
+    	)) yield o.orderID ~ o.userID);
       _ <- Query orderBy o._1
     ) yield o
 
-    val q6c = for (
-      o <- (for ( o <- Orders if o.orderID in (for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max) ) yield o);
+    val q6c = 
+    	for ( o <- (for ( o <- Orders if o.orderID in (
+    		for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max
+    	)) yield o);
       _ <- Query orderBy o.orderID
     ) yield o.orderID ~ o.userID
 

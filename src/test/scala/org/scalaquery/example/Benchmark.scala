@@ -1,8 +1,8 @@
 package org.scalaquery.example
 
-import org.scalaquery.ql.Query
+import scala.language.postfixOps
+import org.scalaquery.ql.{Query, Table}
 import org.scalaquery.ql.driver.{Driver}, Driver.Implicit._
-import org.scalaquery.ql.Table
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.util.NamingContext
 
@@ -46,8 +46,10 @@ object Benchmark {
       _ <- Query.orderBy(u.last asc)
     } yield u.first ~ o.orderID
     val q5 = for (
-      o <- Orders
-        filter { o => o.orderID is (for { o2 <- Orders filter(o.userID is _.userID) } yield o2.orderID.max).asColumn }
+      o <- 
+      	Orders filter{ o => o.orderID is (
+      		for { o2 <- Orders filter(o.userID is _.userID) } yield o2.orderID.max
+      	).asColumn}
     ) yield o.orderID
 
     val s1 = Driver.buildSelectStatement(q1, NamingContext())
