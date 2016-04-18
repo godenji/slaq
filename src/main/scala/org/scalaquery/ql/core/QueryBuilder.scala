@@ -58,7 +58,6 @@ extends QueryBuilderAction with QueryBuilderClause {
 	protected var nc: NamingContext = _nc
   protected var fromSlot: SQLBuilder = _
   protected var selectSlot: SQLBuilder = _
-  protected var maxColumnPos = 0
 
   protected def expr(node: Node, b: SQLBuilder, rename: Boolean): Unit = {
     var pos = 0
