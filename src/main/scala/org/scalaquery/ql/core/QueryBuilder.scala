@@ -44,8 +44,9 @@ extends QueryBuilderAction with QueryBuilderClause {
   
   def insertAllFromClauses(): Unit = FromBuilder.insertAllFromClauses()
 
-  protected def createSubQueryBuilder
-  	(query: Query[_,_], nc: NamingContext): Self
+  protected def createSubQueryBuilder(q: Query[_,_], nc: NamingContext): Self
+  protected def subQueryBuilderFor(q: Query[_,_]): Self =
+    subQueryBuilders.getOrElseUpdate(RefId(q), createSubQueryBuilder(q, nc))
 	
 	type Self <: QueryBuilder
 
@@ -76,9 +77,6 @@ extends QueryBuilderAction with QueryBuilderClause {
 		tableAliases.getOrElseUpdate(alias2, Table.Ref(node, maybeJoin))
 		alias2
 	}
-  
-  protected def subQueryBuilderFor(q: Query[_,_]): Self =
-    subQueryBuilders.getOrElseUpdate(RefId(q), createSubQueryBuilder(q, nc))
 
   protected def expr(node: Node, b: SQLBuilder, rename: Boolean): Unit = {
     var pos = 0
@@ -92,7 +90,7 @@ extends QueryBuilderAction with QueryBuilderClause {
 	      //p.nodeChildren.foreach(println)
         p.nodeChildren.zipWithIndex.foreach{case(n,i) =>
           if(pos != 0) b += ','
-          if(n.isInstanceOf[Join]) expr(
+          if(n.isInstanceOf[Join]) show(
       			p.product.productElement(i).asInstanceOf[Table[_]], b
       		)
       		else expr(n, b, false)
@@ -115,8 +113,8 @@ extends QueryBuilderAction with QueryBuilderClause {
     case sq @ Subquery(_,_) => b += s"${quote(tableAlias(sq))}.*"
     case SubqueryColumn(pos,q,_) => b += s"${quote(tableAlias(q))}.${quote(s"c$pos")}"	
     case SimpleLiteral(w) => b += w
-    case _ =>
-    	Fail(s"Don't know what to do with node `$c` in an expression")
+    case _ => 
+    	Fail(s"Unmatched node `$c` in show block")
   }
   
   /*
