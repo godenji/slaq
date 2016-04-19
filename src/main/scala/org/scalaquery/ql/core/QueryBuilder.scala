@@ -72,7 +72,7 @@ extends QueryBuilderAction with QueryBuilderClause {
         p.nodeChildren.zipWithIndex.foreach{case(n,i) =>
           if(pos != 0) b += ','
           if(n.isInstanceOf[Join]) show(
-      			p.product.productElement(i).asInstanceOf[Table[_]].*, b
+      			p.product.productElement(i).asInstanceOf[Table[_]], b
       		)
       		else expr(n, b, false)
       		pos += 1
