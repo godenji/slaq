@@ -90,6 +90,7 @@ class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
         u <- Users if u.id >= min & u.id <= max & Orders.filter(
         	o => (u.id is o.userID) & (o.product is product)
         ).exists
+        _ <- Query orderBy u.first.desc
       } yield u.first
       val q4 = userNameByIDRangeAndProduct( (2,5,"Product A") )
       println("q4: " + userNameByIDRangeAndProduct.selectStatement)
