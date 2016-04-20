@@ -5,7 +5,22 @@ import org.scalaquery.util.{Node, BinaryNode}
 case class Join(
 	left: Node, 
 	right: Node, 
-	on: Node, joinType: JoinType) extends BinaryNode
+	on: Node, joinType: JoinType) extends BinaryNode {
+	
+	/**
+	 * extracts target table alias or table from join
+	 */
+	final def extractNode(tableName: String, forTableAlias: Boolean): Node = 
+		(left, right) match {
+			case(la @ Table.Alias(l: Table[_]), ra @ Table.Alias(r: Table[_])) =>
+				if(forTableAlias) (
+					if(l.tableName == tableName) la else ra
+				)
+				// else clone target table with Join instance as node delegate
+				else if(l.tableName == tableName) l.mapOp(_ => this) 
+				else r.mapOp(_ => this)
+	}
+}
 	
 object Join {
 	def query[P, P2, U, U2, R]( 

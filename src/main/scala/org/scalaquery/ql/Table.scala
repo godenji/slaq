@@ -7,15 +7,18 @@ import core.{Profile, ColumnOption, ColumnOptions}
 
 abstract class Table[T](
 	val schemaName: Option[String], 
-	val tableName: String, 
-	private var maybeJoin: Option[Join]) extends ColumnBase[T] {
+	val tableName: String) extends ColumnBase[T] {
 	
-	def this(_tableName: String) = this(None, _tableName, None)
+	def this(_tableName: String) = this(None, _tableName)
 	
-	def tableJoin = maybeJoin
+	def nodeChildren = Nil
 	override def isNamedTable = true
-  def nodeChildren = Nil
   override def toString = s"Table $tableName"
+	
+	final def maybeJoin: Option[Join] = nodeDelegate match {
+		case j: Join => Some(j)
+		case _ => None
+	}
   
   type ProfileType = Profile
   val O: ColumnOptions = ColumnOptions
@@ -24,21 +27,9 @@ abstract class Table[T](
   final def column[C : TypeMapper]
 		(name: String, options: ColumnOption[C, ProfileType]*) = {
 		
-		val node = Node(this) match {
-			// if node delegate is a join then store join ref in target tables
-			case j @ Join(
-				t1 @ Table.Alias(left: Table[_]), 
-				t2 @ Table.Alias(right: Table[_]), _, _) =>
-					
-				List(left, right).foreach(_.maybeJoin = Some(j))
-				Node(
-					if(left.tableName == tableName) t1 else t2
-				)
-			// if node delegate is not a join then unset existing join ref
-			case ta @ Table.Alias(t: Table[_]) if t.tableJoin.isDefined =>
-				t.maybeJoin = None
-				ta
-			case x => x
+		val node = nodeDelegate match {
+			case j: Join => j.extractNode(tableName, forTableAlias = false)
+			case delegate => delegate
 		}
 		new NamedColumn[C](node, name, options:_*)
 	}

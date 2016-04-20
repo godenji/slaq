@@ -8,26 +8,26 @@ import org.scalaquery.util._
 trait QueryBuilderAction {self: QueryBuilder=>
 	import _profile.sqlUtils._
 	
-  private[this] val tableAliases = new LinkedHashMap[String, Table.Ref]
-	private[this] val declaredTables = new LinkedHashSet[String]
+  private val tableAliases = new LinkedHashMap[String, Table.Ref]
+	private val declaredTables = new LinkedHashSet[String]
 	final def isDeclaredTable(name: String): Boolean = ( 
 		declaredTables.exists(_ == name) || parent.exists(_.isDeclaredTable(name))
 	)
 
   protected[this] final def tableAlias(node: Node): String = { 
-		val alias = nc.aliasFor(node)
-  	val maybeJoin = node match {
-	    case Table.Alias(t: Table[_]) => t.tableJoin
-	    case _ => None
-	  }
-		val alias2 = 
-			maybeJoin match { // handle left table alias mismatch in on clause of FK join   
-	  		case Some(Join(left, _, on: ForeignKeyQuery[_,_], _))
-	  			if node == left => nc.aliasFor(left)
-	  		case _ => alias
-			}
-		tableAliases.getOrElseUpdate(alias2, Table.Ref(node, maybeJoin))
-		alias2
+		val(node2, maybeJoin) = node match {
+			case NamedColumn(t: Table[_],_,_) =>
+				(t.maybeJoin.map{case j: Join => 
+					j.extractNode(t.tableName, forTableAlias = true)
+				}.getOrElse(t), t.maybeJoin)
+			case NamedColumn(ta @ Table.Alias(t: Table[_]),_,_) => 
+				(ta, t.maybeJoin)
+			case n => 
+				(n, None)
+		}
+  	val alias  = nc.aliasFor(node2)
+		tableAliases.getOrElseUpdate(alias, Table.Ref(node2, maybeJoin))
+		alias
 	}
 	
 	object SelectBuilder{
@@ -49,6 +49,7 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	  	}
       selectSlot = b.createSlot
       selectSlot += "SELECT "
+      //query.reified.dump("")
       expr(query.reified, selectSlot, rename)
       fromSlot = b.createSlot
       if(takeNone) b += " WHERE 1=0"
@@ -62,7 +63,7 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	    for(qb <- subQueryBuilders.valuesIterator) qb.insertAllFromClauses()
 	  }
 	
-	  private[this] def insertFromClauses(): Unit =  {
+	  private def insertFromClauses(): Unit =  {
 	    //println(tableAliases)
 	    val(currentSelect, numAliases) = (
 	    	selectSlot.build.sql, tableAliases.size
@@ -85,17 +86,59 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	    if(fromSlot.isEmpty) scalarFrom.foreach(s=> fromSlot += " FROM " += s)
 	  }
 	  
-	  private[this] def createJoin( // numAliases == 1 == single column selected in query
+	  private def createJoin( // numAliases == 1 == single column selected in query
 	  	j: Join, b: SQLBuilder, isFirst: Boolean, numAliases: Int): Unit = {
 	  	
-	    if(isFirst) tableLabel(j.left, nc.aliasFor(j.left), b)
+	  	val leftAlias = nc.aliasFor(j.left)
+	    if(isFirst) tableLabel(j.left, leftAlias, b)
 	    if(!isFirst || numAliases == 1) {
 		    b += s" ${j.joinType.sqlName} JOIN "
 		    tableLabel(j.right, nc.aliasFor(j.right), b)
 		    b += " ON "
-		    expr(j.on, b)
+		    j.on match {
+		    	case q: ForeignKeyQuery[_,_] =>
+		    		q.fks.foreach{fk=> // handle alias mismatch (fk table not same instance)
+		    			val name = quote(fk.right.asInstanceOf[NamedColumn[_]].name)
+		    			b += s"(${quote(leftAlias)}.$name = "; show(fk.left, b); b += ")"
+		    		}
+		    	case x => show(x, b)
+		    }
 	    }
 	  }
+	  
+	  private def tableLabel(table: Node, alias: String, b: SQLBuilder): Unit = {
+	  	def show(t: Table[_]) = {
+	  		t.schemaName.foreach(b += quote(_) += '.')
+	    	b += s"${quote(t.tableName)} ${quote(alias)}"
+	  	}
+	  	table match {
+		    case Table.Alias(t: Table[_]) => show(t)
+		    case t: Table[_] => show(t)
+		    case 
+		    	Subquery(Union(all, sqs), rename) =>
+			      b += s"($lp"
+			      var first = true
+			      for(sq <- sqs) {
+			        if(!first) b += (if(all) s"$rp UNION ALL $lp" else s"$rp UNION $lp")
+			        subQueryBuilderFor(sq).innerBuildSelect(b, first && rename)
+			        first = false
+			      }
+			      b += s")$rp ${quote(alias)}"
+		    case _ => println(s"tableLabel() >> could not match node $table")
+		  }
+	  }
+	  /*
+	   * hack: SQLite subqueries do not allow nested parens
+	   * 	while MySQL (at least) requires Union queries in the form of:
+	   *  select t1.* from (
+	   *  	(select t2.id from A t2 ..) UNION (select t3.id from A t3 ..)
+	   * 	) t1
+	   * 	when orderBy and limit clauses are required in both selects
+	   */
+	  private val(lp,rp) = _profile match{
+			case driver.SQLiteDriver => ("","")
+			case _=> ("(",")")
+		}
 	}
 	
 	object UpdateBuilder {

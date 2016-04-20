@@ -36,7 +36,7 @@ extends QueryBuilderAction with QueryBuilderClause {
 	def buildSelect(b: SQLBuilder) = 
 		SelectBuilder.buildSelect(b)
 		
-  protected def innerBuildSelect(b: SQLBuilder, rename: Boolean): Unit =
+  protected[core] def innerBuildSelect(b: SQLBuilder, rename: Boolean): Unit =
   	SelectBuilder.innerBuildSelect(b, rename)
   	
   def buildUpdate = UpdateBuilder.buildUpdate
@@ -65,19 +65,25 @@ extends QueryBuilderAction with QueryBuilderClause {
     	if(rename) b += as
     	if(outer) pos = 1
     }
+    def delimit(action: => Unit) = {
+    	if(pos != 0) b += ','
+    	action
+    	pos += 1
+      alias(s" as ${quote(s"c$pos")}", false)
+    }
     node match {
       case p: ProductNode =>
-      	//println(p)
-	      //p.nodeChildren.foreach(println)
-        p.nodeChildren.zipWithIndex.foreach{case(n,i) =>
-          if(pos != 0) b += ','
-          if(n.isInstanceOf[Join]) show(
-      			p.product.productElement(i).asInstanceOf[Table[_]], b
+        p.nodeChildren.zipWithIndex.foreach {
+      		case(n: Join, i) => delimit(
+      			show(p.product.productElement(i).asInstanceOf[Table[_]], b) 
       		)
-      		else expr(n, b, false)
-      		pos += 1
-          alias(s" as ${quote(s"c$pos")}", false)
+        	case(n, _) => delimit( expr(n, b) )
     		}
+      case j: Join => // query yields a single table (i.e. non-product/projection)
+      	val t = query.unpackable.value.asInstanceOf[Table[_]]
+      	show(
+      		j.extractNode(t.tableName, forTableAlias = false), b
+      	)
       case n => show(n, b)
     }
     if(pos == 0) alias(s" as ${quote("c1")}", true)
@@ -158,8 +164,9 @@ extends QueryBuilderAction with QueryBuilderClause {
    * Column show
    */
   private final def show[T](c: Column[T], b: SQLBuilder): Unit = c match {
-    case n: NamedColumn[_] =>
-    	b += s"${quote(tableAlias(n.table))}.${quote(n.name)}"
+    case n: NamedColumn[_] => 
+    	// must pass self (not n.table) to tableAlias for Join check
+    	b += s"${quote(tableAlias(n))}.${quote(n.name)}"
     	
     case c @ BindColumn(v) =>
     	b +?= {(p,param) => c.typeMapper(profile).setValue(v, p)}
@@ -190,43 +197,7 @@ extends QueryBuilderAction with QueryBuilderClause {
         case n => b += " ELSE "; expr(n, b)
       }
       b += " END)"
-    
-    // Column is sealed, these nodes don't generate sql 
-    case _: OperatorColumn[_] | _: WrappedColumn[_] =>
+    case 
+    	_: OperatorColumn[_] | _: WrappedColumn[_] =>
   }
-
-  protected def tableLabel(table: Node, alias: String, b: SQLBuilder): Unit = {
-  	def show(t: Table[_]) = {
-  		t.schemaName.foreach(b += quote(_) += '.')
-    	b += s"${quote(t.tableName)} ${quote(alias)}"
-  	}
-  	table match {
-	    case Table.Alias(t: Table[_]) => show(t)
-	    case t: Table[_] => show(t)
-	    case 
-	    	Subquery(Union(all, sqs), rename) =>
-		      b += s"($lp"
-		      var first = true
-		      for(sq <- sqs) {
-		        if(!first) b += (if(all) s"$rp UNION ALL $lp" else s"$rp UNION $lp")
-		        subQueryBuilderFor(sq).innerBuildSelect(b, first && rename)
-		        first = false
-		      }
-		      b += s")$rp ${quote(alias)}"
-	    case _ => println(s"tableLabel() >> could not match node $table")
-	  }
-  }
-  /*
-   * hack: SQLite subqueries do not allow nested parens
-   * 	while MySQL (at least) requires Union queries in the form of:
-   *  select t1.* from (
-   *  	(select t2.id from A t2 ..) UNION (select t3.id from A t3 ..)
-   * 	) t1
-   * 	when orderBy and limit clauses are required in both selects
-   */
-  private val(lp,rp) = _profile match{
-		case driver.SQLiteDriver => ("","")
-		case _=> ("(",")")
-	}
-  
 }

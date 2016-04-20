@@ -19,13 +19,14 @@ object JoinTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem, SQLiteMe
     def name = column[String]("name")
     def * = id ~ name <> (Categories.apply _, Categories.unapply _)
   }
-  case class Posts(id: Int, title: String, category: Int)
+  case class Posts(id: Int, title: String, category: Int, category2: Int)
   object Posts extends Table[Posts]("posts") {
     def id = column[Int]("id", O PrimaryKey, O AutoInc)
     def title = column[String]("title")
     def category = column[Int]("category")
-    //def catsFk = foreignKey("catsFk", category, Categories)(_.id)
-    def * = id ~ title ~ category <> (Posts.apply _, Posts.unapply _)
+    def category2 = column[Int]("category2")
+    def catsFk = foreignKey("catsFk", category2, Categories)(_.id)
+    def * = id ~ title ~ category ~ category2 <> (Posts.apply _, Posts.unapply _)
   }
   
 class JoinTest(tdb: TestDB) extends DBTest(tdb) {
@@ -41,12 +42,12 @@ class JoinTest(tdb: TestDB) extends DBTest(tdb) {
       Categories(3, "Windows"),
       Categories(4, "Software")
     )
-    Posts.title ~ Posts.category insertAll (
-      ("Test Post", -1),
-      ("Formal Language Processing in Scala, Part 5", 1),
-      ("Efficient Parameterized Queries in ScalaQuery", 2),
-      ("Removing Libraries and HomeGroup icons from the Windows 7 desktop", 3),
-      ("A ScalaQuery Update", 2)
+    Posts.title ~ Posts.category ~ Posts.category2 insertAll (
+      ("Test Post", -1, 1),
+      ("Formal Language Processing in Scala, Part 5", 1, 1),
+      ("Efficient Parameterized Queries in ScalaQuery", 2, 2),
+      ("Removing Libraries and HomeGroup icons from the Windows 7 desktop", 3, 3),
+      ("A ScalaQuery Update", 2, 4)
     )
 
     val q1 = for {
@@ -99,5 +100,13 @@ class JoinTest(tdb: TestDB) extends DBTest(tdb) {
     println("Inner join (single selected column): "+q5.selectStatement)
     q5.foreach(x => println("  "+x))
     assertEquals(List(2,3,4,5), q5.list)
+    
+    val q6 = for {
+      (c,p) <- Categories join Posts on (_.catsFk)
+      _ <- Query orderBy p.id
+    } yield c
+    println("Foreign key join: "+q6.selectStatement)
+    q6.foreach(x => println("  "+x))
+    assertEquals(Set(1,2,3,4), q6.to[Set]().map(_.id))
   }
 }
