@@ -80,18 +80,12 @@ sealed abstract class Query[+P,+U] extends Node {
   def asColumn(implicit ev: P <:< Column[_]): P =
   	ev(unpackable.value).mapOp(_=> this).asInstanceOf[P]
   
-  /** 
-   * join a pair of tables
-   */
   def join[P2, U2](right: Query[P2, U2])      = joinPair(right, jt.Inner)
   def leftJoin[P2, U2](right: Query[P2, U2])  = joinPair(right, jt.Left)
   def rightJoin[P2, U2](right: Query[P2, U2]) = joinPair(right, jt.Right)
   def outerJoin[P2, U2](right: Query[P2, U2]) = joinPair(right, jt.Outer)
   	
-  /**
-   * join a single table
-   */
-  def join[C <: Column[_]     : Queryable](on: P => C) = joinOne(on, jt.Inner)
+  def join[C <: Column[_]      : Queryable](on: P => C) = joinOne(on, jt.Inner)
   def leftJoin[C <: Column[_]  : Queryable](on: P => C) = joinOne(on, jt.Left)
   def rightJoin[C <: Column[_] : Queryable](on: P => C) = joinOne(on, jt.Right)
   def outerJoin[C <: Column[_] : Queryable](on: P => C) = joinOne(on, jt.Outer)
@@ -104,9 +98,9 @@ sealed abstract class Query[+P,+U] extends Node {
   
   private def joinOne(on: P => Node, joinType: JoinType): Query[P, U] = {
   	val upu = unpackable.asInstanceOf[Unpackable[P, U]]
-		val node = Join(reified, reified, on(upu.value), joinType)
+		val join = Join(reified, reified, on(upu.value), joinType)
   	Query[P, U](
-  		Unpackable(upu.mapOp(_ => node), upu.unpack)
+  		Unpackable(upu.mapOp(_ => join), upu.unpack)
   	)  
   }
 }
