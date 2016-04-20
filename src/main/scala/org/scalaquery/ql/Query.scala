@@ -14,8 +14,7 @@ sealed abstract class Query[+P,+U] extends Node {
 
   def nodeChildren = reified :: cond.map(Node.apply) ::: modifiers
   override def nodeNamedChildren = 
-  	(reified, "select") :: cond.map(n=> (Node(n), "where")) ::: 
-  	modifiers.map(o=> (o, "modifier"))
+  	(reified, "select") :: cond.map((_, "where")) ::: modifiers.map((_, "modifier"))
 
   def flatMap[P2,U2](f: P => Query[P2,U2]): Query[P2,U2] = {
     val q = f(unpackable.value)
@@ -144,8 +143,8 @@ class QueryWrap[+P,+U](
 	val cond: List[Column[_]],
 	val modifiers: List[QueryModifier]) extends Query[P,U] {
 	
-	override lazy val reified = unpackable.reifiedNode
-  override lazy val linearizer = unpackable.linearizer
+	lazy val reified = unpackable.reifiedNode
+  lazy val linearizer = unpackable.linearizer
 }
 
 object Query extends QueryWrap

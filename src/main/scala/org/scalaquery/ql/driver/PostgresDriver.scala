@@ -118,10 +118,8 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   		{b += ","; expr(n,b,false)}
   	}
   	def matchTable(n: Node) = n match{
-  		case ta @ Table.Alias(t) => 
-				ansiAppendGroupClause(t,groupCols)(b)
-			case t: Table[_]=> 
-				ansiAppendGroupClause(t.*,groupCols)(b)
+  		case Table.Alias(t) => ansiAppendGroupClause(t, groupCols)(b)
+			case t: Table[_]=> ansiAppendGroupClause(t.*, groupCols)(b)
   	}
   	node match{
 	  	case p: ProductNode =>
