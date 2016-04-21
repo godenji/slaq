@@ -6,10 +6,11 @@ import org.scalaquery.ql._
 import org.scalaquery.util._
 
 trait QueryBuilderAction {self: QueryBuilder=>
-	import _profile.sqlUtils._
+	import profile.sqlUtils._
 	
   private val tableAliases = new LinkedHashMap[String, Table.Ref]
 	private val declaredTables = new LinkedHashSet[String]
+	
 	final def isDeclaredTable(name: String): Boolean = ( 
 		declaredTables.exists(_ == name) || parent.exists(_.isDeclaredTable(name))
 	)
@@ -135,7 +136,7 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	   * 	) t1
 	   * 	when orderBy and limit clauses are required in both selects
 	   */
-	  private val(lp,rp) = _profile match{
+	  private val(lp,rp) = profile match{
 			case driver.SQLiteDriver => ("","")
 			case _=> ("(",")")
 		}

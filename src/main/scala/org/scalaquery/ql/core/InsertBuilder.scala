@@ -24,15 +24,14 @@ class InsertBuilder(val column: Any, val profile: Profile) {
   }
 
   protected def buildParts: (String, StringBuilder, StringBuilder) = {
-    val cols = new StringBuilder
-    val vals = new StringBuilder
-    var table:String = null
+    val(cols, vals) = (new StringBuilder, new StringBuilder)
+    var table: String = null
     def f(c: Any): Unit = c match {
-      case p:Projection[_] =>
-        for(i <- 0 until p.productArity)
-          f(Node(p.productElement(i)))
-      case t:Table[_] => f(Node(t.*))
-      case n:NamedColumn[_] =>
+      case p: Projection[_] => for(i <- 0 until p.productArity) {
+      	f(Node(p.productElement(i)))
+      }
+      case t: Table[_] => f(Node(t.*))
+      case n: NamedColumn[_] =>
       	val tmpTable = n.table.asInstanceOf[Table[_]].tableName
         if(table eq null) table = tmpTable
         else if(table != tmpTable) Fail(
@@ -49,7 +48,7 @@ class InsertBuilder(val column: Any, val profile: Profile) {
   }
 
   protected def appendNamedColumn(
-  	n: NamedColumn[_], cols: StringBuilder, vals: StringBuilder) {
+  	n: NamedColumn[_], cols: StringBuilder, vals: StringBuilder): Unit = {
   	
     if(!cols.isEmpty) {
       cols append ","

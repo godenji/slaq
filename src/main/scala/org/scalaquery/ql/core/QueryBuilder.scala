@@ -22,13 +22,13 @@ final class GenericQueryBuilder[T](
 }
 
 abstract class QueryBuilder(
-	_query: Query[_,_],
+	val query: Query[_,_],
 	_nc: NamingContext,
 	val parent: Option[QueryBuilder],
-	val _profile: Profile
+	val profile: Profile
 )
 extends QueryBuilderAction with QueryBuilderClause {
-	import _profile.sqlUtils._
+	import profile.sqlUtils._
 	
   final def buildSelect: (SQLBuilder.Result, ValueLinearizer[_]) =
   	SelectBuilder.buildSelect
@@ -50,8 +50,6 @@ extends QueryBuilderAction with QueryBuilderClause {
 	
 	type Self <: QueryBuilder
 
-  protected val profile = _profile
-  protected val query: Query[_,_] = _query
   protected val subQueryBuilders = new LinkedHashMap[RefId[Query[_,_]], Self]
   protected val scalarFrom: Option[String] = None
   protected val concatOperator: Option[String] = None
@@ -61,7 +59,7 @@ extends QueryBuilderAction with QueryBuilderClause {
 
   protected def expr(node: Node, b: SQLBuilder, rename: Boolean): Unit = {
     var pos = 0
-    def alias(as: String, outer: Boolean): Unit = {
+    def alias(as: String, outer: Boolean) = {
     	if(rename) b += as
     	if(outer) pos = 1
     }
@@ -74,9 +72,10 @@ extends QueryBuilderAction with QueryBuilderClause {
     node match {
       case p: ProductNode =>
         p.nodeChildren.zipWithIndex.foreach {
-      		case(n: Join, i) => delimit(
-      			show(p.product.productElement(i).asInstanceOf[Table[_]], b) 
-      		)
+      		case(n: Join, i) => 
+      			delimit( // delegate is Join, show parent Table
+      				show(p.product.productElement(i).asInstanceOf[Table[_]], b) 
+      			)
         	case(n, _) => delimit( expr(n, b) )
     		}
       case j: Join => // query yields a single table (i.e. non-product/projection)
@@ -155,8 +154,8 @@ extends QueryBuilderAction with QueryBuilderClause {
       b += s.name += '('; b.sep(s.nodeChildren, ",")(expr(_, b)); b += ')'
       if(s.scalar) b += '}'
       
-    case s: SimpleExpression=> s.toSQL(b, this)
-    case s: SimpleBinaryOperator=>
+    case s: SimpleExpression => s.toSQL(b, this)
+    case s: SimpleBinaryOperator =>
     	b += '('; expr(s.left, b); b += s" ${s.name} "; expr(s.right, b); b += ')'
   }
   
