@@ -5,11 +5,20 @@ import org.scalaquery.Fail
 import org.scalaquery.ql._
 import org.scalaquery.util._
 
-trait QueryBuilderAction {self: QueryBuilder=>
+trait QueryBuilderAction { self: QueryBuilder=>
 	import profile.sqlUtils._
 	
+  private val subQueries = new LinkedHashMap[RefId[Query[_,_]], Self]
   private val tableAliases = new LinkedHashMap[String, Table.Ref]
 	private val declaredTables = new LinkedHashSet[String]
+	private var selectSlot: SQLBuilder = _
+  private var fromSlot:   SQLBuilder = _
+  private var nc: NamingContext = namingContext
+  
+  protected def subQueryBuilder(q: Query[_,_]): Self =
+    subQueries.getOrElseUpdate(
+    	RefId(q), createSubQueryBuilder(q, namingContext)
+    )
 	
 	final def isDeclaredTable(name: String): Boolean = ( 
 		declaredTables.exists(_ == name) || parent.exists(_.isDeclaredTable(name))
@@ -31,19 +40,22 @@ trait QueryBuilderAction {self: QueryBuilder=>
 		alias
 	}
 	
-	object SelectBuilder{
-		def buildSelect: (SQLBuilder.Result, ValueLinearizer[_]) = {
+	object SelectBuilder {
+		/** build select statement for a query result set */
+		def build: (SQLBuilder.Result, ValueLinearizer[_]) = {
 	    val b = new SQLBuilder
-	    buildSelect(b)
+	    build(b)
 	    (b.build, query.linearizer)
 	  }
 	
-	  def buildSelect(b: SQLBuilder): Unit = {
-	    innerBuildSelect(b, false)
-	    insertAllFromClauses()
+		/** build select statement including from clause(s) */
+	  def build(b: SQLBuilder): Unit = {
+	    build(b, false)
+	    FromBuilder.build
 	  }
 	
-	  def innerBuildSelect(b: SQLBuilder, rename: Boolean): Unit = {
+	  /** build select statement excluding from clause(s) */
+	  def build(b: SQLBuilder, rename: Boolean): Unit = {
 	  	val takeNone = queryModifiers[TakeDrop] match {
         case TakeDrop(Some(ConstColumn(0)),_,_) :: _ => true
         case _ => false
@@ -58,13 +70,13 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	  }
 	}
 	
-	object FromBuilder{
-		def insertAllFromClauses(): Unit = {
+	object FromBuilder {
+		def build: Unit = {
 	    if(fromSlot ne null) insertFromClauses()
-	    for(qb <- subQueryBuilders.valuesIterator) qb.insertAllFromClauses()
+	    for(qb <- subQueries.valuesIterator) qb.FromBuilder.build
 	  }
 	
-	  private def insertFromClauses(): Unit =  {
+	  private def insertFromClauses(): Unit = {
 	    //println(tableAliases)
 	    val(currentSelect, numAliases) = (
 	    	selectSlot.build.sql, tableAliases.size
@@ -76,10 +88,10 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	    	)
 	      if(!hasParentAlias) {
 	        if(isFirst) fromSlot += " FROM "
-	        tr.tableJoin.map(createJoin(_, fromSlot, isFirst, numAliases)).
+	        tr.tableJoin.map(createJoin(_, isFirst, numAliases)(fromSlot)).
 	        getOrElse{
 	        	if(!isFirst) fromSlot += ','
-	        	tableLabel(tr.table, alias, fromSlot)
+	        	tableLabel(tr.table, alias)(fromSlot)
 	        }
 	        declaredTables += alias
 	      }
@@ -88,13 +100,13 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	  }
 	  
 	  private def createJoin( // numAliases == 1 == single column selected in query
-	  	j: Join, b: SQLBuilder, isFirst: Boolean, numAliases: Int): Unit = {
+	  	j: Join, isFirst: Boolean, numAliases: Int)(implicit b: SQLBuilder): Unit = {
 	  	
 	  	val leftAlias = nc.aliasFor(j.left)
-	    if(isFirst) tableLabel(j.left, leftAlias, b)
+	    if(isFirst) tableLabel(j.left, leftAlias)
 	    if(!isFirst || numAliases == 1) {
 		    b += s" ${j.joinType.sqlName} JOIN "
-		    tableLabel(j.right, nc.aliasFor(j.right), b)
+		    tableLabel(j.right, nc.aliasFor(j.right))
 		    b += " ON "
 		    j.on match {
 		    	case q: ForeignKeyQuery[_,_] =>
@@ -107,7 +119,7 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	    }
 	  }
 	  
-	  private def tableLabel(table: Node, alias: String, b: SQLBuilder): Unit = {
+	  private def tableLabel(table: Node, alias: String)(implicit b: SQLBuilder): Unit = {
 	  	def show(t: Table[_]) = {
 	  		t.schemaName.foreach(b += quote(_) += '.')
 	    	b += s"${quote(t.tableName)} ${quote(alias)}"
@@ -121,11 +133,12 @@ trait QueryBuilderAction {self: QueryBuilder=>
 			      var first = true
 			      for(sq <- sqs) {
 			        if(!first) b += (if(all) s"$rp UNION ALL $lp" else s"$rp UNION $lp")
-			        subQueryBuilderFor(sq).innerBuildSelect(b, first && rename)
+			        subQueryBuilder(sq).SelectBuilder.build(b, first && rename)
 			        first = false
 			      }
 			      b += s")$rp ${quote(alias)}"
-		    case _ => println(s"tableLabel() >> could not match node $table")
+		    case _ => 
+		    	Fail(s"Unmatched node `$table` in `tableLabel()` call")
 		  }
 	  }
 	  /*
@@ -143,7 +156,7 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	}
 	
 	object UpdateBuilder {
-		def buildUpdate = {
+		def build = {
 	    if(!query.modifiers.isEmpty)
 	    	Fail("""
 					A query for an UPDATE statement must not have any modifiers
@@ -205,7 +218,7 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	}
 	
 	object DeleteBuilder {
-		def buildDelete = {
+		def build = {
 	    val b = new SQLBuilder += "DELETE FROM "
 	    val (delTable, delTableName) = query.reified match {
 	      case t @ Table.Alias(base:Table[_]) => 
@@ -226,7 +239,7 @@ trait QueryBuilderAction {self: QueryBuilder=>
 	    if(tableAliases.size > 1) Fail(
 	    	"Conditions of a DELETE statement must not reference other tables"
 	    )
-	    for(qb <- subQueryBuilders.valuesIterator) qb.insertAllFromClauses()
+	    for(qb <- subQueries.valuesIterator) qb.FromBuilder.build
 	    b.build
 	  }
 	}

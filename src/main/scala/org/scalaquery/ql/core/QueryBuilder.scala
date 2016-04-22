@@ -23,43 +23,30 @@ final class GenericQueryBuilder[T](
 
 abstract class QueryBuilder(
 	val query: Query[_,_],
-	_nc: NamingContext,
+	protected val namingContext: NamingContext,
 	val parent: Option[QueryBuilder],
 	val profile: Profile
 )
 extends QueryBuilderAction with QueryBuilderClause {
 	import profile.sqlUtils._
 	
-  final def buildSelect: (SQLBuilder.Result, ValueLinearizer[_]) =
-  	SelectBuilder.buildSelect
-  	
-	def buildSelect(b: SQLBuilder) = 
-		SelectBuilder.buildSelect(b)
-		
-  protected[core] def innerBuildSelect(b: SQLBuilder, rename: Boolean): Unit =
-  	SelectBuilder.innerBuildSelect(b, rename)
-  	
-  def buildUpdate = UpdateBuilder.buildUpdate
-  def buildDelete = DeleteBuilder.buildDelete
-  
-  def insertAllFromClauses(): Unit = FromBuilder.insertAllFromClauses()
-
-  protected def createSubQueryBuilder(q: Query[_,_], nc: NamingContext): Self
-  protected def subQueryBuilderFor(q: Query[_,_]): Self =
-    subQueryBuilders.getOrElseUpdate(RefId(q), createSubQueryBuilder(q, nc))
-	
 	type Self <: QueryBuilder
-
-  protected val subQueryBuilders = new LinkedHashMap[RefId[Query[_,_]], Self]
   protected val scalarFrom: Option[String] = None
   protected val concatOperator: Option[String] = None
-	protected var nc: NamingContext = _nc
-  protected var fromSlot: SQLBuilder = _
-  protected var selectSlot: SQLBuilder = _
+
+  protected def createSubQueryBuilder
+  	(q: Query[_,_], nc: NamingContext): Self
+	
+  final def buildSelect(b: SQLBuilder): Unit = SelectBuilder.build(b)
+  final def buildSelect: 
+  	(SQLBuilder.Result, ValueLinearizer[_]) = SelectBuilder.build
+  	
+  final def buildUpdate = UpdateBuilder.build
+  final def buildDelete = DeleteBuilder.build
 
   protected def expr(node: Node, b: SQLBuilder, rename: Boolean): Unit = {
     var pos = 0
-    def alias(as: String, outer: Boolean) = {
+    def alias(as: => String, outer: Boolean) = {
     	if(rename) b += as
     	if(outer) pos = 1
     }
@@ -67,7 +54,7 @@ extends QueryBuilderAction with QueryBuilderClause {
     	if(pos != 0) b += ','
     	action
     	pos += 1
-      alias(s" as ${quote(s"c$pos")}", false)
+      alias(s" as ${quote(s"c$pos")}", outer = false)
     }
     node match {
       case p: ProductNode =>
@@ -85,7 +72,7 @@ extends QueryBuilderAction with QueryBuilderClause {
       	)
       case n => show(n, b)
     }
-    if(pos == 0) alias(s" as ${quote("c1")}", true)
+    if(pos == 0) alias(s" as ${quote("c1")}", outer = true)
   }
   def expr(c: Node, b: SQLBuilder): Unit = expr(c, b, false)
   
@@ -109,7 +96,7 @@ extends QueryBuilderAction with QueryBuilderClause {
   private final def show(c: Query[_,_], b: SQLBuilder): Unit = c match {
   	case q: ForeignKeyQuery[_,_] => q.fks.foreach(show(_, b))
     case q =>
-    	b += "("; subQueryBuilderFor(q).innerBuildSelect(b, false); b += ")"
+    	b += "("; subQueryBuilder(q).SelectBuilder.build(b, false); b += ")"
   }
 
   /*
