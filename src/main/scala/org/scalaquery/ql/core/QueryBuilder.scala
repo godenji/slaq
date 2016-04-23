@@ -5,6 +5,7 @@ import scala.collection.mutable.LinkedHashMap
 import org.scalaquery.Fail
 import org.scalaquery.ql._
 import org.scalaquery.util._
+import org.scalaquery.ql.{ColumnOps => Cols}
 
 /**
  * generic query builder (benchmarking and statement verification)
@@ -33,6 +34,7 @@ extends QueryBuilderAction with QueryBuilderClause {
 	type Self <: QueryBuilder
   protected val scalarFrom: Option[String] = None
   protected val concatOperator: Option[String] = None
+  private val NullColumn = ConstColumn.NULL
 
   protected def createSubQueryBuilder
   	(q: Query[_,_], nc: NamingContext): Self
@@ -103,27 +105,26 @@ extends QueryBuilderAction with QueryBuilderClause {
    * OperatorColumn show
    */
   private final def show[T](c: OperatorColumn[T], b: SQLBuilder): Unit = c match {
-    case ColumnOps.Is(l, ConstColumn(null)) => b += '('; expr(l, b); b += " IS NULL)"
-    case ColumnOps.Is(l,r) => b += '('; expr(l, b); b += " = "; expr(r, b); b += ')'
-  	case ColumnOps.Not(
-  		ColumnOps.Is(l, ConstColumn(null))) => b += '('; expr(l, b); b += " IS NOT NULL)"
-    case ColumnOps.Not(e) => b += "(NOT "; expr(e, b); b+= ')'
+    case Cols.Is(l, NullColumn) => b += '('; expr(l, b); b += " IS NULL)"
+    case Cols.Is(l,r) => b += '('; expr(l, b); b += " = "; expr(r, b); b += ')'
+  	case Cols.Not(Cols.Is(l, NullColumn)) => b += '('; expr(l, b); b += " IS NOT NULL)"
+    case Cols.Not(e) => b += "(NOT "; expr(e, b); b+= ')'
     
     case fk: ForeignKey[_,_] =>
       b += "(("; expr(fk.left, b); b += ") = ("; expr(fk.right, b); b += "))"
       
-    case ColumnOps.InSet(e,seq,tm,bind) => 
+    case Cols.InSet(e,seq,tm,bind) => 
     	if(seq.isEmpty) show(ConstColumn(false), b) else {
       	b += '('; expr(e, b); b += " IN ("
       	if(bind) b.sep(seq, ",")(x=> b +?= {(p,param) => tm(profile).setValue(x, p)})
       	else b += seq.map(tm(profile).value2SQLLiteral).mkString(",")
       	b += "))"
     	}
-    case ColumnOps.Between(left,start,end) =>
+    case Cols.Between(left,start,end) =>
     	expr(left, b); b += " BETWEEN "; expr(start, b); b += " AND "; expr(end, b)
     	
-    case ColumnOps.CountDistinct(e) => b += "COUNT(DISTINCT "; expr(e, b); b += ')'
-    case ColumnOps.Like(l,r,esc) =>
+    case Cols.CountDistinct(e) => b += "COUNT(DISTINCT "; expr(e, b); b += ')'
+    case Cols.Like(l,r,esc) =>
       b += '('; expr(l, b); b += " LIKE "; expr(r, b);
       esc.foreach { ch =>
         if(ch == '\'' || ch == '%' || ch == '_') Fail(
@@ -166,7 +167,7 @@ extends QueryBuilderAction with QueryBuilderClause {
       	pc.typeMapper(profile).setValue(v.asInstanceOf[T], p)
     	}
     	
-  	case ConstColumn(null) => b += "NULL"
+  	case NullColumn => b += "NULL"
     case c @ ConstColumn(v) => b += c.typeMapper(profile).value2SQLLiteral(v)
     case HavingColumn(x) => expr(c,b)
     case a @ AsColumnOf(ch,name) =>
@@ -179,7 +180,7 @@ extends QueryBuilderAction with QueryBuilderClause {
         b += " WHEN "; expr(w.left, b); b += " THEN "; expr(w.right, b)
       }
       c.elseClause match {
-        case ConstColumn(null) =>
+        case NullColumn =>
         case n => b += " ELSE "; expr(n, b)
       }
       b += " END)"
