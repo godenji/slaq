@@ -36,16 +36,6 @@ extends QueryBuilderAction with QueryBuilderClause {
   protected val concatOperator: Option[String] = None
   private val NullColumn = ConstColumn.NULL
 
-  protected def createSubQueryBuilder
-  	(q: Query[_,_], nc: NamingContext): Self
-	
-  final def buildSelect(b: SQLBuilder): Unit = SelectBuilder.build(b)
-  final def buildSelect: 
-  	(SQLBuilder.Result, ValueLinearizer[_]) = SelectBuilder.build
-  	
-  final def buildUpdate = UpdateBuilder.build
-  final def buildDelete = DeleteBuilder.build
-
   protected def expr(node: Node, b: SQLBuilder, rename: Boolean): Unit = {
     var pos = 0
     def alias(as: => String, outer: Boolean) = {
@@ -98,7 +88,7 @@ extends QueryBuilderAction with QueryBuilderClause {
   private final def show(c: Query[_,_], b: SQLBuilder): Unit = c match {
   	case q: ForeignKeyQuery[_,_] => q.fks.foreach(show(_, b))
     case q =>
-    	b += "("; subQueryBuilder(q).SelectBuilder.build(b, false); b += ")"
+    	b += "("; subQueryBuilder(q).Select.build(b, false); b += ")"
   }
 
   /*
