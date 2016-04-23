@@ -43,7 +43,7 @@ trait FromBuilder { self: QueryBuilder with QueryBuilderAction =>
 	  }
 	  
 	  private def createJoin( // numAliases == 1 == single column selected in query
-	  	j: Join, isFirst: Boolean, numAliases: Int)(implicit b: SQLBuilder): Unit = {
+	  	j: Join, isFirst: Boolean, numAliases: Int)(implicit b: SqlBuilder): Unit = {
 	  	
 	  	val leftAlias = nc.aliasFor(j.left)
 	    if(isFirst) tableLabel(j.left, leftAlias)
@@ -62,7 +62,7 @@ trait FromBuilder { self: QueryBuilder with QueryBuilderAction =>
 	    }
 	  }
 	  
-	  private def tableLabel(table: Node, alias: String)(implicit b: SQLBuilder): Unit = {
+	  private def tableLabel(table: Node, alias: String)(implicit b: SqlBuilder): Unit = {
 	  	def show(t: Table[_]) = {
 	  		t.schemaName.foreach(b += quote(_) += '.')
 	    	b += s"${quote(t.tableName)} ${quote(alias)}"

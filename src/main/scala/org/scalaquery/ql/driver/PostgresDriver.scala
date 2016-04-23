@@ -52,13 +52,13 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
     new PostgresQueryBuilder(query, nc, Some(this), profile)
   
-  override protected def show(c: Node, b: SQLBuilder): Unit = c match {
+  override protected def show(c: Node, b: SqlBuilder): Unit = c match {
     case Sequence.Nextval(seq) => b += s"nextval('${seq.name}')"
     case Sequence.Currval(seq) => b += s"currval('${seq.name}')"
     case _ => super.show(c, b)
   }
 
-  override protected def appendLimitClause(b: SQLBuilder) = queryModifiers[TakeDrop].lastOption.foreach {
+  override protected def appendLimitClause(b: SqlBuilder) = queryModifiers[TakeDrop].lastOption.foreach {
   	case TakeDrop(Some(t), Some(d), compareNode) =>
   		val compFn = maybeLimitNode(t,d,compareNode,_:Boolean)
   		appendLimitValue(b+=" LIMIT ", t, compFn(false))  
@@ -69,7 +69,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     case _ =>
   }
   
-  override protected def appendGroupClause(b: SQLBuilder): Unit = 
+  override protected def appendGroupClause(b: SqlBuilder): Unit = 
   	queryModifiers[Grouping] match {
     	case Nil =>
     	case xs =>
@@ -108,7 +108,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
    * group by o.userID, u.id // u.id implicitly appended 
    */
   private def ansiAppendGroupClause(
-  	node: Node, groupCols: List[String])(b: SQLBuilder): Unit = {
+  	node: Node, groupCols: List[String])(b: SqlBuilder): Unit = {
   	
   	def matchColumn(n: NamedColumn[_]) = {
   		if( // append if is PK and not already exist in groupCols

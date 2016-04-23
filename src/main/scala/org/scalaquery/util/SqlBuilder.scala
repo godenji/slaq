@@ -3,15 +3,15 @@ package org.scalaquery.util
 import scala.collection.mutable.ArrayBuffer
 import org.scalaquery.session.PositionedParameters
 
-final class SQLBuilder extends SQLBuilder.Segment { self =>
-  import SQLBuilder._
+final class SqlBuilder extends SqlBuilder.Segment { self =>
+  import SqlBuilder._
 
   private val segments = new ArrayBuffer[Segment]
   private var currentStringSegment: StringSegment = null
 
   private def ss = {
     if(currentStringSegment eq null) {
-      if(segments.isEmpty || segments.last.isInstanceOf[SQLBuilder]) {
+      if(segments.isEmpty || segments.last.isInstanceOf[SqlBuilder]) {
         currentStringSegment = new StringSegment
         segments += currentStringSegment
       }
@@ -24,7 +24,7 @@ final class SQLBuilder extends SQLBuilder.Segment { self =>
   def +=(i: Int)    = { ss.sb append i; this }
   def +=(l: Long)   = { ss.sb append l; this }
   def +=(c: Char)   = { ss.sb append c; this }
-  def +=(s: SQLBuilder) = { ss.sb append s; this }
+  def +=(s: SqlBuilder) = { ss.sb append s; this }
 
   def +?=(f: Setter) = { ss.setters append f; ss.sb append '?'; this }
 
@@ -39,7 +39,7 @@ final class SQLBuilder extends SQLBuilder.Segment { self =>
   def isEmpty = ss.sb.isEmpty
 
   def createSlot = {
-    val s = new SQLBuilder
+    val s = new SqlBuilder
     segments += s
     currentStringSegment = null
     s
@@ -56,12 +56,12 @@ final class SQLBuilder extends SQLBuilder.Segment { self =>
   }
 }
 
-object SQLBuilder {
+object SqlBuilder {
   final type Setter = (PositionedParameters, Any) => Unit
   final case class Result(sql: String, setter: Setter)
   
   implicit class StringInterpolator(val sc: StringContext) extends AnyVal {
-		@inline final def b(args: Any*)(implicit builder: SQLBuilder): SQLBuilder = {
+		@inline final def b(args: Any*)(implicit builder: SqlBuilder): SqlBuilder = {
 			val(keys, vals) = (sc.parts.iterator, args.iterator)
 			builder += keys.next
 			while(keys.hasNext) {
@@ -70,7 +70,7 @@ object SQLBuilder {
 					case i: Int    => builder += i
 					case l: Long   => builder += l
 					case c: Char   => builder += c
-					case sb: SQLBuilder => builder += sb
+					case sb: SqlBuilder => builder += sb
 				}
 			  builder += keys.next
 			}

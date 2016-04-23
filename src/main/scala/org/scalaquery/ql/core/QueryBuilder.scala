@@ -36,7 +36,7 @@ extends QueryBuilderAction with QueryBuilderClause {
   protected val concatOperator: Option[String] = None
   private val NullColumn = ConstColumn.NULL
 
-  protected def expr(node: Node, b: SQLBuilder, rename: Boolean): Unit = {
+  protected def expr(node: Node, b: SqlBuilder, rename: Boolean): Unit = {
     var pos = 0
     def alias(as: => String, outer: Boolean) = {
     	if(rename) b += as
@@ -66,9 +66,9 @@ extends QueryBuilderAction with QueryBuilderClause {
     }
     if(pos == 0) alias(s" as ${quote("c1")}", outer = true)
   }
-  def expr(c: Node, b: SQLBuilder): Unit = expr(c, b, false)
+  def expr(c: Node, b: SqlBuilder): Unit = expr(c, b, false)
   
-  protected def show(c: Node, b: SQLBuilder): Unit = c match {
+  protected def show(c: Node, b: SqlBuilder): Unit = c match {
 	  case c: Query[_,_]        => show(c, b)
   	case c: OperatorColumn[_] => show(c, b)
   	case c: Column[_]         => show(c, b)    
@@ -85,7 +85,7 @@ extends QueryBuilderAction with QueryBuilderClause {
   /*
    * Query show
    */
-  private final def show(c: Query[_,_], b: SQLBuilder): Unit = c match {
+  private final def show(c: Query[_,_], b: SqlBuilder): Unit = c match {
   	case q: ForeignKeyQuery[_,_] => q.fks.foreach(show(_, b))
     case q =>
     	b += "("; subQueryBuilder(q).Select.build(b, false); b += ")"
@@ -94,7 +94,7 @@ extends QueryBuilderAction with QueryBuilderClause {
   /*
    * OperatorColumn show
    */
-  private final def show[T](c: OperatorColumn[T], b: SQLBuilder): Unit = c match {
+  private final def show[T](c: OperatorColumn[T], b: SqlBuilder): Unit = c match {
     case Cols.Is(l, NullColumn) => b += '('; expr(l, b); b += " IS NULL)"
     case Cols.Is(l,r) => b += '('; expr(l, b); b += " = "; expr(r, b); b += ')'
   	case Cols.Not(Cols.Is(l, NullColumn)) => b += '('; expr(l, b); b += " IS NOT NULL)"
@@ -140,7 +140,7 @@ extends QueryBuilderAction with QueryBuilderClause {
   /*
    * Column show
    */
-  private final def show[T](c: Column[T], b: SQLBuilder): Unit = c match {
+  private final def show[T](c: Column[T], b: SqlBuilder): Unit = c match {
     case n: NamedColumn[_] => 
     	// must pass self (not n.table) to tableAlias for Join check
     	b += s"${quote(tableAlias(n))}.${quote(n.name)}"

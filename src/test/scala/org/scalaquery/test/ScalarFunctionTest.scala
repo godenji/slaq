@@ -9,7 +9,7 @@ import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
-import org.scalaquery.util.{SQLBuilder, BinaryNode, Node}
+import org.scalaquery.util.{SqlBuilder, BinaryNode, Node}
 import java.sql.{Time, Date, Timestamp}
 
 object ScalarFunctionTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)

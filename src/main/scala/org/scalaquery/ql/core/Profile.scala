@@ -2,7 +2,7 @@ package org.scalaquery.ql.core
 
 import org.scalaquery.ql.{Table, Sequence, Query, DDL}
 import org.scalaquery.util.{
-	ValueLinearizer, NamingContext, SQLBuilder
+	ValueLinearizer, NamingContext, SqlBuilder
 }
 
 trait Profile {
@@ -20,20 +20,20 @@ trait Profile {
   val sqlUtils = new SQLUtils
 
   def buildSelectStatement(query: Query[_,_], nc: NamingContext): 
-  	(SQLBuilder.Result, ValueLinearizer[_]) = 
+  	(SqlBuilder.Result, ValueLinearizer[_]) = 
   		createQueryBuilder(query, nc).buildSelect
   		
   def buildUpdateStatement(query: Query[_,_], nc: NamingContext): 
-  	SQLBuilder.Result = createQueryBuilder(query, nc).buildUpdate
+  	SqlBuilder.Result = createQueryBuilder(query, nc).buildUpdate
   	
   def buildDeleteStatement(query: Query[_,_], nc: NamingContext): 
-  	SQLBuilder.Result = createQueryBuilder(query, nc).buildDelete
+  	SqlBuilder.Result = createQueryBuilder(query, nc).buildDelete
 
   def buildInsertStatement(cb: Any): String = 
   	new InsertBuilder(cb, this).buildInsert
   	
   def buildInsertStatement(cb: Any, q: Query[_,_]): 
-  	SQLBuilder.Result = new InsertBuilder(cb, this).buildInsert(q)
+  	SqlBuilder.Result = new InsertBuilder(cb, this).buildInsert(q)
 
   def buildTableDDL(table: Table[_]): DDL = 
   	new DDLBuilder(table, this).buildDDL

@@ -6,7 +6,7 @@ import org.scalaquery.ql._
 import org.scalaquery.util._
 
 trait QueryBuilderClause {self: QueryBuilder=>
-	protected def appendClauses(b: SQLBuilder): Unit = {
+	protected def appendClauses(b: SqlBuilder): Unit = {
     appendConditions(b)
     appendGroupClause(b)
     appendHavingConditions(b)
@@ -17,7 +17,7 @@ trait QueryBuilderClause {self: QueryBuilder=>
 	protected def queryModifiers[T <: QueryModifier](implicit m: ClassTag[T]) = 
 		query.modifiers.filter(m.runtimeClass.isInstance(_)).asInstanceOf[List[T]]
 
-  protected def appendConditions(b: SQLBuilder): Unit = 
+  protected def appendConditions(b: SqlBuilder): Unit = 
   	query.cond.filter{case HavingColumn(x) => false; case _ => true} 
   	match {
 	    case Nil =>
@@ -26,7 +26,7 @@ trait QueryBuilderClause {self: QueryBuilder=>
 	    	b.sep(xs, " AND ")(x=> expr(Node(x), b))
 	  }
 
-  protected def appendGroupClause(b: SQLBuilder): Unit = 
+  protected def appendGroupClause(b: SqlBuilder): Unit = 
   	queryModifiers[Grouping] match {
     	case Nil =>
     	case xs => 
@@ -34,7 +34,7 @@ trait QueryBuilderClause {self: QueryBuilder=>
     		b.sep(xs, ",")(x=> expr(x.by, b, false))
   	}
 
-  protected def appendHavingConditions(b: SQLBuilder): Unit = {
+  protected def appendHavingConditions(b: SqlBuilder): Unit = {
   	query.cond.collect{case HavingColumn(c) => c} match {
 	    case Nil =>
 	    case xs =>
@@ -43,7 +43,7 @@ trait QueryBuilderClause {self: QueryBuilder=>
 	  }
   }
 
-  protected def appendOrderClause(b: SQLBuilder): Unit = 
+  protected def appendOrderClause(b: SqlBuilder): Unit = 
   	queryModifiers[Ordering] match {
     	case Nil =>
     	case xs => 
@@ -51,7 +51,7 @@ trait QueryBuilderClause {self: QueryBuilder=>
     		b.sep(xs, ",")(appendOrdering(_, b))
   	}
 
-  protected def appendOrdering(o: Ordering, b: SQLBuilder): Unit = {
+  protected def appendOrdering(o: Ordering, b: SqlBuilder): Unit = {
     expr(o.by, b, false)
     if(o.isInstanceOf[Ordering.Desc]) b += " DESC"
     o.nullOrdering match {
@@ -61,7 +61,7 @@ trait QueryBuilderClause {self: QueryBuilder=>
     }
   }
 
-  protected def appendLimitClause(b: SQLBuilder): Unit = 
+  protected def appendLimitClause(b: SqlBuilder): Unit = 
   	queryModifiers[TakeDrop].lastOption.foreach {
 	    case TakeDrop(Some(t), Some(d), compareNode) =>
 	    	val compFn = maybeLimitNode(t,d,compareNode,_:Boolean)
@@ -96,7 +96,7 @@ trait QueryBuilderClause {self: QueryBuilder=>
   }
   
   protected def appendLimitValue(
-  	b: SQLBuilder, node: Column[Int], 
+  	b: SqlBuilder, node: Column[Int], 
   	compareNode: Option[Column[Int]] = None): Unit = {
   	
   	def paramValue(param: Any, idx: Int): Int = (

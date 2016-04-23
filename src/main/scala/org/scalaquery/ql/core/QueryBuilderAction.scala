@@ -12,15 +12,15 @@ trait QueryBuilderAction
 		
   private val subQueries = new LinkedHashMap[RefId[Query[_,_]], Self]
   protected val tableAliases = new LinkedHashMap[String, Table.Ref]
-	protected var selectSlot: SQLBuilder = _
-  protected var fromSlot:   SQLBuilder = _
+	protected var selectSlot: SqlBuilder = _
+  protected var fromSlot:   SqlBuilder = _
   protected var nc: NamingContext = namingContext
 
   protected def createSubQueryBuilder(q: Query[_,_], nc: NamingContext): Self
 	
-  final def buildSelect(b: SQLBuilder): Unit = Select.build(b)
+  final def buildSelect(b: SqlBuilder): Unit = Select.build(b)
   final def buildSelect: 
-  	(SQLBuilder.Result, ValueLinearizer[_]) = Select.build
+  	(SqlBuilder.Result, ValueLinearizer[_]) = Select.build
   
   final def buildUpdate = Update.build
   final def buildDelete = Delete.build

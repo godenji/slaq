@@ -1,7 +1,7 @@
 package org.scalaquery.ql
 
 import org.scalaquery.ql.core.QueryBuilder
-import org.scalaquery.util.{SQLBuilder, Node, BinaryNode, NullaryNode}
+import org.scalaquery.util.{SqlBuilder, Node, BinaryNode, NullaryNode}
 
 /**
  * A SimpleFunction gets translated to a plain function call or JDBC/ODBC
@@ -90,45 +90,45 @@ case class SimpleLiteral(name: String) extends Node {
 }
 
 trait SimpleExpression extends Node {
-  def toSQL(b: SQLBuilder, qb:QueryBuilder): Unit
+  def toSQL(b: SqlBuilder, qb:QueryBuilder): Unit
 }
 
 object SimpleExpression {
-  def apply[T : TypeMapper](f: (Seq[Node], SQLBuilder,QueryBuilder) => Unit): 
+  def apply[T : TypeMapper](f: (Seq[Node], SqlBuilder,QueryBuilder) => Unit): 
   	(Seq[Column[_]] => OperatorColumn[T] with SimpleExpression) =
 	    (paramsC: Seq[Column[_]]) =>
 	      new OperatorColumn[T] with SimpleExpression {
 	        def nodeChildren = paramsC.map(n => Node(n)).toList
-	        def toSQL(b: SQLBuilder, qb:QueryBuilder) = f(nodeChildren, b, qb)
+	        def toSQL(b: SqlBuilder, qb:QueryBuilder) = f(nodeChildren, b, qb)
 	      }
 
-  def nullary[R : TypeMapper](f: (SQLBuilder,QueryBuilder) => Unit): 
+  def nullary[R : TypeMapper](f: (SqlBuilder,QueryBuilder) => Unit): 
   	OperatorColumn[R] with SimpleExpression = {
-	    val g = apply({ (ch: Seq[Node], b: SQLBuilder, qb:QueryBuilder) => f(b, qb) });
+	    val g = apply({ (ch: Seq[Node], b: SqlBuilder, qb:QueryBuilder) => f(b, qb) });
 	    g.apply(Seq())
 	  }
   
-  def unary[T1, R : TypeMapper](f: (Node, SQLBuilder,QueryBuilder) => Unit): 
+  def unary[T1, R : TypeMapper](f: (Node, SqlBuilder,QueryBuilder) => Unit): 
   	(Column[T1] => OperatorColumn[R] with SimpleExpression) = {
 	  val g = apply({
-	  	(ch: Seq[Node], b: SQLBuilder, qb:QueryBuilder) => f(ch(0), b, qb) });
+	  	(ch: Seq[Node], b: SqlBuilder, qb:QueryBuilder) => f(ch(0), b, qb) });
 	    { t1: Column[T1] => g(Seq(t1)) }
 	}
 
-  def binary[T1, T2, R : TypeMapper](f: (Node, Node, SQLBuilder,QueryBuilder) => Unit): 
+  def binary[T1, T2, R : TypeMapper](f: (Node, Node, SqlBuilder,QueryBuilder) => Unit): 
   	((Column[T1], Column[T2]) => OperatorColumn[R] with SimpleExpression) = {
     val g = apply({
-    	(ch: Seq[Node], b: SQLBuilder, qb:QueryBuilder) => f(ch(0), ch(1), b, qb) });
+    	(ch: Seq[Node], b: SqlBuilder, qb:QueryBuilder) => f(ch(0), ch(1), b, qb) });
     	{ (t1: Column[T1], t2: Column[T2]) => g(Seq(t1, t2)) }
 	}
 
   def ternary[T1, T2, T3, R : TypeMapper]
-  	(f: (Node, Node, Node, SQLBuilder,QueryBuilder) => Unit): 
+  	(f: (Node, Node, Node, SqlBuilder,QueryBuilder) => Unit): 
 	  	((Column[T1], Column[T2], 
 	  		Column[T3]) => OperatorColumn[R] with SimpleExpression) = {
   	
     val g = apply({
-    	(ch: Seq[Node], b: SQLBuilder, qb:QueryBuilder) => f(
+    	(ch: Seq[Node], b: SqlBuilder, qb:QueryBuilder) => f(
     		ch(0), ch(1), ch(2), b, qb) }
    		);
 	    { (t1: Column[T1], t2: Column[T2], t3: Column[T3]) => g(Seq(t1, t2, t3)) }

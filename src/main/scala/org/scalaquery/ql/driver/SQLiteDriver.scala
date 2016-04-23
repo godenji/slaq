@@ -125,7 +125,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
     new SQLiteQueryBuilder(query, nc, Some(this), profile)
 
-  override protected def appendOrdering(o: Ordering, b: SQLBuilder) {
+  override protected def appendOrdering(o: Ordering, b: SqlBuilder) {
     val desc = o.isInstanceOf[Ordering.Desc]
     if(o.nullOrdering == Ordering.NullsLast && !desc) {
       b += "("
@@ -140,7 +140,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     if(desc) b += " desc"
   }
 
-  override protected def appendLimitClause(b: SQLBuilder) = queryModifiers[TakeDrop].lastOption.foreach {
+  override protected def appendLimitClause(b: SqlBuilder) = queryModifiers[TakeDrop].lastOption.foreach {
     case TakeDrop(Some(t), Some(d), compareNode) => 
     	val compFn = maybeLimitNode(t,d,compareNode,_:Boolean)
     	appendLimitValue(b+=" LIMIT ", d, compFn(true))
@@ -151,7 +151,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     case _ =>
   }
 
-  override protected def show(c: Node, b: SQLBuilder): Unit = c match {
+  override protected def show(c: Node, b: SqlBuilder): Unit = c match {
   	case fk: ForeignKey[_,_] =>
       val cols = fk.linearizedSourceColumns.zip(fk.linearizedTargetColumns)
       b += "("

@@ -8,8 +8,8 @@ trait UpdateBuilder { self: QueryBuilder with QueryBuilderAction =>
 	import profile.sqlUtils._
 	
   object Update {
-		def build: SQLBuilder.Result = {
-	    val b = new SQLBuilder += "UPDATE "
+		def build: SqlBuilder.Result = {
+	    val b = new SqlBuilder += "UPDATE "
 	    val tableNameSlot = b.createSlot
 	    b += " SET "
 	    var table: Node = null

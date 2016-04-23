@@ -14,9 +14,9 @@ class InsertBuilder(val column: Any, val profile: Profile) {
     s"INSERT INTO ${quote(table)} ($cols) VALUES ($vals)"
   }
 
-  def buildInsert(query: Query[_,_]): SQLBuilder.Result = {
+  def buildInsert(query: Query[_,_]): SqlBuilder.Result = {
     val (table, cols, _) = buildParts
-    val b = new SQLBuilder
+    val b = new SqlBuilder
     b += s"INSERT INTO ${quote(table)} (${cols.toString}) "
     val qb = profile.createQueryBuilder(query, NamingContext())
     qb.buildSelect(b)

@@ -89,7 +89,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   protected def createSubQueryBuilder(query: Query[_,_], nc: NamingContext) =
     new HsqldbQueryBuilder(query, nc, Some(this), profile)
 
-  override protected def show(c: Node, b: SQLBuilder): Unit = c match {
+  override protected def show(c: Node, b: SqlBuilder): Unit = c match {
 
     case c @ ConstColumn(v: String) if v ne null =>
       /* Hsqldb treats string literals as type CHARACTER and pads them with
@@ -110,7 +110,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     case _ => super.show(c, b)
   }
 
-  override protected def appendLimitClause(b: SQLBuilder) = queryModifiers[TakeDrop].lastOption.foreach {
+  override protected def appendLimitClause(b: SqlBuilder) = queryModifiers[TakeDrop].lastOption.foreach {
     case TakeDrop(Some(t), Some(d), compareNode) =>
     	val compFn = maybeLimitNode(t,d,compareNode,_:Boolean)
     	appendLimitValue(b+=" LIMIT ", t, compFn(false))

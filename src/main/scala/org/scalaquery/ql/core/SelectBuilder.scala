@@ -9,20 +9,20 @@ trait SelectBuilder { self: QueryBuilder with QueryBuilderAction =>
   object Select {
   	
 		/** build select statement for a query result set */
-		def build: (SQLBuilder.Result, ValueLinearizer[_]) = {
-	    val b = new SQLBuilder
+		def build: (SqlBuilder.Result, ValueLinearizer[_]) = {
+	    val b = new SqlBuilder
 	    build(b)
 	    (b.build, query.linearizer)
 	  }
 	
 		/** build select statement including from clause(s) */
-	  def build(b: SQLBuilder): Unit = {
+	  def build(b: SqlBuilder): Unit = {
 	    build(b, false)
 	    From.build
 	  }
 	
 	  /** build select statement excluding from clause(s) */
-	  def build(b: SQLBuilder, rename: Boolean): Unit = {
+	  def build(b: SqlBuilder, rename: Boolean): Unit = {
 	  	val takeNone = queryModifiers[TakeDrop] match {
         case TakeDrop(Some(ConstColumn(0)),_,_) :: _ => true
         case _ => false

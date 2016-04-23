@@ -8,8 +8,8 @@ trait DeleteBuilder { self: QueryBuilder with QueryBuilderAction =>
 	import profile.sqlUtils._
 	
   object Delete {
-		def build: SQLBuilder.Result = {
-	    val b = new SQLBuilder += "DELETE FROM "
+		def build: SqlBuilder.Result = {
+	    val b = new SqlBuilder += "DELETE FROM "
 	    val (table, tableName) = query.reified match {
 	      case ta @ Table.Alias(t: Table[_]) => (ta, t.tableName)
 	      case t: Table[_] => (t, t.tableName)
