@@ -21,13 +21,9 @@ final class SQLBuilder extends SQLBuilder.Segment { self =>
   }
 
   def +=(s: String) = { ss.sb append s; this }
-
-  def +=(i: Int) = { ss.sb append i; this }
-
-  def +=(l: Long) = { ss.sb append l; this }
-
-  def +=(c: Char) = { ss.sb append c; this }
-
+  def +=(i: Int)    = { ss.sb append i; this }
+  def +=(l: Long)   = { ss.sb append l; this }
+  def +=(c: Char)   = { ss.sb append c; this }
   def +=(s: SQLBuilder) = { ss.sb append s; this }
 
   def +?=(f: Setter) = { ss.setters append f; ss.sb append '?'; this }
@@ -63,6 +59,24 @@ final class SQLBuilder extends SQLBuilder.Segment { self =>
 object SQLBuilder {
   final type Setter = (PositionedParameters, Any) => Unit
   final case class Result(sql: String, setter: Setter)
+  
+  implicit class StringInterpolator(val sc: StringContext) extends AnyVal {
+		@inline final def b(args: Any*)(implicit builder: SQLBuilder): SQLBuilder = {
+			val(keys, vals) = (sc.parts.iterator, args.iterator)
+			builder += keys.next
+			while(keys.hasNext) {
+				vals.next match {
+					case s: String => builder += s
+					case i: Int    => builder += i
+					case l: Long   => builder += l
+					case c: Char   => builder += c
+					case sb: SQLBuilder => builder += sb
+				}
+			  builder += keys.next
+			}
+			builder
+		}
+	}
 
   private class CombinedSetter(b: Seq[Setter]) extends Setter {
     def apply(p: PositionedParameters, param: Any): Unit = for(s <- b) s(p, param)
