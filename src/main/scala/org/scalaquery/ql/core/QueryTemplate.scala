@@ -5,9 +5,10 @@ import org.scalaquery.MutatingStatementInvoker
 import org.scalaquery.ql.Query
 import org.scalaquery.session.{PositionedParameters, PositionedResult}
 import org.scalaquery.util.{ValueLinearizer, NamingContext}
+import scala.annotation.unchecked.{uncheckedVariance => uV}
 
-final class QueryTemplate[P, R](query: Query[_,R], profile: Profile) 
-	extends MutatingStatementInvoker[P, R] {
+final class QueryTemplate[P, +R](query: Query[_,R], profile: Profile) 
+	extends MutatingStatementInvoker[P, R @uV] {
 
   final protected lazy val (built, lin) = 
   	profile.buildSelect(query, NamingContext())
@@ -21,6 +22,6 @@ final class QueryTemplate[P, R](query: Query[_,R], profile: Profile)
   final protected def extractValue(rs: PositionedResult): 
   	R = lin.asInstanceOf[ValueLinearizer[R]].getResult(profile, rs)
 
-  final protected def updateRowValues(rs: PositionedResult, value: R) = 
+  final protected def updateRowValues(rs: PositionedResult, value: R @uV) = 
   	lin.asInstanceOf[ValueLinearizer[R]].updateResult(profile, rs, value)
 }

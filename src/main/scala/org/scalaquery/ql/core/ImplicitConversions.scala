@@ -60,14 +60,13 @@ trait ImplicitConversions[DriverType <: Profile] {
   		Unpackable[T, U] = new Unpackable[T, U](t, unpack)
   }
   
-  implicit final class TableQueryExtensions[T <: Table[_]](t: T) {
-  	@inline def createFinderBy[P](f: T => NamedColumn[P])
-  		(implicit profile: Profile, tm: TypeMapper[P]) : QueryTemplate[P,T] = {
-  		
-  		Params[P](tm).flatMap{p=> 
-	    	table2Query(t).filter(t=> ColumnOps.Is(f(t), p))
-	    }(profile)
-  	}
+  implicit final class TableQueryExtensions[T <: Table[_]](val t: T) {
+  	@inline def createFinderBy[P]
+  		(f: T => NamedColumn[P])(implicit profile: Profile, tm: TypeMapper[P]): 
+  			QueryTemplate[P, t.TableType] = 
+	  			Params[P](tm).flatMap{p=>
+		  			table2Query(t).filter(t=> ColumnOps.Is(f(t), p))
+			    }(profile)
   }
   
 }

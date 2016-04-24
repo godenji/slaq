@@ -9,6 +9,8 @@ abstract class Table[T](
 	val schemaName: Option[String], 
 	val tableName: String) extends ColumnBase[T] {
 	
+	final type TableType = T
+	
 	def this(_tableName: String) = this(None, _tableName)
 	
 	def nodeChildren = Nil
