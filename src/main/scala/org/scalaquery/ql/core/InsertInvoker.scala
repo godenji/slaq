@@ -8,7 +8,8 @@ import org.scalaquery.session.{Session, PositionedParameters}
 
 final class InsertInvoker[T, U] (unpackable: Unpackable[T, U], profile: Profile) {
 
-  lazy val insertStatement = profile.buildInsert(unpackable.value)
+  final lazy val insertStatement = 
+  	profile.buildInsert(unpackable.value)
   
   def insertStatementFor[TT](query: Query[TT, U]): String = 
   	profile.buildInsert(unpackable.value, query).sql

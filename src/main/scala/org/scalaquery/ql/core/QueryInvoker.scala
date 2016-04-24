@@ -12,26 +12,22 @@ final class QueryInvoker[Q, R](q: Query[Q, R], profile: Profile)
   extends MutatingStatementInvoker[Unit, R] 
 	with UnitInvokerMixin[R] with MutatingUnitInvoker[R] {
 
-  override protected val delegate = this
+  override final protected val delegate = this
 
-  protected lazy val (built, lin) = 
+  final protected lazy val (built, lin) = 
   	profile.buildSelect(q, NamingContext())
 
-  @inline final def selectStatement = getStatement
-  def pretty = 
-  	getStatement.replaceAll("`", "").replaceAll("\"", "").split(",").mkString(", ").
-  	replaceAll("(FROM|INNER|LEFT|RIGHT|FULL|WHERE|GROUP BY|ORDER BY|LIMIT)", "\n$1")
+	@inline final protected def getStatement = built.sql
+  def selectStatement = getStatement
 
-  protected def getStatement = built.sql
-
-  protected def setParam(param: Unit, st: PreparedStatement): Unit = 
+  final protected def setParam(param: Unit, st: PreparedStatement): Unit = 
   	built.setter(new PositionedParameters(st), null)
 
-  protected def extractValue(rs: PositionedResult): R = 
+  final protected def extractValue(rs: PositionedResult): R = 
   	lin.asInstanceOf[ValueLinearizer[R]].getResult(profile, rs)
 
-  protected def updateRowValues(rs: PositionedResult, value: R) = 
+  final protected def updateRowValues(rs: PositionedResult, value: R) = 
   	lin.asInstanceOf[ValueLinearizer[R]].updateResult(profile, rs, value)
 
-  def invoker: this.type = this
+  final def invoker: this.type = this
 }

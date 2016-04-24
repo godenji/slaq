@@ -62,4 +62,9 @@ abstract class StatementInvoker[-P, +R] extends Invoker[P, R] { self =>
   }
 
   protected def extractValue(pr: PositionedResult): R
+  
+  /** pretty print generated statement */
+  def pretty = 
+  	getStatement.replaceAll("`", "").replaceAll("\"", "").split(",").mkString(", ").
+  	replaceAll("(FROM|INNER|LEFT|RIGHT|FULL|WHERE|GROUP BY|ORDER BY|LIMIT)", "\n$1")
 }

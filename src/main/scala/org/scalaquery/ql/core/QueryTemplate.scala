@@ -9,22 +9,18 @@ import org.scalaquery.util.{ValueLinearizer, NamingContext}
 final class QueryTemplate[P, R](query: Query[_,R], profile: Profile) 
 	extends MutatingStatementInvoker[P, R] {
 
-  protected lazy val (built, lin) = 
+  final protected lazy val (built, lin) = 
   	profile.buildSelect(query, NamingContext())
 
-  @inline final def selectStatement = getStatement
-  def pretty = 
-  	getStatement.replaceAll("`", "").replaceAll("\"", "").split(",").mkString(", ").
-  	replaceAll("(FROM|INNER|LEFT|RIGHT|FULL|WHERE|GROUP BY|ORDER BY|LIMIT)", "\n$1")
+	@inline final protected def getStatement = built.sql
+  def selectStatement = getStatement
 
-  protected def getStatement = built.sql
-
-  protected def setParam(param: P, st: PreparedStatement): 
+  final protected def setParam(param: P, st: PreparedStatement): 
   	Unit = built.setter(new PositionedParameters(st), param)
 
-  protected def extractValue(rs: PositionedResult): 
+  final protected def extractValue(rs: PositionedResult): 
   	R = lin.asInstanceOf[ValueLinearizer[R]].getResult(profile, rs)
 
-  protected def updateRowValues(rs: PositionedResult, value: R) = 
+  final protected def updateRowValues(rs: PositionedResult, value: R) = 
   	lin.asInstanceOf[ValueLinearizer[R]].updateResult(profile, rs, value)
 }

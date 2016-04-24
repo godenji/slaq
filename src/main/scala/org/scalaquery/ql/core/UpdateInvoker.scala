@@ -7,12 +7,11 @@ import org.scalaquery.util.NamingContext
 final class UpdateInvoker[T](
 	query: Query[_ <: ColumnBase[T], T], profile: Profile) {
 
-  protected lazy val built = 
+  final protected lazy val built = 
   	profile.buildUpdate(query, NamingContext())
 
+	@inline final protected def getStatement = built.sql
   def updateStatement = getStatement
-
-  protected def getStatement = built.sql
 
   def update(value: T)(implicit session: Session): Int = 
   	session.withPreparedStatement(updateStatement) {st=>
