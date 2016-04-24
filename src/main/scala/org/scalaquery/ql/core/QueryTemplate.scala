@@ -10,7 +10,7 @@ final class QueryTemplate[P, R](query: Query[_,R], profile: Profile)
 	extends MutatingStatementInvoker[P, R] {
 
   protected lazy val (built, lin) = 
-  	profile.buildSelectStatement(query, NamingContext())
+  	profile.buildSelect(query, NamingContext())
 
   @inline final def selectStatement = getStatement
   def pretty = 

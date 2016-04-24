@@ -15,7 +15,7 @@ final class QueryInvoker[Q, R](q: Query[Q, R], profile: Profile)
   override protected val delegate = this
 
   protected lazy val (built, lin) = 
-  	profile.buildSelectStatement(q, NamingContext())
+  	profile.buildSelect(q, NamingContext())
 
   @inline final def selectStatement = getStatement
   def pretty = 

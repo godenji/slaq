@@ -25,7 +25,7 @@ object StatementVerify {
     def dump(n: String, q: Query[ColumnBase[_], _]) {
       val nc = NamingContext()
       q.dump(n+": ", nc)
-      println(Driver.buildSelectStatement(q, nc))
+      println(Driver.buildSelect(q, nc))
       println()
     }
 
@@ -116,14 +116,14 @@ object StatementVerify {
 
     println()
 
-    println("Insert1: " +Driver.buildInsertStatement(Users))
-    println("Insert2: " +Driver.buildInsertStatement(Users.first ~ Users.last))
+    println("Insert1: " +Driver.buildInsert(Users))
+    println("Insert2: " +Driver.buildInsert(Users.first ~ Users.last))
 
     val d1 = Users.filter(_.id is 42)
     val d2 = for(u <- Users filter( _.id notIn Orders.map(_.userID) )) yield u
-    println("d0: " +Driver.buildDeleteStatement(Users, NamingContext()))
-    println("d1: " +Driver.buildDeleteStatement(d1, NamingContext()))
-    println("d2: " +Driver.buildDeleteStatement(d2, NamingContext()))
+    println("d0: " +Driver.buildDelete(Users, NamingContext()))
+    println("d1: " +Driver.buildDelete(d1, NamingContext()))
+    println("d2: " +Driver.buildDelete(d2, NamingContext()))
 
     (Users.ddl ++ Orders.ddl).createStatements.foreach(println)
   }

@@ -8,7 +8,7 @@ final class UpdateInvoker[T](
 	query: Query[_ <: ColumnBase[T], T], profile: Profile) {
 
   protected lazy val built = 
-  	profile.buildUpdateStatement(query, NamingContext())
+  	profile.buildUpdate(query, NamingContext())
 
   def updateStatement = getStatement
 

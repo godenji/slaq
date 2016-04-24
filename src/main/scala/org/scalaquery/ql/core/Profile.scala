@@ -19,20 +19,18 @@ trait Profile {
   val typeMapperDelegates: TypeMapperDelegatesT
   val sqlUtils = new SQLUtils
 
-  def buildSelectStatement(query: Query[_,_], nc: NamingContext): 
+  def buildSelect(query: Query[_,_], nc: NamingContext): 
   	(SqlBuilder.Result, ValueLinearizer[_]) = 
   		createQueryBuilder(query, nc).buildSelect
   		
-  def buildUpdateStatement(query: Query[_,_], nc: NamingContext): 
+  def buildUpdate(query: Query[_,_], nc: NamingContext): 
   	SqlBuilder.Result = createQueryBuilder(query, nc).buildUpdate
   	
-  def buildDeleteStatement(query: Query[_,_], nc: NamingContext): 
+  def buildDelete(query: Query[_,_], nc: NamingContext): 
   	SqlBuilder.Result = createQueryBuilder(query, nc).buildDelete
 
-  def buildInsertStatement(cb: Any): String = 
-  	new InsertBuilder(cb, this).buildInsert
-  	
-  def buildInsertStatement(cb: Any, q: Query[_,_]): 
+  def buildInsert(cb: Any): String = new InsertBuilder(cb, this).buildInsert
+  def buildInsert(cb: Any, q: Query[_,_]): 
   	SqlBuilder.Result = new InsertBuilder(cb, this).buildInsert(q)
 
   def buildTableDDL(table: Table[_]): DDL = 

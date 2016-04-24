@@ -6,15 +6,16 @@ import org.scalaquery.ql.driver.{Driver}, Driver.Implicit._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.util.NamingContext
 
-object Benchmark {
+object BenchmarkPar {
 
   val COUNT = 20000
   val PRE_COUNT = 2000
+  val items = (0 to COUNT).toList
 
   def main(args: Array[String]): Unit = {
-    for(i <- 0 to COUNT) test1(i == 0)
+  	items.par.foreach(i => test1(i == 0))
     val t0 = System.nanoTime()
-    for(i <- 0 to COUNT) test1(false)
+    items.par.foreach(i => test1(false))
     val t1 = System.nanoTime()
     val total = (t1-t0)/1000000.0
     println(COUNT+" runs tooks "+total+" ms ("+(total*1000.0/COUNT)+" µs per run)")
@@ -33,7 +34,7 @@ object Benchmark {
     def * = userID ~ orderID
   }
 
-  def test1(print: Boolean) {
+  def test1(print: Boolean): Unit = {
     val q1 = for(u <- Users) yield u
     val q2 = for {
       u <- Users

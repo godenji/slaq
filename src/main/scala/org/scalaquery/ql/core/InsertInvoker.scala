@@ -8,10 +8,10 @@ import org.scalaquery.session.{Session, PositionedParameters}
 
 final class InsertInvoker[T, U] (unpackable: Unpackable[T, U], profile: Profile) {
 
-  lazy val insertStatement = profile.buildInsertStatement(unpackable.value)
+  lazy val insertStatement = profile.buildInsert(unpackable.value)
   
   def insertStatementFor[TT](query: Query[TT, U]): String = 
-  	profile.buildInsertStatement(unpackable.value, query).sql
+  	profile.buildInsert(unpackable.value, query).sql
   	
   def insertStatementFor[TT](c: TT)(implicit unpack: Unpack[TT, U]): 
   	String = insertStatementFor(Query(c))
@@ -77,7 +77,7 @@ final class InsertInvoker[T, U] (unpackable: Unpackable[T, U], profile: Profile)
   }
 
   def insert[TT](query: Query[TT, U])(implicit session: Session): Int = {
-    val sbr = profile.buildInsertStatement(unpackable.value, query)
+    val sbr = profile.buildInsert(unpackable.value, query)
     session.withPreparedStatement(insertStatementFor(query)) {st=>
       st.clearParameters()
       sbr.setter(new PositionedParameters(st), null)

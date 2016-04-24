@@ -8,7 +8,7 @@ final class DeleteInvoker[T](
 	query: Query[_ <: Table[T], T], profile: Profile) {
 
   protected lazy val built = 
-  	profile.buildDeleteStatement(query, NamingContext())
+  	profile.buildDelete(query, NamingContext())
 
   def deleteStatement = built.sql
 
