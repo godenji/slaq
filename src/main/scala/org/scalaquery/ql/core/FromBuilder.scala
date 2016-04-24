@@ -55,7 +55,7 @@ trait FromBuilder { self: QueryBuilder with QueryBuilderAction =>
 		    	case q: ForeignKeyQuery[_,_] =>
 		    		q.fks.foreach{fk=> // handle alias mismatch (fk table not same instance)
 		    			val name = quote(fk.right.asInstanceOf[NamedColumn[_]].name)
-		    			b += s"(${quote(leftAlias)}.$name = "; show(fk.left, b); b += ")"
+		    			b += s"(${quote(leftAlias)}.$name = "; show(fk.left, b); b += ')'
 		    		}
 		    	case x => show(x, b)
 		    }

@@ -88,7 +88,7 @@ extends QueryBuilderAction with QueryBuilderClause {
   private final def show(c: Query[_,_], b: SqlBuilder): Unit = c match {
   	case q: ForeignKeyQuery[_,_] => q.fks.foreach(show(_, b))
     case q =>
-    	b += "("; subQueryBuilder(q).Select.build(b, false); b += ")"
+    	b += '('; subQueryBuilder(q).Select.build(b, false); b += ')'
   }
 
   /*
@@ -96,7 +96,7 @@ extends QueryBuilderAction with QueryBuilderClause {
    */
   private final def show[T](c: OperatorColumn[T], b: SqlBuilder): Unit = c match {
     case Cols.Is(l, NullColumn) => b += '('; expr(l, b); b += " IS NULL)"
-    case Cols.Is(l,r) => b += '('; expr(l, b); b += " = "; expr(r, b); b += ')'
+    case Cols.Is(l,r) => b += '('; expr(l, b); b += '='; expr(r, b); b += ')'
   	case Cols.Not(Cols.Is(l, NullColumn)) => b += '('; expr(l, b); b += " IS NOT NULL)"
     case Cols.Not(e) => b += "(NOT "; expr(e, b); b+= ')'
     

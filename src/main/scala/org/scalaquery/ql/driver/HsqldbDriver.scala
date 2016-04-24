@@ -71,7 +71,7 @@ class HsqldbDDLBuilder(table: Table[_], profile: HsqldbDriver) extends DDLBuilde
       val sb = new StringBuilder append "ALTER TABLE " append quote(table.tableName) append " ADD "
       sb append "CONSTRAINT " append quote(idx.name) append " UNIQUE("
       addIndexColumnList(idx.on, sb, idx.table.tableName)
-      sb append ")"
+      sb append ')'
       sb.toString
     } else super.createIndex(idx)
   }

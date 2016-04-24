@@ -51,8 +51,8 @@ class InsertBuilder(val column: Any, val profile: Profile) {
   	n: NamedColumn[_], cols: StringBuilder, vals: StringBuilder): Unit = {
   	
     if(!cols.isEmpty) {
-      cols append ","
-      vals append ","
+      cols append ','
+      vals append ','
     }
     cols append quote(n.name)
     vals append '?'

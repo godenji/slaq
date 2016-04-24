@@ -92,21 +92,21 @@ class SQLiteDDLBuilder(table: Table[_], profile: SQLiteDriver)
     var first = true
     for(n <- table.create_*) {
       if(first) first = false
-      else b append ","
+      else b append ','
       createColumnDDLBuilder(n).appendColumn(b)
     }
     var prevPK: String = null
     for(pk <- table.primaryKeys) {
       if(prevPK eq null) prevPK = pk.name
       else Fail("Table "+table.tableName+" defines multiple primary keys "+prevPK+" and "+pk.name)
-      b append ","
+      b append ','
       addPrimaryKey(pk, b)
     }
     for(fk <- table.foreignKeys) {
-      b append ","
+      b append ','
       addForeignKey(fk, b)
     }
-    b append ")"
+    b append ')'
     new DDL {
       val createPhase1 = Iterable(b.toString)
       val createPhase2 = Iterable()
@@ -128,11 +128,11 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   override protected def appendOrdering(o: Ordering, b: SqlBuilder) {
     val desc = o.isInstanceOf[Ordering.Desc]
     if(o.nullOrdering == Ordering.NullsLast && !desc) {
-      b += "("
+      b += '('
       expr(o.by, b)
       b += ") is null,"
     } else if(o.nullOrdering == Ordering.NullsFirst && desc) {
-      b += "("
+      b += '('
       expr(o.by, b)
       b += ") is null desc,"
     }
@@ -144,7 +144,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
     case TakeDrop(Some(t), Some(d), compareNode) => 
     	val compFn = maybeLimitNode(t,d,compareNode,_:Boolean)
     	appendLimitValue(b+=" LIMIT ", d, compFn(true))
-    	appendLimitValue(b+=",", t, compFn(false))
+    	appendLimitValue(b+=',', t, compFn(false))
     	
     case TakeDrop(Some(t), None, _) => appendLimitValue(b+=" LIMIT ",t)
     case TakeDrop(None, Some(d), _) => appendLimitValue(b+=" LIMIT ",d); b+= ",-1"
@@ -154,9 +154,9 @@ extends QueryBuilder(_query, _nc, parent, profile) {
   override protected def show(c: Node, b: SqlBuilder): Unit = c match {
   	case fk: ForeignKey[_,_] =>
       val cols = fk.linearizedSourceColumns.zip(fk.linearizedTargetColumns)
-      b += "("
+      b += '('
       b.sep(cols, " AND "){case(l,r) => expr(l, b); b += " = "; expr(r, b)}
-      b += ")"
+      b += ')'
     case StdFunction("exists", q: Query[_,_]) =>
       // SQLite rejects double parens around sub-expression
       b += "exists"; show(q, b)
@@ -172,7 +172,7 @@ extends QueryBuilder(_query, _nc, parent, profile) {
        * unescaped function calls by default */
       b += s.name += '('
       b.sep(s.nodeChildren, ",")(expr(_, b))
-      b += ")"
+      b += ')'
     case _ => super.show(c, b)
   }
 }
