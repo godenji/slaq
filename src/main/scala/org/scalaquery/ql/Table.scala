@@ -37,19 +37,18 @@ abstract class Table[T](
 	}
   
 	def create_* : Iterable[NamedColumn[_]] = {
-		def createTableError(msg: Option[String]) = Fail(
-			s"Cannot use ${msg.getOrElse("")} in ${tableName}.* CREATE TABLE statement"
+		def createTableError(msg: String) = Fail(
+			s"Cannot use $msg in ${tableName}.* CREATE TABLE statement"
 		)
-  	def f(n:Node): Iterable[NamedColumn[_]] = n match {
-      case p:Projection[_] =>
-        0 until p.productArity map (n => Node(p.productElement(n)) match {
+  	Node(*) match {
+      case p: Projection[_] =>
+        0 until p.productArity map (n=> Node(p.productElement(n)) match {
           case c: NamedColumn[_] => c
-          case c => createTableError(Some(s"column $c"))
+          case c => createTableError(s"column $c")
         })
-      case n:NamedColumn[_] => Iterable(n)
-      case _ => createTableError(None)
+      case n: NamedColumn[_] => Iterable(n)
+      case n => createTableError(s"$n")
     }
-    f(Node(*))
   }
 
   def foreignKey[P, PU, TT <: Table[_], U]
