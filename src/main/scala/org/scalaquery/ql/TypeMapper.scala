@@ -39,14 +39,10 @@ object TypeMapper {
   @inline implicit final def typeMapper2OptionTypeMapper[T](implicit t: TypeMapper[T]): 
   	OptionTypeMapper[T] = t.createOptionTypeMapper
 
-  import godenji.iso.macros._
-  implicit final def mappableType[T <: MappedToBase]
+  import godenji.macros.isomorphism._
+  @inline implicit final def mappableType[T <: MappedToBase]
 		(implicit iso: Isomorphism[T], tm: TypeMapper[T#Underlying]): BaseTypeMapper[T] =
       MappedTypeMapper.base[T,T#Underlying](iso.map, iso.comap)
-      
-//  implicit def mappableType[A,B]
-//		(implicit m: Mappable[A,B], tm: TypeMapper[B]): BaseTypeMapper[A] =
-//      MappedTypeMapper.base[A,B](m.map, m.comap)
       
   implicit object BooleanTypeMapper extends BaseTypeMapper[Boolean] {
     def apply(profile:Profile) = profile.typeMapperDelegates.booleanTypeMapperDelegate

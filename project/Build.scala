@@ -12,7 +12,8 @@ object ApplicationBuild extends Build
   lazy val superSettings = super.settings
   lazy val root = Project(
   	appName, file("."), settings = _settings(
-  		appName, Seq(Libs.isoMacro) ++ appDeps
+  		appName, // TODO change to Seq(Libs.isoMacro)
+  		Seq("godenji" % "value-class-bindable_2.11" % "0.1.1") ++ appDeps
   	)
   ).settings(
   	Defaults.coreDefaultSettings ++ fmppSettings ++ Seq(
@@ -20,7 +21,8 @@ object ApplicationBuild extends Build
 			organizationName := "ScalaQuery", organization := "org.scalaquery",
 			scalaVersion := scalaRelease,
 			scalacOptions ++= Seq(
-				//"-optimise", /* note: tests FAIL with optimise enabled */
+				// note: tests FAIL with optimise enabled
+				"-optimise", "-Ybackend:GenBCode", "-Yopt:l:classpath", "-Yinline-warnings",
 				"-unchecked", "-deprecation", "-feature",
 				"-Yinline-warnings", "-Ywarn-unused-import",
 				"-language:implicitConversions", "-language:postfixOps", 
