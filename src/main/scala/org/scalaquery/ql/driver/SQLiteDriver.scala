@@ -5,7 +5,6 @@ import org.scalaquery.ql._
 import org.scalaquery.ql.core._
 import org.scalaquery.util._
 import java.sql.{Timestamp, Time, Date}
-import java.util.UUID
 
 /**
  * ScalaQuery driver for SQLite.

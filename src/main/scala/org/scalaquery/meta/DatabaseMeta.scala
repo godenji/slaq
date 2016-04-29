@@ -2,7 +2,7 @@ package org.scalaquery.meta
 
 import java.sql._
 import java.lang.reflect.{Method, InvocationTargetException}
-import org.scalaquery.{ResultSetInvoker, UnitInvoker}
+import org.scalaquery.ResultSetInvoker
 import org.scalaquery.session._
 import org.scalaquery.simple.GetResult.GetString
 

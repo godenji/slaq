@@ -1,6 +1,6 @@
 package org.scalaquery.meta
 
-import org.scalaquery.{ResultSetInvoker, UnitInvoker}
+import org.scalaquery.ResultSetInvoker
 
 /**
  * A wrapper for a row in the ResultSet returned by DatabaseMetaData.getSuperTables().

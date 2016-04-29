@@ -1,6 +1,5 @@
 package org.scalaquery.ql
 
-import java.sql.PreparedStatement
 import org.scalaquery.Fail
 import org.scalaquery.ql.core.{Profile,QueryTemplate}
 

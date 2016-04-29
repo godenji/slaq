@@ -1,7 +1,7 @@
 package org.scalaquery.meta
 
 import java.sql._
-import org.scalaquery.{ResultSetInvoker, UnitInvoker}
+import org.scalaquery.ResultSetInvoker
 import org.scalaquery.ql.TypeMapperDelegate
 
 /**

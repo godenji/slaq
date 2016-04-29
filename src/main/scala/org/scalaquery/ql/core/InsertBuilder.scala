@@ -1,7 +1,5 @@
 package org.scalaquery.ql.core
 
-import scala.collection.mutable.HashMap
-import java.io.PrintWriter
 import org.scalaquery.Fail
 import org.scalaquery.ql._
 import org.scalaquery.util._
