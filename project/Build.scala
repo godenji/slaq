@@ -13,7 +13,7 @@ object ApplicationBuild extends Build
   lazy val root = Project(
   	appName, file("."), settings = _settings(
   		appName, // TODO change to Seq(Libs.isoMacro)
-  		Seq("godenji" % "value-class-bindable_2.11" % "0.1.1") ++ appDeps
+  		Seq("godenji" % "value-class-root_2.11" % "0.1.1") ++ appDeps
   	)
   ).settings(
   	Defaults.coreDefaultSettings ++ fmppSettings ++ Seq(
@@ -27,7 +27,6 @@ object ApplicationBuild extends Build
 				"-Yinline-warnings", "-Ywarn-unused-import",
 				"-language:implicitConversions", "-language:postfixOps", 
 				"-language:higherKinds", "-language:existentials"
-				//"-Yno-adapted-args:false", "-Xfatal-warnings:false"
 			),
 			description := "A type-safe database API for Scala",
 			homepage := Some(url("http://scalaquery.org/")),
