@@ -12,8 +12,7 @@ object ApplicationBuild extends Build
   lazy val superSettings = super.settings
   lazy val root = Project(
   	appName, file("."), settings = _settings(
-  		appName, // TODO change to Seq(Libs.isoMacro)
-  		Seq("godenji" % "value-class-root_2.11" % "0.1.1") ++ appDeps
+  		appName, Seq(Libs.valueClassBindableRoot) ++ appDeps
   	)
   ).settings(
   	Defaults.coreDefaultSettings ++ fmppSettings ++ Seq(
