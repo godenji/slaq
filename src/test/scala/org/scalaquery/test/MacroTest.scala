@@ -7,7 +7,7 @@ import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
-import godenji.iso.macros._
+import godenji.macros.isomorphism._
 
 object MacroTest extends DBTestObject(H2Mem)
 

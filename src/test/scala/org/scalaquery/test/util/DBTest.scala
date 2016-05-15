@@ -1,8 +1,6 @@
 package org.scalaquery.test.util
 
 import scala.collection.JavaConversions
-import java.io.{File, IOException, FileInputStream}
-import java.util.Properties
 import org.junit.Assert._
 import org.junit.{Before, After}
 import org.junit.runner.{JUnitCore, RunWith}

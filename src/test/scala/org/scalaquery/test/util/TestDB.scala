@@ -1,7 +1,6 @@
 package org.scalaquery.test.util
 
 import java.util.Properties
-import java.sql.SQLException
 import org.scalaquery.ql.core.Profile
 import org.scalaquery.ql.driver.{
 	H2Driver, SQLiteDriver, PostgresDriver, MySQLDriver, HsqldbDriver
@@ -13,7 +12,6 @@ import org.scalaquery.simple.GetResult._
 import java.util.zip.GZIPInputStream
 import java.io._
 import org.junit.Assert
-import org.scalaquery.meta.MTable
 
 object TestDBOptions {
   val testDBDir = dbProps.getProperty("testDir", "test-dbs")

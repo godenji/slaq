@@ -8,7 +8,6 @@ import org.scalaquery.ql.Table
 import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
-import org.scalaquery.Fail
 
 object TemplateTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 

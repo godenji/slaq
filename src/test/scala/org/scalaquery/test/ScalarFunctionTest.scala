@@ -2,14 +2,11 @@ package org.scalaquery.test
 
 import org.junit.Test
 import org.junit.Assert._
-import org.junit.runner.JUnitCore
 import org.scalaquery.ql._
-import org.scalaquery.ql.core.QueryBuilder
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
-import org.scalaquery.util.{SqlBuilder, BinaryNode, Node}
 import java.sql.{Time, Date, Timestamp}
 
 object ScalarFunctionTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
