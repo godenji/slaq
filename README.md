@@ -2,13 +2,16 @@ This is a port of Stephan Zeiger's excellent ScalaQuery, built against Scala
 2.10.4+
 
 Changes to-date:
-* added support for multiple table (outer) joins
+* added support for Scala 2.12
+* added support for multiple table (outer) joins, mirroring sql join syntax
+* automatic mapping of user defined value classes to underlying primitve type
 * take/drop queries are now cacheable
 * map/flatMap `Parameters` call has been renamed to `Params`
 * threadLocalSession has been removed
 * deprecated `!=` conditional operator has been removed
 * =~, =!, &, and | are now available as alternatives to ===, =!=, &&, and ||
-* MS Access support has been removed
+* MS Access and Derby support have been removed
+* myriad refactorings that improve performance compared to original implementation
 
 ScalaQuery is a type-safe database query API for Scala.
 
