@@ -10,3 +10,5 @@ target/
 /\.project
 /\.classpath
 /\.settings/
+sbt-cache-config/
+sbt-cache-update/
