@@ -1,3 +1,5 @@
 logLevel := Level.Warn
 
-meta.Build.Plugins.eclipseCommon
+import meta.Build.Plugins._
+
+eclipseCommon; scalaJs()
