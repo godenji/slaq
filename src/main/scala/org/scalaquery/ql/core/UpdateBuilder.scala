@@ -33,10 +33,12 @@ trait UpdateBuilder { self: QueryBuilder with QueryBuilderAction =>
 	    	}
 	    	node match {
 	        case p: Projection[_] =>
-	        	p.nodeChildren.zipWithIndex.foreach{case(n: NamedColumn[_], i) =>
-	        		if(i > 0) b += ','
-	            setColumn(n)
-	        	}
+	        	p.nodeChildren.zipWithIndex.foreach{
+	        		case(n: NamedColumn[_], i) =>
+		        		if(i > 0) b += ','
+		            setColumn(n)
+	        		case _ =>
+		        }
 	        case t @ Table(name) => project(t, name, t.*)
 	        case ta @ Table.Alias(t @ Table(name)) => project(ta, name, t.*)
 	        case n: NamedColumn[_] => setColumn(n)

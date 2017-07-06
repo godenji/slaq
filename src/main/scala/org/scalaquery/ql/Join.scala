@@ -19,6 +19,7 @@ case class Join(
 				// else clone target table with Join instance as node delegate
 				else if(l.tableName == tableName) l.mapOp(_ => this) 
 				else r.mapOp(_ => this)
+			case(l, _) => l // shouldn't get here (i.e. left/right Node is always a table)
 	}
 }
 	
