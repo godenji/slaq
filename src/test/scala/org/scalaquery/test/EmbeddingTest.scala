@@ -10,7 +10,7 @@ object EmbeddingTest extends DBTestObject(H2Mem)
 
 class EmbeddingTest(tdb: TestDB) extends DBTest(tdb) {
 
-  @Test def testRaw(): Unit = db withSession { implicit ss:Session=>
+  @Test def testRaw(): Unit = db withSession { implicit ss: Session =>
     import org.scalaquery.simple.{StaticQuery => Q, GetResult}
 
     Q.u + "create table USERS(ID int not null primary key, NAME varchar(255))" execute;

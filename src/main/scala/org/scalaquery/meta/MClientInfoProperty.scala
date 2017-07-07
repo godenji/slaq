@@ -10,14 +10,14 @@ case class MClientInfoProperty(name: String, maxLen: Int, defaultValue: String, 
 
 object MClientInfoProperty {
   private[this] val m = try { classOf[DatabaseMetaData].getMethod("getClientInfoProperties") }
-    catch { case _:NoSuchMethodException => null }
+  catch { case _: NoSuchMethodException => null }
 
   def getClientInfoProperties: UnitInvoker[MClientInfoProperty] = {
     /* Regular version, requires Java 1.6:
 		ResultSetInvoker[MClientInfoProperty](_.metaData.getClientInfoProperties()) { r =>
 			MClientInfoProperty(r<<, r<<, r<<, r<<)
 		}*/
-    if(m == null) UnitInvoker.empty
+    if (m == null) UnitInvoker.empty
     else ResultSetInvoker[MClientInfoProperty](s => DatabaseMeta.invokeForRS(m, s.metaData)) { r =>
       MClientInfoProperty(r<<, r<<, r<<, r<<)
     }

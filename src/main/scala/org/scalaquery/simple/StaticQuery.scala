@@ -8,8 +8,8 @@ import org.scalaquery.session.{PositionedParameters, PositionedResult}
  * Invoker for raw SQL queries.
  * The companion object contains utility methods for building static queries.
  */
-abstract class StaticQuery[-P,+R](query: String, rconv: GetResult[R], pconv: SetParameter[P])
-extends StatementInvoker[P,R] {
+abstract class StaticQuery[-P, +R](query: String, rconv: GetResult[R], pconv: SetParameter[P])
+  extends StatementInvoker[P, R] {
   protected def getStatement = query
   protected def setParam(param: P, st: PreparedStatement) = pconv(param, new PositionedParameters(st))
   protected def extractValue(rs: PositionedResult): R = rconv(rs)
@@ -17,8 +17,8 @@ extends StatementInvoker[P,R] {
   protected[this] type Self <: StaticQuery[P, R]
   protected[this] def copy(query: String = this.query, pconv: SetParameter[P] = this.pconv): Self
 
-  def + (s: String) = copy(query + s)
-  def +? [T](v: T)(implicit p: SetParameter[T]) = copy(query + '?', new SetParameter[P] {
+  def +(s: String) = copy(query + s)
+  def +?[T](v: T)(implicit p: SetParameter[T]) = copy(query + '?', new SetParameter[P] {
     def apply(param: P, pp: PositionedParameters) {
       pconv(param, pp)
       p(v, pp)
@@ -28,11 +28,11 @@ extends StatementInvoker[P,R] {
 
 object StaticQuery {
   def apply[R](implicit conv: GetResult[R]) = queryNA("")
-  def apply[P, R](implicit pconv1: SetParameter[P],  rconv: GetResult[R]) = query[P,R]("")
+  def apply[P, R](implicit pconv1: SetParameter[P], rconv: GetResult[R]) = query[P, R]("")
   def u = updateNA("")
   def u1[P](implicit pconv1: SetParameter[P]) = update[P]("")
 
-  def query[P,R](query: String)(implicit rconv: GetResult[R], pconv: SetParameter[P]) =
+  def query[P, R](query: String)(implicit rconv: GetResult[R], pconv: SetParameter[P]) =
     new StaticQuery1[P, R](query, rconv, pconv)
 
   def queryNA[R](query: String)(implicit conv: GetResult[R]) =

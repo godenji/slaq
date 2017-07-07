@@ -9,7 +9,7 @@ import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
 
-object NestingTest extends DBTestObject(H2Mem /*, SQLiteMem, Postgres, MySQL, HsqldbMem*/)
+object NestingTest extends DBTestObject(H2Mem /*, SQLiteMem, Postgres, MySQL, HsqldbMem*/ )
 
 class NestingTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
@@ -23,7 +23,7 @@ class NestingTest(tdb: TestDB) extends DBTest(tdb) {
       def * = a ~ b ~ c
     }
 
-    db withSession { implicit ss:Session=>
+    db withSession { implicit ss: Session =>
       T.ddl.create
       T.insertAll((1, "1", "a"), (2, "2", "b"), (3, "3", "c"))
 
@@ -39,7 +39,7 @@ class NestingTest(tdb: TestDB) extends DBTest(tdb) {
         c <- T.map(t => t.c)
         _ <- Query.orderBy(c, a)
       } yield a ~ b ~ c ~ 5
-      println("q1a: "+q1a.selectStatement)
+      println("q1a: " + q1a.selectStatement)
       assertEquals(res1, q1a.to[List]())
 
       val q1b = for {
@@ -47,7 +47,7 @@ class NestingTest(tdb: TestDB) extends DBTest(tdb) {
         c <- T.map(t => t.c)
         _ <- Query.orderBy(c, a)
       } yield a ~ b ~ c ~ 5
-      println("q1b: "+q1b.selectStatement)
+      println("q1b: " + q1b.selectStatement)
       println(q1b.list)
       assertEquals(res1, q1b.to[List]())
 
@@ -56,7 +56,7 @@ class NestingTest(tdb: TestDB) extends DBTest(tdb) {
         c <- T.map(t => t.c)
         _ <- Query.orderBy(c, a)
       } yield (a, b, c, ConstColumn(5))
-      println("q1c: "+q1c.selectStatement)
+      println("q1c: " + q1c.selectStatement)
       println(q1c.list)
       assertEquals(res1, q1c.to[List]())
 
@@ -65,7 +65,7 @@ class NestingTest(tdb: TestDB) extends DBTest(tdb) {
         c <- T.map(t => t.c)
         _ <- Query.orderBy(c, a)
       } yield ((a, b), (c, 5))
-      println("q1d: "+q1d.selectStatement)
+      println("q1d: " + q1d.selectStatement)
       println(q1d.list)
       assertEquals(res1b, q1d.to[List]())
 
@@ -73,24 +73,24 @@ class NestingTest(tdb: TestDB) extends DBTest(tdb) {
 
       val q2a = for {
         a ~ b ~ c <- T.filter(_.a =~ 1).map(t => t.a ~ t.b ~ 4) unionAll T.filter(_.a =~ 2).map(t => t.a ~ t.b ~ 5)
-      } yield a ~ b ~ (c*2)
+      } yield a ~ b ~ (c * 2)
       //q2a.dump("q2a: ")
-      println("q2a: "+q2a.selectStatement)
+      println("q2a: " + q2a.selectStatement)
       assertEquals(res2, q2a.to[Set]())
 
       val q2b = for {
         (a, b, c) <- T.filter(_.a =~ 1).map(t => (t.a, t.b, ConstColumn(4))) unionAll T.filter(_.a =~ 2).map(t => (t.a, t.b, ConstColumn(5)))
-      } yield a ~ b ~ (c*2)
+      } yield a ~ b ~ (c * 2)
       q2b.dump("q2b: ")
-      println("q2b: "+q2b.selectStatement)
+      println("q2b: " + q2b.selectStatement)
       println(q2b.list)
       assertEquals(res2, q2b.to[Set]())
 
       val q2c = for {
         (a, b, c) <- T.filter(_.a =~ 1).map(t => (t.a, t.b, 4)) unionAll T.filter(_.a =~ 2).map(t => (t.a, t.b, 5))
-      } yield a ~ b ~ (c*2)
+      } yield a ~ b ~ (c * 2)
       q2c.dump("q2c: ")
-      println("q2c: "+q2c.selectStatement)
+      println("q2c: " + q2c.selectStatement)
       println(q2c.list)
       assertEquals(res2, q2c.to[Set]())
     }

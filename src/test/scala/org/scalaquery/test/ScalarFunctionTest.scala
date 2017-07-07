@@ -14,7 +14,7 @@ object ScalarFunctionTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL
 class ScalarFunctionTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def test = db withSession { implicit ss:Session=>
+  @Test def test = db withSession { implicit ss: Session =>
     def check[T](q: Query[ColumnBase[T], T], exp: T*) = {
       println("Executing: " + q.selectStatement)
       assertEquals(exp.toSet, q.list.toSet)
@@ -22,11 +22,11 @@ class ScalarFunctionTest(tdb: TestDB) extends DBTest(tdb) {
     def checkIn[T](q: Query[ColumnBase[T], T], exp: T*) = {
       println("Executing: " + q.selectStatement)
       val found = q.list.toSet
-      assert(found.forall(exp contains _), "all of result "+found+" should be in expected "+exp)
+      assert(found.forall(exp contains _), "all of result " + found + " should be in expected " + exp)
     }
 
     // Literals
-    def checkLit[T : TypeMapper](v: T) = check(Query(ConstColumn(v)), v)
+    def checkLit[T: TypeMapper](v: T) = check(Query(ConstColumn(v)), v)
     checkLit(false)
     checkLit(true)
     checkLit(42: Byte)
@@ -49,7 +49,7 @@ class ScalarFunctionTest(tdb: TestDB) extends DBTest(tdb) {
     check(Query(ConstColumn("foo") ++ "bar"), "foobar")
     check(Query(ConstColumn(1) ifNull 42), 1)
     check(Query(ConstColumn[Option[Int]](None) ifNull 42), 42)
-    check(Query(ConstColumn(8) % 3 ), 2)
+    check(Query(ConstColumn(8) % 3), 2)
     check(Query(ConstColumn(-12.5).abs), 12.5)
     check(Query(ConstColumn(1.9).ceil), 2.0)
     check(Query(ConstColumn(1.5).ceil), 2.0)

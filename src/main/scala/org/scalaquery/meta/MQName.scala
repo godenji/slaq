@@ -6,9 +6,9 @@ import org.scalaquery.session.PositionedResult
  * A qualified name with an optional catalog and schema.
  */
 case class MQName(catalog: Option[String], schema: Option[String], name: String) {
-	
+
   override def toString =
-  	s"MQName(${(catalog ++ schema).map(x=> s"$x.").mkString("")}$name)"
+    s"MQName(${(catalog ++ schema).map(x => s"$x.").mkString("")}$name)"
 
   def catalog_? = catalog.orNull
   def schema_? = schema.orNull

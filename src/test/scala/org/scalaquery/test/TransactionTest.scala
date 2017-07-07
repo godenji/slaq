@@ -20,30 +20,30 @@ class TransactionTest(tdb: TestDB) extends DBTest(tdb) {
       def * = a
     }
 
-    db withSession { implicit ss:Session=>
+    db withSession { implicit ss: Session =>
       T.ddl.create
     }
 
     val q = Query(T)
 
-    db withTransaction { implicit ss:Session=>
+    db withTransaction { implicit ss: Session =>
       T.insert(42)
       assertEquals(Some(42), q.firstOption)
       ss.rollback()
     }
-    assertEquals(None, db withSession { implicit ss:Session=> q.firstOption})
-    
+    assertEquals(None, db withSession { implicit ss: Session => q.firstOption })
+
     def bInsert(implicit ss: Session) = {
-    	T.insert(2) 
+      T.insert(2)
     }
-    db.withTransaction{implicit ss:Session=>
-	    val res = for{
-	    	a <- Right(T.insert(1)).right
-	    	b <- Right(bInsert).right
-	    } yield(a,b)
-	    assertEquals( (1,1), res.right.get )
-	    ss.rollback()
+    db.withTransaction { implicit ss: Session =>
+      val res = for {
+        a <- Right(T.insert(1)).right
+        b <- Right(bInsert).right
+      } yield (a, b)
+      assertEquals((1, 1), res.right.get)
+      ss.rollback()
     }
-    assertEquals(None, db withSession { implicit ss:Session=> q.firstOption})
+    assertEquals(None, db withSession { implicit ss: Session => q.firstOption })
   }
 }

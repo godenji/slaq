@@ -23,7 +23,7 @@ trait CloseableIterator[+T] extends Iterator[T] with Closeable { self =>
   final def use[R](f: (Iterator[T] => R)): R =
     try f(this) finally close()
 
-  final def use[R](f: =>R): R =
+  final def use[R](f: => R): R =
     try f finally close()
 
   /**
@@ -56,7 +56,7 @@ object CloseableIterator {
   class Single[+T](item: T) extends CloseableIterator[T] {
     private var more = true
     def hasNext = more
-    def next() = if(more) { more = false; item } else noNext
+    def next() = if (more) { more = false; item } else noNext
     def close {}
   }
 
@@ -71,9 +71,10 @@ object CloseableIterator {
   final class Close[C <: Closeable](makeC: => C) {
     def after[T](f: C => CloseableIterator[T]) = {
       val c = makeC
-      (try f(c) catch { case e: Throwable =>
-        try c.close() catch { case _:Throwable => }
-        throw e
+      (try f(c) catch {
+        case e: Throwable =>
+          try c.close() catch { case _: Throwable => }
+          throw e
       }) thenClose c
     }
   }

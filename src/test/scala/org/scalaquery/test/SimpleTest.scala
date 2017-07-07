@@ -13,7 +13,7 @@ class SimpleTest(tdb: TestDB) extends DBTest(tdb) {
 
   implicit val getUserResult = GetResult(r => new User(r<<, r<<))
 
-  case class User(id:Int, name:String)
+  case class User(id: Int, name: String)
 
   @Test def test() {
     def getUsers(id: Option[Int]) = {
@@ -30,65 +30,65 @@ class SimpleTest(tdb: TestDB) extends DBTest(tdb) {
     val userForID = Q[Int, User] + "select id, name from users where id = ?"
     val userForIdAndName = Q[(Int, String), User] + "select id, name from users where id = ? and name = ?"
 
-    db withTransaction { implicit ss:Session=>
-      println("Creating user table: "+createTable.first)
+    db withTransaction { implicit ss: Session =>
+      println("Creating user table: " + createTable.first)
       println("Inserting users:")
-      for(i <- populateUsers) println("  "+i.first)
+      for (i <- populateUsers) println("  " + i.first)
 
       println("All IDs:")
-      for(s <- allIDs.list) println("  "+s)
-      assertEquals(Set(1,0,2,3), allIDs.list.toSet)
+      for (s <- allIDs.list) println("  " + s)
+      assertEquals(Set(1, 0, 2, 3), allIDs.list.toSet)
 
       println("All IDs with foreach:")
       var s1 = Set[Int]()
       allIDs foreach { s =>
-        println("  "+s)
+        println("  " + s)
         s1 += s
       }
-      assertEquals(Set(1,0,2,3), s1)
+      assertEquals(Set(1, 0, 2, 3), s1)
 
       val res = userForID.first(2)
-      println("User for ID 2: "+res)
-      assertEquals(User(2,"guest"), res)
+      println("User for ID 2: " + res)
+      assertEquals(User(2, "guest"), res)
 
-      assertEquals(User(2,"guest"), userForIdAndName((2, "guest")).first)
+      assertEquals(User(2, "guest"), userForIdAndName((2, "guest")).first)
       assertEquals(None, userForIdAndName((2, "foo")).firstOption)
 
       println("User 2 with foreach:")
       var s2 = Set[User]()
       userForID(2) foreach { s =>
-        println("  "+s)
+        println("  " + s)
         s2 += s
       }
-      assertEquals(Set(User(2,"guest")), s2)
+      assertEquals(Set(User(2, "guest")), s2)
 
       println("User 2 with foreach:")
       var s3 = Set[User]()
       getUsers(Some(2)) foreach { s =>
-        println("  "+s)
+        println("  " + s)
         s3 += s
       }
-      assertEquals(Set(User(2,"guest")), s3)
+      assertEquals(Set(User(2, "guest")), s3)
 
       println("All users with foreach:")
       var s4 = Set[User]()
       getUsers(None) foreach { s =>
-        println("  "+s)
+        println("  " + s)
         s4 += s
       }
-      assertEquals(Set(User(1,"szeiger"), User(2,"guest"), User(0,"admin"), User(3,"foo")), s4)
+      assertEquals(Set(User(1, "szeiger"), User(2, "guest"), User(0, "admin"), User(3, "foo")), s4)
 
       println("All users with elements.foreach:")
       var s5 = Set[User]()
-      for(s <- getUsers(None).elements) {
-        println("  "+s)
+      for (s <- getUsers(None).elements) {
+        println("  " + s)
         s5 += s
       }
-      assertEquals(Set(User(1,"szeiger"), User(2,"guest"), User(0,"admin"), User(3,"foo")), s5)
+      assertEquals(Set(User(1, "szeiger"), User(2, "guest"), User(0, "admin"), User(3, "foo")), s5)
 
-      if(tdb.canGetLocalTables) {
+      if (tdb.canGetLocalTables) {
         println("All tables:")
-        for(t <- tdb.getLocalTables) println("  "+t)
+        for (t <- tdb.getLocalTables) println("  " + t)
         assertEquals(List("users"), tdb.getLocalTables.map(_.toLowerCase))
       }
       tdb.assertUnquotedTablesExist("users")

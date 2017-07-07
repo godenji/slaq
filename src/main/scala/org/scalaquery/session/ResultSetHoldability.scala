@@ -9,10 +9,10 @@ sealed abstract class ResultSetHoldability(val intValue: Int) { self =>
 }
 
 object ResultSetHoldability {
-  case object Auto                  extends ResultSetHoldability(0) {
+  case object Auto extends ResultSetHoldability(0) {
     override def withDefault(r: ResultSetHoldability) = r
   }
-  case object Default               extends ResultSetHoldability(0)
+  case object Default extends ResultSetHoldability(0)
   case object HoldCursorsOverCommit extends ResultSetHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT)
-  case object CloseCursorsAtCommit  extends ResultSetHoldability(ResultSet.CLOSE_CURSORS_AT_COMMIT)
+  case object CloseCursorsAtCommit extends ResultSetHoldability(ResultSet.CLOSE_CURSORS_AT_COMMIT)
 }

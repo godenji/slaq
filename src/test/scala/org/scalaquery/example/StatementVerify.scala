@@ -24,14 +24,14 @@ object StatementVerify {
 
     def dump(n: String, q: Query[ColumnBase[_], _]) {
       val nc = NamingContext()
-      q.dump(n+": ", nc)
+      q.dump(n + ": ", nc)
       println(Driver.buildSelect(q, nc))
       println()
     }
 
-    val q1 = for(u <- Users) yield u
+    val q1 = for (u <- Users) yield u
 
-    val q1b = q1.mapResult { case (id,f,l) => id + ". " + f + " " + l }
+    val q1b = q1.mapResult { case (id, f, l) => id + ". " + f + " " + l }
 
     val q2 = for {
       u <- Users
@@ -39,7 +39,7 @@ object StatementVerify {
       o <- Orders filter { o => (u.id is o.userID) & (u.first isNotNull) }
     } yield u.first ~ u.last ~ o.orderID
 
-    val q3 = for(u <- Users filter(_.id is 42)) yield u.first ~ u.last
+    val q3 = for (u <- Users filter (_.id is 42)) yield u.first ~ u.last
 
     val q4 = for {
       (u, o) <- Users join Orders on (_.id is _.userID)
@@ -47,33 +47,43 @@ object StatementVerify {
     } yield u.first ~ o.orderID
 
     val q5 = for (
-      o <-
-      	for( o <- Orders if o.orderID in (
-      		for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max
-      	)) yield o.orderID;
+      o <- for (
+        o <- Orders if o.orderID in (
+          for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max
+        )
+      ) yield o.orderID;
       _ <- Query orderBy o
     ) yield o
 
-    val q6a = 
-    	for( o <- (for ( o <- Orders if o.orderID in (
-    		for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max
-    	)) yield o.orderID);
-      _ <- Query orderBy o
-    ) yield o
+    val q6a =
+      for (
+        o <- (for (
+          o <- Orders if o.orderID in (
+            for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max
+          )
+        ) yield o.orderID);
+        _ <- Query orderBy o
+      ) yield o
 
-    val q6b = 
-    	for( o <- (for ( o <- Orders if o.orderID in (
-    		for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max
-    	)) yield o.orderID ~ o.userID);
-      _ <- Query orderBy o._1
-    ) yield o
+    val q6b =
+      for (
+        o <- (for (
+          o <- Orders if o.orderID in (
+            for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max
+          )
+        ) yield o.orderID ~ o.userID);
+        _ <- Query orderBy o._1
+      ) yield o
 
-    val q6c = 
-    	for ( o <- (for ( o <- Orders if o.orderID in (
-    		for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max
-    	)) yield o);
-      _ <- Query orderBy o.orderID
-    ) yield o.orderID ~ o.userID
+    val q6c =
+      for (
+        o <- (for (
+          o <- Orders if o.orderID in (
+            for { o2 <- Orders if o.userID is o2.userID } yield o2.orderID.max
+          )
+        ) yield o);
+        _ <- Query orderBy o.orderID
+      ) yield o.orderID ~ o.userID
 
     dump("q1", q1)
     dump("q2", q2)
@@ -97,7 +107,7 @@ object StatementVerify {
     }
 
     {
-      def f[A](t:Table[A]) = t.mapOp(n => Table.Alias(n))
+      def f[A](t: Table[A]) = t.mapOp(n => Table.Alias(n))
       val m2a = for { u <- Query(Users) } yield f(u)
       val m2b = Query(f(Users))
       dump("m2a", m2a)
@@ -116,14 +126,14 @@ object StatementVerify {
 
     println()
 
-    println("Insert1: " +Driver.buildInsert(Users))
-    println("Insert2: " +Driver.buildInsert(Users.first ~ Users.last))
+    println("Insert1: " + Driver.buildInsert(Users))
+    println("Insert2: " + Driver.buildInsert(Users.first ~ Users.last))
 
     val d1 = Users.filter(_.id is 42)
-    val d2 = for(u <- Users filter( _.id notIn Orders.map(_.userID) )) yield u
-    println("d0: " +Driver.buildDelete(Users, NamingContext()))
-    println("d1: " +Driver.buildDelete(d1, NamingContext()))
-    println("d2: " +Driver.buildDelete(d2, NamingContext()))
+    val d2 = for (u <- Users filter (_.id notIn Orders.map(_.userID))) yield u
+    println("d0: " + Driver.buildDelete(Users, NamingContext()))
+    println("d1: " + Driver.buildDelete(d1, NamingContext()))
+    println("d2: " + Driver.buildDelete(d2, NamingContext()))
 
     (Users.ddl ++ Orders.ddl).createStatements.foreach(println)
   }

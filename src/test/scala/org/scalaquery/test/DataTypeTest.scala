@@ -20,16 +20,16 @@ class DataTypeTest(tdb: TestDB) extends DBTest(tdb) {
       def * = id ~ data
     }
 
-    db withSession { implicit ss:Session=>
+    db withSession { implicit ss: Session =>
       T.ddl.createStatements foreach println
       T.ddl.create;
-      T insert (( 1, Array[Byte](1,2,3) ))
-      T insert (( 2, Array[Byte](4,5) ))
-      assertEquals(Set((1,"123"), (2,"45")), Query(T).list.map{ case (id, data) => (id, data.mkString) }.toSet)
+      T insert ((1, Array[Byte](1, 2, 3)))
+      T insert ((2, Array[Byte](4, 5)))
+      assertEquals(Set((1, "123"), (2, "45")), Query(T).list.map { case (id, data) => (id, data.mkString) }.toSet)
     }
   }
 
-  @Test def testNumeric() = db withSession { implicit ss:Session=>
+  @Test def testNumeric() = db withSession { implicit ss: Session =>
     object T extends Table[(Int, Int, Long, Short, Byte)]("test") {
       def id = column[Int]("id")
       def intData = column[Int]("int_data")
@@ -50,9 +50,9 @@ class DataTypeTest(tdb: TestDB) extends DBTest(tdb) {
     }
 
     test(List(
-      (2, -1,          -1L,           -1: Short,      -1: Byte),
-      (3, 0,            0L,            0: Short,       0: Byte),
-      (4, 1,            1L,            1: Short,       1: Byte)
+      (2, -1, -1L, -1: Short, -1: Byte),
+      (3, 0, 0L, 0: Short, 0: Byte),
+      (4, 1, 1L, 1: Short, 1: Byte)
     ))
 
     test(List(

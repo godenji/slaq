@@ -24,7 +24,7 @@ class ColumnDefaultTest(tdb: TestDB) extends DBTest(tdb) {
   }
 
   @Test def test() {
-    db withSession { implicit ss:Session=>
+    db withSession { implicit ss: Session =>
       A.ddl.createStatements foreach println
       A.ddl.create
       A.id insert 42

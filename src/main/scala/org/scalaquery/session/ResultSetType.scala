@@ -9,10 +9,10 @@ sealed abstract class ResultSetType(val intValue: Int) { self =>
 }
 
 object ResultSetType {
-  case object Auto              extends ResultSetType(ResultSet.TYPE_FORWARD_ONLY) {
+  case object Auto extends ResultSetType(ResultSet.TYPE_FORWARD_ONLY) {
     override def withDefault(r: ResultSetType) = r
   }
-  case object ForwardOnly       extends ResultSetType(ResultSet.TYPE_FORWARD_ONLY)
+  case object ForwardOnly extends ResultSetType(ResultSet.TYPE_FORWARD_ONLY)
   case object ScrollInsensitive extends ResultSetType(ResultSet.TYPE_SCROLL_INSENSITIVE)
-  case object ScrollSensitive   extends ResultSetType(ResultSet.TYPE_SCROLL_SENSITIVE)
+  case object ScrollSensitive extends ResultSetType(ResultSet.TYPE_SCROLL_SENSITIVE)
 }

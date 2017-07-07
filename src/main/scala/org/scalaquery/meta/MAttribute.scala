@@ -18,11 +18,12 @@ case class MAttribute(typeName: MQName, attrName: String, sqlType: Int, attrType
 
 object MAttribute {
   def getAttributes(typePattern: MQName, attributeNamePattern: String = "%") = ResultSetInvoker[MAttribute](
-      _.metaData.getAttributes(typePattern.catalog_?, typePattern.schema_?, typePattern.name, attributeNamePattern)) { r =>
+    _.metaData.getAttributes(typePattern.catalog_?, typePattern.schema_?, typePattern.name, attributeNamePattern)
+  ) { r =>
       MAttribute(MQName.from(r), r<<, r<<, r<<, r<<, r<<, r<<, r.nextInt match {
-          case DatabaseMetaData.attributeNoNulls => Some(false)
-          case DatabaseMetaData.attributeNullable => Some(true)
-          case _ => None
-        }, r<<, r<<, r.skip.skip<<, r<<, DatabaseMeta.yesNoOpt(r), MQName.optionalFrom(r), r<<)
-  }
+        case DatabaseMetaData.attributeNoNulls  => Some(false)
+        case DatabaseMetaData.attributeNullable => Some(true)
+        case _                                  => None
+      }, r<<, r<<, r.skip.skip<<, r<<, DatabaseMeta.yesNoOpt(r), MQName.optionalFrom(r), r<<)
+    }
 }

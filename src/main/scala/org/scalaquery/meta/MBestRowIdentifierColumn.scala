@@ -9,7 +9,8 @@ import org.scalaquery.ql.TypeMapperDelegate
  */
 case class MBestRowIdentifierColumn(
   scope: MBestRowIdentifierColumn.Scope, column: String, sqlType: Int, typeName: String,
-  columnSize: Option[Int], decimalDigits: Option[Short], pseudoColumn: Option[Boolean]) {
+  columnSize: Option[Int], decimalDigits: Option[Short], pseudoColumn: Option[Boolean]
+) {
 
   def sqlTypeName = TypeMapperDelegate.typeNames.get(sqlType)
 }
@@ -17,13 +18,14 @@ case class MBestRowIdentifierColumn(
 object MBestRowIdentifierColumn {
   def getBestRowIdentifier(table: MQName, scope: Scope, nullable: Boolean = false) =
     ResultSetInvoker[MBestRowIdentifierColumn](
-      _.metaData.getBestRowIdentifier(table.catalog_?, table.schema_?, table.name, scope.value, nullable)) { r =>
-      MBestRowIdentifierColumn(Scope(r<<), r<<, r<<, r<<, r<<, r.skip<<, r.nextShort match {
+      _.metaData.getBestRowIdentifier(table.catalog_?, table.schema_?, table.name, scope.value, nullable)
+    ) { r =>
+        MBestRowIdentifierColumn(Scope(r<<), r<<, r<<, r<<, r<<, r.skip<<, r.nextShort match {
           case DatabaseMetaData.bestRowNotPseudo => Some(false)
-          case DatabaseMetaData.bestRowPseudo => Some(true)
-          case _ => None
+          case DatabaseMetaData.bestRowPseudo    => Some(true)
+          case _                                 => None
         })
-  }
+      }
 
   sealed abstract class Scope(val value: Int)
 
@@ -32,9 +34,9 @@ object MBestRowIdentifierColumn {
     final case object Transaction extends Scope(DatabaseMetaData.bestRowTransaction)
     final case object Session extends Scope(DatabaseMetaData.bestRowSession)
     private[MBestRowIdentifierColumn] def apply(value: Short) = value match {
-      case DatabaseMetaData.bestRowTemporary => Temporary
+      case DatabaseMetaData.bestRowTemporary   => Temporary
       case DatabaseMetaData.bestRowTransaction => Transaction
-      case DatabaseMetaData.bestRowSession => Session
+      case DatabaseMetaData.bestRowSession     => Session
     }
   }
 }

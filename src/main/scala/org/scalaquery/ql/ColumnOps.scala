@@ -18,40 +18,39 @@ trait ColumnOps[B1, P1] {
 
   def is[P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Is(leftOperand, Node(e)))
-  def =~ [P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
-  	om(Is(leftOperand, Node(e)))
-  def =! [P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+  def =~[P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+    om(Is(leftOperand, Node(e)))
+  def =![P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Not(Is(leftOperand, Node(e))))
-    
-  def < [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+
+  def <[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Relational("<", leftOperand, Node(e)))
-  def <= [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+  def <=[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Relational("<=", leftOperand, Node(e)))
-  def > [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+  def >[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Relational(">", leftOperand, Node(e)))
-  def >= [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+  def >=[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
     om(Relational(">=", leftOperand, Node(e)))
-    
+
   def inSet[R](seq: Traversable[B1])(implicit om: OM2Bin[Boolean, P1, R], tm: BaseTM) =
     om(InSet(leftOperand, seq, tm, false))
   def inSetBind[R](seq: Traversable[B1])(implicit om: OM2Bin[Boolean, P1, R], tm: BaseTM) =
     om(InSet(leftOperand, seq, tm, true))
-  def between[P2, P3, R](start: Column[P2], end: Column[P3])
-  	(implicit om: OM3[B1, B1, Boolean, P2, P3, R]) = om(Between(leftOperand, start, end))
+  def between[P2, P3, R](start: Column[P2], end: Column[P3])(implicit om: OM3[B1, B1, Boolean, P2, P3, R]) = om(Between(leftOperand, start, end))
   def ifNull[B2, P2, R](e: Column[P2])(implicit om: OM2[B2, Boolean, P2, R]): Column[P2] =
     EscFunction[P2]("ifnull", leftOperand, Node(e))(e.typeMapper)
 
-  def + [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
+  def +[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
     om(Arith[B1]("+", leftOperand, Node(e)))
-  def - [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
+  def -[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
     om(Arith[B1]("-", leftOperand, Node(e)))
-  def * [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
+  def *[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
     om(Arith[B1]("*", leftOperand, Node(e)))
-  def / [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
+  def /[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
     om(Arith[B1]("/", leftOperand, Node(e)))
-  def % [P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
+  def %[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
     om(EscFunction[B1]("mod", leftOperand, Node(e)))
-    
+
   def abs(implicit om: ToSame, tm: Num) =
     om(EscFunction[B1]("abs", leftOperand))
   def ceil(implicit om: ToSame, tm: Num) =
@@ -89,50 +88,50 @@ trait ColumnOps[B1, P1] {
 }
 
 object ColumnOps {
-  case class In(left: Node, right: Node) 
-  	extends OperatorColumn[Boolean] with SimpleBinaryOperator { val name = "in" }
+  case class In(left: Node, right: Node)
+    extends OperatorColumn[Boolean] with SimpleBinaryOperator { val name = "in" }
 
-  case class Relational(name: String, left: Node, right: Node) 
-  	extends OperatorColumn[Boolean] with SimpleBinaryOperator
-  	
-  case class Arith[T : TypeMapper](name: String, left: Node, right: Node) 
-  	extends OperatorColumn[T] with SimpleBinaryOperator
+  case class Relational(name: String, left: Node, right: Node)
+    extends OperatorColumn[Boolean] with SimpleBinaryOperator
+
+  case class Arith[T: TypeMapper](name: String, left: Node, right: Node)
+    extends OperatorColumn[T] with SimpleBinaryOperator
 
   case class Is(left: Node, right: Node) extends OperatorColumn[Boolean] with BinaryNode
   case class CountDistinct(child: Node) extends OperatorColumn[Int] with UnaryNode
-  
-  case class InSet[T](child: Node, seq: Traversable[T], tm: TypeMapper[T], bind: Boolean) 
-  	extends OperatorColumn[Boolean] with UnaryNode
 
-  case class Between(left: Node, start: Node, end: Node) 
-  	extends OperatorColumn[Boolean] {
-    	def nodeChildren = left :: start :: end :: Nil
-  	}
+  case class InSet[T](child: Node, seq: Traversable[T], tm: TypeMapper[T], bind: Boolean)
+    extends OperatorColumn[Boolean] with UnaryNode
 
-  case class And(left: Node, right: Node) 
-  	extends OperatorColumn[Boolean] with SimpleBinaryOperator {
-  	val name = "and" 
+  case class Between(left: Node, start: Node, end: Node)
+    extends OperatorColumn[Boolean] {
+    def nodeChildren = left :: start :: end :: Nil
   }
-  case class Or(left: Node, right: Node) 
-  	extends OperatorColumn[Boolean] with SimpleBinaryOperator {
-  	val name = "or"
+
+  case class And(left: Node, right: Node)
+    extends OperatorColumn[Boolean] with SimpleBinaryOperator {
+    val name = "and"
+  }
+  case class Or(left: Node, right: Node)
+    extends OperatorColumn[Boolean] with SimpleBinaryOperator {
+    val name = "or"
   }
   case class Not(child: Node) extends OperatorColumn[Boolean] with UnaryNode
 
-  case class Like(left: Node, right: Node, esc: Option[Char]) 
-  	extends OperatorColumn[Boolean] with BinaryNode
-  	
-  class StartsWith(n: Node, s: String) 
-  	extends Like(n, ConstColumn(likeEncode(s)+'%'), Some('^'))
-  
-  class EndsWith(n: Node, s: String) 
-  	extends Like(n, ConstColumn('%'+likeEncode(s)), Some('^'))
+  case class Like(left: Node, right: Node, esc: Option[Char])
+    extends OperatorColumn[Boolean] with BinaryNode
+
+  class StartsWith(n: Node, s: String)
+    extends Like(n, ConstColumn(likeEncode(s) + '%'), Some('^'))
+
+  class EndsWith(n: Node, s: String)
+    extends Like(n, ConstColumn('%' + likeEncode(s)), Some('^'))
 
   def likeEncode(s: String) = {
     val b = new StringBuilder
-    for(c <- s) c match {
+    for (c <- s) c match {
       case '%' | '_' | '^' => b append '^' append c
-      case _ => b append c
+      case _               => b append c
     }
     b toString
   }

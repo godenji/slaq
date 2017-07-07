@@ -17,13 +17,13 @@ class InvokerTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
   @Test def testCollections() {
-    
+
     val T = new Table[Int]("t") {
       def a = column[Int]("a")
       def * = a
     }
 
-    db withSession { implicit ss:Session=>
+    db withSession { implicit ss: Session =>
       T.ddl.create
       T.insertAll(2, 3, 1, 5, 4)
 
@@ -59,14 +59,14 @@ class InvokerTest(tdb: TestDB) extends DBTest(tdb) {
   }
 
   @Test def testMap() {
-    
+
     val T = new Table[(Int, String)]("t") {
       def k = column[Int]("k")
       def v = column[String]("v")
       def * = k ~ v
     }
 
-    db withSession { implicit ss:Session=>
+    db withSession { implicit ss: Session =>
       T.ddl.create
       T.insertAll(2 -> "b", 3 -> "c", 1 -> "a")
 
@@ -92,8 +92,8 @@ class InvokerTest(tdb: TestDB) extends DBTest(tdb) {
 
     def setUp(implicit session: Session) {
       T.ddl.create
-      for(g <- 1 to 1000 grouped 100)
-        T.insertAll(g:_*)
+      for (g <- 1 to 1000 grouped 100)
+        T.insertAll(g: _*)
     }
 
     def f() = CloseableIterator close db.createSession after { implicit session =>

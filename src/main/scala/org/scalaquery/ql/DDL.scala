@@ -19,7 +19,7 @@ trait DDL { self =>
 
   /** Create the entities described by this DDL object */
   def create(implicit session: Session): Unit = session.withTransaction {
-    for(s <- createStatements)
+    for (s <- createStatements)
       session.withPreparedStatement(s)(_.execute)
   }
 
@@ -34,7 +34,7 @@ trait DDL { self =>
 
   /** Drop the entities described by this DDL object */
   def drop(implicit session: Session): Unit = session.withTransaction {
-    for(s <- dropStatements)
+    for (s <- dropStatements)
       session.withPreparedStatement(s)(_.execute)
   }
 

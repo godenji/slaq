@@ -41,7 +41,7 @@ class TablesInObjectTest {
     } yield p.category ~ c.id
     //q1.dump("Local function")
     val sel1 = q1.selectStatement
-    println("Local function:  "+sel1)
+    println("Local function:  " + sel1)
 
     val q2 = for {
       p <- Posts
@@ -49,7 +49,7 @@ class TablesInObjectTest {
     } yield p.category ~ c.id
     //q1.dump("Method on table")
     val sel2 = q2.selectStatement
-    println("Method on table: "+sel2)
+    println("Method on table: " + sel2)
 
     assertEquals(sel1, sel2)
   }

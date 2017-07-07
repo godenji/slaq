@@ -18,14 +18,14 @@ case class Done[E, +A](a: A, e: Input[E] = Empty) extends IterV[E, A] {
   def map[B](f: A => B): IterV[E, B] = Done(f(a), e)
   def flatMap[B](f: A => IterV[E, B]) = f(a) match {
     case Done(x, _) => Done(x, e)
-    case Cont(k) => k(e)
+    case Cont(k)    => k(e)
   }
 }
 
 case class Cont[E, +A](k: Cont.K[E, A]) extends IterV[E, A] {
   def runOption = k(EOF) match {
     case Done(a, _) => Some(a)
-    case Cont(_) => None
+    case Cont(_)    => None
   }
   def map[B](f: A => B): IterV[E, B] = Cont { i => k(i).map(f) }
   def flatMap[B](f: A => IterV[E, B]) = Cont { i => k(i).flatMap(f) }

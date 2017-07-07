@@ -14,7 +14,7 @@ object ForeignKeyTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, Hs
 class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def test1(): Unit = db withSession { implicit ss:Session=>
+  @Test def test1(): Unit = db withSession { implicit ss: Session =>
 
     object Categories extends Table[(Int, String)]("categories") {
       def id = column[Int]("id", O PrimaryKey)
@@ -57,9 +57,9 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
       _ <- Query orderBy p.id
     } yield (p.id, c.id, c.name, p.title)
     q1.dump("Manual join: ")
-    println("Manual join: "+q1.selectStatement)
-    q1.foreach(x => println("  "+x))
-    assertEquals(List((2,1), (3,2), (4,3), (5,2)), q1.map(p => (p._1, p._2)).list)
+    println("Manual join: " + q1.selectStatement)
+    q1.foreach(x => println("  " + x))
+    assertEquals(List((2, 1), (3, 2), (4, 3), (5, 2)), q1.map(p => (p._1, p._2)).list)
 
     val q2 = for {
       p <- Posts
@@ -67,9 +67,9 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
       _ <- Query orderBy p.id
     } yield (p.id, c.id, c.name, p.title)
     q2.dump("Foreign-key join: ")
-    println("Foreign-key join: "+q2.selectStatement)
-    q2.foreach(x => println("  "+x))
-    assertEquals(List((2,1), (3,2), (4,3), (5,2)), q2.map(p => (p._1, p._2)).list)
+    println("Foreign-key join: " + q2.selectStatement)
+    q2.foreach(x => println("  " + x))
+    assertEquals(List((2, 1), (3, 2), (4, 3), (5, 2)), q2.map(p => (p._1, p._2)).list)
 
     val ddl2 = Categories.ddl ++ Posts.ddl
     ddl2.dropStatements foreach println
@@ -77,7 +77,7 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
     tdb.assertNotTablesExist("categories", "posts")
   }
 
-  @Test def test2(): Unit = db withSession { implicit ss:Session=>
+  @Test def test2(): Unit = db withSession { implicit ss: Session =>
 
     object A extends Table[(Int, Int, String)]("a") {
       def k1 = column[Int]("k1")
@@ -116,12 +116,12 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
       a <- A
       b <- a.bFK
     } yield (a.s, b.s)
-    println("Multiple rows: "+q1.selectStatement)
-    q1.foreach(x => println("  "+x))
-    assertEquals(Set(("a12","b12"), ("a34","b34")), q1.list.toSet)
+    println("Multiple rows: " + q1.selectStatement)
+    q1.foreach(x => println("  " + x))
+    assertEquals(Set(("a12", "b12"), ("a34", "b34")), q1.list.toSet)
   }
 
-  @Test def testCombinedJoin(): Unit = db withSession { implicit ss:Session=>
+  @Test def testCombinedJoin(): Unit = db withSession { implicit ss: Session =>
 
     object A extends Table[(Int, String)]("a") {
       def id = column[Int]("id", O.PrimaryKey)
@@ -133,7 +133,7 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
       def id = column[Int]("id", O.PrimaryKey)
       def aRef = column[Int]("aRef")
       def * = id ~ aRef
-      def a = foreignKey(n+"_a_fk", aRef, A)(_.id)
+      def a = foreignKey(n + "_a_fk", aRef, A)(_.id)
     }
 
     val B = new Dep("b")

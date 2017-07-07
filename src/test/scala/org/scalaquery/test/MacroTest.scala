@@ -24,14 +24,14 @@ class MacroTest(tdb: TestDB) extends DBTest(tdb) {
       def id = column[UserId]("id", O PrimaryKey, O AutoInc)
       def first = column[String]("first")
       def last = column[String]("last")
-      def * = id~first~last <> (User.apply _, User.unapply _)
+      def * = id ~ first ~ last <> (User.apply _, User.unapply _)
       val findByID = this.createFinderBy(_.id)
     }
 
-    db withSession { implicit ss:Session=>
+    db withSession { implicit ss: Session =>
 
       Users.ddl.create
-      
+
     }
   }
 
@@ -42,8 +42,9 @@ class MacroTest(tdb: TestDB) extends DBTest(tdb) {
     case object False extends Bool
 
     implicit val boolTypeMapper = MappedTypeMapper.base[Bool, Int](
-      b => if(b == True) 1 else 0,
-      i => if(i == 1) True else False)
+      b => if (b == True) 1 else 0,
+      i => if (i == 1) True else False
+    )
 
     object T extends Table[(Int, Bool)]("t") {
       def id = column[Int]("id", O PrimaryKey, O AutoInc)
@@ -51,12 +52,12 @@ class MacroTest(tdb: TestDB) extends DBTest(tdb) {
       def * = id ~ b
     }
 
-    db withSession { implicit ss:Session=>
+    db withSession { implicit ss: Session =>
       T.ddl.create
       T.b.insertAll(False, True)
       assertEquals(Query(T).list.toSet, Set((1, False), (2, True)))
-      assertEquals(T.filter(_.b =~ (True:Bool)).list.toSet, Set((2, True)))
-      assertEquals(T.filter(_.b =~ (False:Bool)).list.toSet, Set((1, False)))
+      assertEquals(T.filter(_.b =~ (True: Bool)).list.toSet, Set((2, True)))
+      assertEquals(T.filter(_.b =~ (False: Bool)).list.toSet, Set((1, False)))
     }
   }
 }

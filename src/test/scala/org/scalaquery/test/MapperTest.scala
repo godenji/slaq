@@ -24,11 +24,11 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
       def last = column[String]("last")
       def * = id.? ~ first ~ last <> (User, User.unapply _)
       def forInsert = first ~ last <>
-        ({ (f, l) => User(None, f, l) }, { u:User => Some((u.first, u.last)) })
+        ({ (f, l) => User(None, f, l) }, { u: User => Some((u.first, u.last)) })
       val findByID = this.createFinderBy(_.id)
     }
 
-    db withSession { implicit ss:Session=>
+    db withSession { implicit ss: Session =>
 
       Users.ddl.create
       (Users.first ~ Users.last).insert(("Homer", "Simpson"))
@@ -41,15 +41,15 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
       )
 
       val updateQ = Users.filter(_.id =~ 2.bind).map(_.forInsert)
-      println("Update: "+updateQ.updateStatement)
+      println("Update: " + updateQ.updateStatement)
       updateQ.update(User(None, "Marge", "Simpson"))
 
-      Users.filter(_.id between(1, 2)).foreach(println)
+      Users.filter(_.id between (1, 2)).foreach(println)
       println("ID 3 -> " + Users.findByID.first(3))
 
       assertEquals(
         Set(User(Some(1), "Homer", "Simpson"), User(Some(2), "Marge", "Simpson")),
-        Users.filter(_.id between(1, 2)).list.toSet
+        Users.filter(_.id between (1, 2)).list.toSet
       )
       assertEquals(
         User(Some(3), "Carl", "Carlson"),
@@ -68,13 +68,13 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
       def * = a ~ b <> (Data, Data.unapply _)
     }
 
-    db withSession { implicit ss:Session=>
+    db withSession { implicit ss: Session =>
       Ts.ddl.create
       Ts.insertAll(new Data(1, 2), new Data(3, 4), new Data(5, 6))
 
       val updateQ = Ts.filter(_.a =~ 1)
       updateQ.dump("updateQ: ")
-      println("Update: "+updateQ.updateStatement)
+      println("Update: " + updateQ.updateStatement)
       updateQ.update(Data(7, 8))
 
       assertEquals(
@@ -91,8 +91,9 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
     case object False extends Bool
 
     implicit val boolTypeMapper = MappedTypeMapper.base[Bool, Int](
-      b => if(b == True) 1 else 0,
-      i => if(i == 1) True else False)
+      b => if (b == True) 1 else 0,
+      i => if (i == 1) True else False
+    )
 
     object T extends Table[(Int, Bool)]("t") {
       def id = column[Int]("id", O PrimaryKey, O AutoInc)
@@ -100,12 +101,12 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
       def * = id ~ b
     }
 
-    db withSession { implicit ss:Session=>
+    db withSession { implicit ss: Session =>
       T.ddl.create
       T.b.insertAll(False, True)
       assertEquals(Query(T).list.toSet, Set((1, False), (2, True)))
-      assertEquals(T.filter(_.b =~ (True:Bool)).list.toSet, Set((2, True)))
-      assertEquals(T.filter(_.b =~ (False:Bool)).list.toSet, Set((1, False)))
+      assertEquals(T.filter(_.b =~ (True: Bool)).list.toSet, Set((2, True)))
+      assertEquals(T.filter(_.b =~ (False: Bool)).list.toSet, Set((1, False)))
     }
   }
 }

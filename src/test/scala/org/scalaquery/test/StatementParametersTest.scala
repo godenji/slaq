@@ -12,7 +12,7 @@ class StatementParametersTest(tdb: TestDB) extends DBTest(tdb) {
 
   @Test def testExplicit() {
     println("*** Explicit ***")
-    db withSession { s1:Session =>
+    db withSession { s1: Session =>
       pr("start")(s1)
       ResultSetType.ScrollInsensitive(s1) { s2 =>
         pr("in ScrollInsensitive block")(s2)
@@ -30,17 +30,17 @@ class StatementParametersTest(tdb: TestDB) extends DBTest(tdb) {
 
   @Test def testImplicit() {
     println("*** Implicit ***")
-    db withSession { implicit session:Session=>
+    db withSession { implicit session: Session =>
       pr("start")
       check(ResultSetType.Auto, ResultSetConcurrency.Auto, ResultSetHoldability.Auto)
       /*
        * need explicit reference to ResultSet*'s session to override above withSession implicit
        * looks like in order to set custom ResultSet* attribs one *must* be explicit
        */
-      ResultSetType.ScrollInsensitive {ss:Session=>
+      ResultSetType.ScrollInsensitive { ss: Session =>
         pr("in ScrollInsensitive block")
         check(ResultSetType.ScrollInsensitive, ResultSetConcurrency.Auto, ResultSetHoldability.Auto)
-        ResultSetHoldability.HoldCursorsOverCommit {ss:Session=>
+        ResultSetHoldability.HoldCursorsOverCommit { ss: Session =>
           pr("in HoldCursorsOverCommit block")
           check(ResultSetType.ScrollInsensitive, ResultSetConcurrency.Auto, ResultSetHoldability.HoldCursorsOverCommit)
         }
@@ -53,7 +53,7 @@ class StatementParametersTest(tdb: TestDB) extends DBTest(tdb) {
   }
 
   def pr(msg: String)(implicit ss: Session) = println(
-  	s"$msg: ${ss.cursorType} ${ss.concurrencyType} ${ss.holdabilityType}"
+    s"$msg: ${ss.cursorType} ${ss.concurrencyType} ${ss.holdabilityType}"
   )
 
   def check(t: ResultSetType, c: ResultSetConcurrency, h: ResultSetHoldability)(implicit ss: Session) {

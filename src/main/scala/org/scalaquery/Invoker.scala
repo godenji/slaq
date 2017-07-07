@@ -108,12 +108,12 @@ trait Invoker[-P, +R] { self =>
   /**
    * Execute the statement and feed the converted rows of the result set into an iteratee.
    */
-  final def enumerate[B, RR >: R](param: P, iter: IterV[RR,B])(implicit session: Session): IterV[RR, B] = {
+  final def enumerate[B, RR >: R](param: P, iter: IterV[RR, B])(implicit session: Session): IterV[RR, B] = {
     var _iter = iter
     val it = elements(param)(session)
     try {
-      while(it.hasNext && !_iter.isInstanceOf[Done[_,_]]) {
-        val cont = _iter.asInstanceOf[Cont[RR,B]]
+      while (it.hasNext && !_iter.isInstanceOf[Done[_, _]]) {
+        val cont = _iter.asInstanceOf[Cont[RR, B]]
         _iter = cont.k(El(it.next))
       }
     } finally it.close()
@@ -123,7 +123,7 @@ trait Invoker[-P, +R] { self =>
   /**
    * Apply the parameter for this Invoker, creating a parameterless UnitInvoker.
    */
-  def apply(parameter: P): UnitInvoker[R] = new AppliedInvoker[P,R] {
+  def apply(parameter: P): UnitInvoker[R] = new AppliedInvoker[P, R] {
     protected val appliedParameter = parameter
     protected val delegate = self
   }
@@ -139,7 +139,7 @@ trait Invoker[-P, +R] { self =>
    * and return the first row of the result set, or None if the result set is empty.
    */
   def firstFlatten[B](param: P)(implicit session: Session, ev: R <:< Option[B]): Option[B] =
-    firstOption(param).map(ev.apply _).getOrElse(None)//.asInstanceOf[Option[B]]
+    firstOption(param).map(ev.apply _).getOrElse(None) //.asInstanceOf[Option[B]]
 }
 
 /**
@@ -160,10 +160,10 @@ trait UnitInvoker[+R] extends Invoker[Unit, R] {
   final def elementsTo(maxRows: Int)(implicit session: Session): CloseableIterator[R] = delegate.elementsTo(appliedParameter, maxRows)
   final def execute()(implicit session: Session): Unit = delegate.execute(appliedParameter)
   final def foldLeft[B](z: B)(op: (B, R) => B)(implicit session: Session): B = delegate.foldLeft(appliedParameter, z)(op)
-  final def enumerate[B, RR >: R](iter: IterV[RR,B])(implicit session: Session): IterV[RR, B] = delegate.enumerate(appliedParameter, iter)
+  final def enumerate[B, RR >: R](iter: IterV[RR, B])(implicit session: Session): IterV[RR, B] = delegate.enumerate(appliedParameter, iter)
 
   def firstFlatten[B](implicit session: Session, ev: R <:< Option[B]): Option[B] =
-    firstOption.map(ev.apply _).getOrElse(None)//.asInstanceOf[Option[B]]
+    firstOption.map(ev.apply _).getOrElse(None) //.asInstanceOf[Option[B]]
   override def mapResult[U](f: (R => U)): UnitInvoker[U] = new MappedInvoker(this, f) with UnitInvokerMixin[U]
 }
 

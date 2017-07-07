@@ -32,7 +32,7 @@ class UnionTest(tdb: TestDB) extends DBTest(tdb) {
   }
 
   @Test def test() {
-    db withSession { implicit ss:Session=>
+    db withSession { implicit ss: Session =>
 
       (Managers.ddl ++ Employees.ddl) create
 
@@ -50,25 +50,25 @@ class UnionTest(tdb: TestDB) extends DBTest(tdb) {
         (8, "Greg", 3)
       )
 
-      val q1 = for(m <- Managers filter { _.department is "IT" }) yield (m.id, m.name)
-      println("Managers in IT: "+ q1.selectStatement)
-      q1.foreach(o => println("  "+o))
+      val q1 = for (m <- Managers filter { _.department is "IT" }) yield (m.id, m.name)
+      println("Managers in IT: " + q1.selectStatement)
+      q1.foreach(o => println("  " + o))
 
-      val q2 = for(e <- Employees filter { _.departmentIs("IT") }) yield (e.id, e.name)
+      val q2 = for (e <- Employees filter { _.departmentIs("IT") }) yield (e.id, e.name)
       println("Employees in IT: " + q2.selectStatement)
-      q2.foreach(o => println("  "+o))
+      q2.foreach(o => println("  " + o))
 
-      val q3 = for(x @ (id, name) <- q1 union q2; _ <- Query.orderBy(name asc)) yield x
+      val q3 = for (x @ (id, name) <- q1 union q2; _ <- Query.orderBy(name asc)) yield x
       q3.dump("q3: ")
       println()
       println("Combined and sorted: " + q3.selectStatement)
-      q3.foreach(o => println("  "+o))
+      q3.foreach(o => println("  " + o))
 
-      assertEquals(q3.list, List((2,"Amy"), (7,"Ben"), (8,"Greg"), (6,"Leonard"), (3,"Steve")))
+      assertEquals(q3.list, List((2, "Amy"), (7, "Ben"), (8, "Greg"), (6, "Leonard"), (3, "Steve")))
     }
   }
 
-  @Test def testUnionWithoutProjection() = db withSession { implicit ss:Session=>
+  @Test def testUnionWithoutProjection() = db withSession { implicit ss: Session =>
 
     Managers.ddl create;
     Managers.insertAll(
@@ -77,7 +77,7 @@ class UnionTest(tdb: TestDB) extends DBTest(tdb) {
       (3, "Steve", "IT")
     )
 
-    def f (s: String) = Managers filter { _.name =~ s}
+    def f(s: String) = Managers filter { _.name =~ s }
     val q = f("Peter") union f("Amy")
     q.dump("q: ")
     println(q.selectStatement)

@@ -4,14 +4,14 @@ import java.sql.ResultSet
 
 sealed abstract class ResultSetConcurrency(val intValue: Int) { self =>
   def apply[T](base: Session)(f: Session => T): T = f(base.forParameters(concurrency = self))
-  def apply[T](f: => T)(implicit base: Session): T = apply(base)(base => f) 
+  def apply[T](f: => T)(implicit base: Session): T = apply(base)(base => f)
   def withDefault(r: ResultSetConcurrency) = this
 }
 
 object ResultSetConcurrency {
-  case object Auto      extends ResultSetConcurrency(ResultSet.CONCUR_READ_ONLY) {
+  case object Auto extends ResultSetConcurrency(ResultSet.CONCUR_READ_ONLY) {
     override def withDefault(r: ResultSetConcurrency) = r
   }
-  case object ReadOnly  extends ResultSetConcurrency(ResultSet.CONCUR_READ_ONLY)
+  case object ReadOnly extends ResultSetConcurrency(ResultSet.CONCUR_READ_ONLY)
   case object Updatable extends ResultSetConcurrency(ResultSet.CONCUR_UPDATABLE)
 }

@@ -13,8 +13,8 @@ case class MFunction(name: MQName, remarks: String, returnsTable: Option[Boolean
 
 object MFunction {
   private[this] val m = classOf[DatabaseMetaData].getMethod(
-		"getFunctions", classOf[String], classOf[String], classOf[String]
-	)
+    "getFunctions", classOf[String], classOf[String], classOf[String]
+  )
 
   def getFunctions(namePattern: MQName) = {
     /* Regular version, requires Java 1.6:
@@ -26,19 +26,18 @@ object MFunction {
 					case _ => None
 				}, r<<)
 		}*/
-    if(m == null) UnitInvoker.empty
-    else ResultSetInvoker[MFunction](s=>
-	      try DatabaseMeta.invokeForRS(
-	      	m, s.metaData, namePattern.catalog_?, 
-	      	namePattern.schema_?, namePattern.name
-	      )
-	      catch {case _:SQLException | _: NoSuchMethodException => null}
-	    ){r=>
+    if (m == null) UnitInvoker.empty
+    else ResultSetInvoker[MFunction](s =>
+      try DatabaseMeta.invokeForRS(
+        m, s.metaData, namePattern.catalog_?,
+        namePattern.schema_?, namePattern.name
+      )
+      catch { case _: SQLException | _: NoSuchMethodException => null }) { r =>
       MFunction(MQName.from(r), r<<, r.nextShort match {
-          case 1 /*DatabaseMetaData.functionNoTable*/ => Some(false)
-          case 2 /*DatabaseMetaData.functionReturnsTable*/ => Some(true)
-          case _ => None
-        }, r<<)
+        case 1 /*DatabaseMetaData.functionNoTable*/ => Some(false)
+        case 2 /*DatabaseMetaData.functionReturnsTable*/ => Some(true)
+        case _ => None
+      }, r<<)
     }
   }
 }

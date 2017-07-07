@@ -11,15 +11,19 @@ case class MFunctionColumn(
   function: MQName, column: String, columnType: Short, sqlType: Int, typeName: String,
   precision: Option[Int], length: Int, scale: Option[Short], radix: Short,
   nullable: Option[Boolean], remarks: String, charOctetLength: Option[Int],
-  ordinalPosition: Int, isNullable: Option[Boolean], specificName: String) {
+  ordinalPosition: Int, isNullable: Option[Boolean], specificName: String
+) {
 
   def sqlTypeName = TypeMapperDelegate.typeNames.get(sqlType)
 }
 
 object MFunctionColumn {
-  private[this] val m = try { classOf[DatabaseMetaData].getMethod("getFunctionColumns",
-      classOf[String], classOf[String], classOf[String], classOf[String]) }
-    catch { case _:NoSuchMethodException => null }
+  private[this] val m = try {
+    classOf[DatabaseMetaData].getMethod(
+      "getFunctionColumns",
+      classOf[String], classOf[String], classOf[String], classOf[String]
+    )
+  } catch { case _: NoSuchMethodException => null }
 
   def getFunctionColumns(functionPattern: MQName, columnNamePattern: String = "%") = {
     /* to support Java pre-1.6 use:
@@ -32,16 +36,17 @@ object MFunctionColumn {
           case 1 /*DatabaseMetaData.functionNullable*/ => Some(true)
           case _ => None
         }, r<<, r<<, r<<, DatabaseMeta.yesNoOpt(r), r<<)
-    } 
-    */
-  	ResultSetInvoker[MFunctionColumn](
-      _.metaData.getFunctionColumns(functionPattern.catalog_?, functionPattern.schema_?,
-                                    functionPattern.name, columnNamePattern)) { r =>
-      MFunctionColumn(MQName.from(r), r<<, r<<, r<<, r<<, r<<, r<<, r<<, r<<, r.nextShort match {
-          case DatabaseMetaData.functionNoNulls => Some(false)
-          case DatabaseMetaData.functionNullable => Some(true)
-          case _ => None
-        }, r<<, r<<, r<<, DatabaseMeta.yesNoOpt(r), r<<)
     }
+    */
+    ResultSetInvoker[MFunctionColumn](
+      _.metaData.getFunctionColumns(functionPattern.catalog_?, functionPattern.schema_?,
+                                    functionPattern.name, columnNamePattern)
+    ) { r =>
+        MFunctionColumn(MQName.from(r), r<<, r<<, r<<, r<<, r<<, r<<, r<<, r<<, r.nextShort match {
+          case DatabaseMetaData.functionNoNulls  => Some(false)
+          case DatabaseMetaData.functionNullable => Some(true)
+          case _                                 => None
+        }, r<<, r<<, r<<, DatabaseMeta.yesNoOpt(r), r<<)
+      }
   }
 }

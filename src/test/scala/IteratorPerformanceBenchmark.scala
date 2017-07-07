@@ -11,38 +11,37 @@ object IteratorPerformanceBenchmark {
       def value = column[String]("value")
       def * = key ~ value
     }
-    Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver") withSession { implicit ss:Session=>
+    Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver") withSession { implicit ss: Session =>
       Props.ddl.create
       val count = 10000
       val size = 1000
-      for(i <- 1 to size) Props.insert( (s"k$i", s"v$i") )
+      for (i <- 1 to size) Props.insert((s"k$i", s"v$i"))
       val inv = Query(Props).invoker
 
       val buf = new ArrayBuffer[(String, String)]
       def measure(s: String)(f: => Any) {
         val t0 = System.currentTimeMillis()
         var i = 0
-        while(i < count) { buf.clear; f; i += 1; assert(buf.length == size) }
+        while (i < count) { buf.clear; f; i += 1; assert(buf.length == size) }
         val t1 = System.currentTimeMillis()
-        println(s" (${count}x) took ${t1-t0}ms, size = ${buf.length}")
+        println(s" (${count}x) took ${t1 - t0}ms, size = ${buf.length}")
       }
 
       val repeat = 5
       var r = 0
-      while(r < repeat) {
-        measure("foreach"){ ; inv.foreach((), { i => buf += i }, 0) }
-        measure("elements loop"){
+      while (r < repeat) {
+        measure("foreach") { ; inv.foreach((), { i => buf += i }, 0) }
+        measure("elements loop") {
           val it = inv.elements()
           try {
-            while(it.hasNext) buf += it.next
+            while (it.hasNext) buf += it.next
           } finally { it.close() }
         }
-        measure("elements.foreach"){ inv.elements().foreach(i => buf += i) }
+        measure("elements.foreach") { inv.elements().foreach(i => buf += i) }
         r += 1
       }
     }
   }
-
 
   /*def main2(args: Array[String]) {
     val inv = new Invoker[Int, String] {

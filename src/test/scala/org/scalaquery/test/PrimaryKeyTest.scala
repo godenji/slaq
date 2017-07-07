@@ -13,7 +13,7 @@ object PrimaryKeyTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem, SQ
 class PrimaryKeyTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def test1(): Unit = db withSession { implicit ss:Session=>
+  @Test def test1(): Unit = db withSession { implicit ss: Session =>
 
     object A extends Table[(Int, Int, String)]("a") {
       def k1 = column[Int]("k1")

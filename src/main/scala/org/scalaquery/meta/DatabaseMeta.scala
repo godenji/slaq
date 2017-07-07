@@ -15,21 +15,23 @@ object DatabaseMeta {
 
   def getTableTypes = ResultSetInvoker[String](_.metaData.getTableTypes())
 
-  private[meta] def yesNoOpt(r: PositionedResult) = if(r.hasMoreColumns) r.nextString match {
+  private[meta] def yesNoOpt(r: PositionedResult) = if (r.hasMoreColumns) r.nextString match {
     case "YES" => Some(true)
-    case "NO" => Some(false)
-    case _ => None
-  } else None
+    case "NO"  => Some(false)
+    case _     => None
+  }
+  else None
 
   private[meta] def invokeForRS(m: Method, target: AnyRef, args: AnyRef*): ResultSet = {
-    try { m.invoke(target, args:_*).asInstanceOf[ResultSet] } catch { case t:Throwable => 
-      (t match {
-        case i: InvocationTargetException => i.getCause()
-        case other => other
-      }) match {
-        case a: AbstractMethodError => null
-        case other => throw other
-      }
+    try { m.invoke(target, args: _*).asInstanceOf[ResultSet] } catch {
+      case t: Throwable =>
+        (t match {
+          case i: InvocationTargetException => i.getCause()
+          case other                        => other
+        }) match {
+          case a: AbstractMethodError => null
+          case other                  => throw other
+        }
     }
   }
 }

@@ -22,22 +22,22 @@ class MiscTest(tdb: TestDB) extends DBTest(tdb) {
       def * = a ~ b
     }
 
-    db withSession { implicit ss:Session=>
+    db withSession { implicit ss: Session =>
       T.ddl.create
       T.insertAll(("1", "a"), ("2", "a"), ("3", "b"))
 
-      val q1 = for(t <- T if t.a =~ "1" | t.a =~ "2") yield t
-      println("q1: "+q1.selectStatement)
+      val q1 = for (t <- T if t.a =~ "1" | t.a =~ "2") yield t
+      println("q1: " + q1.selectStatement)
       q1.foreach(println _)
       assertEquals(q1.to[Set](), Set(("1", "a"), ("2", "a")))
 
-      val q2 = for(t <- T if (t.a != "1") | (t.b != "a")) yield t
-      println("q2: "+q2.selectStatement) // Hah, not what you expect!
+      val q2 = for (t <- T if (t.a =~ "1") | (t.b =~ "a")) yield t
+      println("q2: " + q2.selectStatement)
       q2.foreach(println _)
-      assertEquals(q2.to[Set](), Set(("1", "a"), ("2", "a"), ("3", "b")))
+      assertEquals(q2.to[Set](), Set(("1", "a"), ("2", "a")))
 
-      val q3 = for(t <- T if t.a =! "1" | t.b =! "a") yield t
-      println("q3: "+q3.selectStatement)
+      val q3 = for (t <- T if t.a =! "1" | t.b =! "a") yield t
+      println("q3: " + q3.selectStatement)
       q3.foreach(println _)
       assertEquals(q3.to[Set](), Set(("2", "a"), ("3", "b")))
     }
@@ -65,7 +65,7 @@ class MiscTest(tdb: TestDB) extends DBTest(tdb) {
       def * = a
     }
 
-    db withSession { implicit ss:Session=>
+    db withSession { implicit ss: Session =>
       (T1.ddl ++ T2.ddl ++ T3.ddl ++ T4.ddl) create
 
       T1.insert("a")
@@ -88,7 +88,7 @@ class MiscTest(tdb: TestDB) extends DBTest(tdb) {
       def * = a
     }
 
-    db withSession { implicit ss:Session=>
+    db withSession { implicit ss: Session =>
       T1.ddl.create
       T1.insertAll("foo", "bar", "foobar", "foo%")
 

@@ -47,7 +47,7 @@ object TypeMapperDelegates {
     def updateValue(v: Blob, r: PositionedResult) = r.updateBlob(v)
     override def value2SQLLiteral(value: Blob) =
       Fail(
-      	"Blob does not have a literal representation"
+        "Blob does not have a literal representation"
       )
   }
 
@@ -69,7 +69,7 @@ object TypeMapperDelegates {
     def updateValue(v: Array[Byte], r: PositionedResult) = r.updateBytes(v)
     override def value2SQLLiteral(value: Array[Byte]) =
       Fail(
-      	"Array[Byte] does not have a literal representation"
+        "Array[Byte] does not have a literal representation"
       )
   }
 
@@ -89,7 +89,7 @@ object TypeMapperDelegates {
     def setOption(v: Option[Date], p: PositionedParameters) = p.setDateOption(v)
     def nextValue(r: PositionedResult) = r.nextDate
     def updateValue(v: Date, r: PositionedResult) = r.updateDate(v)
-    override def value2SQLLiteral(value: Date) = "{d '"+value.toString+"'}"
+    override def value2SQLLiteral(value: Date) = "{d '" + value.toString + "'}"
   }
 
   class DoubleTypeMapperDelegate extends TypeMapperDelegate[Double] {
@@ -144,12 +144,12 @@ object TypeMapperDelegates {
     def setOption(v: Option[String], p: PositionedParameters) = p.setStringOption(v)
     def nextValue(r: PositionedResult) = r.nextString
     def updateValue(v: String, r: PositionedResult) = r.updateString(v)
-    override def value2SQLLiteral(value: String) = if(value eq null) "NULL" else {
+    override def value2SQLLiteral(value: String) = if (value eq null) "NULL" else {
       val sb = new StringBuilder
       sb append '\''
-      for(c <- value) c match {
+      for (c <- value) c match {
         case '\'' => sb append "''"
-        case _ => sb append c
+        case _    => sb append c
       }
       sb append '\''
       sb.toString
@@ -163,7 +163,7 @@ object TypeMapperDelegates {
     def setOption(v: Option[Time], p: PositionedParameters) = p.setTimeOption(v)
     def nextValue(r: PositionedResult) = r.nextTime
     def updateValue(v: Time, r: PositionedResult) = r.updateTime(v)
-    override def value2SQLLiteral(value: Time) = "{t '"+value.toString+"'}"
+    override def value2SQLLiteral(value: Time) = "{t '" + value.toString + "'}"
   }
 
   class TimestampTypeMapperDelegate extends TypeMapperDelegate[Timestamp] {
@@ -173,7 +173,7 @@ object TypeMapperDelegates {
     def setOption(v: Option[Timestamp], p: PositionedParameters) = p.setTimestampOption(v)
     def nextValue(r: PositionedResult) = r.nextTimestamp
     def updateValue(v: Timestamp, r: PositionedResult) = r.updateTimestamp(v)
-    override def value2SQLLiteral(value: Timestamp) = "{ts '"+value.toString+"'}"
+    override def value2SQLLiteral(value: Timestamp) = "{ts '" + value.toString + "'}"
   }
 
   class UnitTypeMapperDelegate extends TypeMapperDelegate[Unit] {
@@ -192,34 +192,34 @@ object TypeMapperDelegates {
     override def sqlTypeName = "UUID"
     def setValue(v: UUID, p: PositionedParameters) = p.setBytes(toBytes(v))
     def setOption(v: Option[UUID], p: PositionedParameters) =
-      if(v == None) p.setNull(sqlType) else p.setBytes(toBytes(v.get))
+      if (v == None) p.setNull(sqlType) else p.setBytes(toBytes(v.get))
     def nextValue(r: PositionedResult) = fromBytes(r.nextBytes())
     def updateValue(v: UUID, r: PositionedResult) = r.updateBytes(toBytes(v))
     override def value2SQLLiteral(value: UUID): String =
       Fail(
-      	"UUID does not support a literal representation"
+        "UUID does not support a literal representation"
       )
-    def toBytes(uuid: UUID) = if(uuid eq null) null else {
+    def toBytes(uuid: UUID) = if (uuid eq null) null else {
       val msb = uuid.getMostSignificantBits
       val lsb = uuid.getLeastSignificantBits
       val buff = new Array[Byte](16)
       var i = 0
-      while(i < 8) {
+      while (i < 8) {
         buff(i) = ((msb >> (8 * (7 - i))) & 255).toByte;
         buff(8 + i) = ((lsb >> (8 * (7 - i))) & 255).toByte;
         i += 1
       }
       buff
     }
-    def fromBytes(data: Array[Byte]) = if(data eq null) null else {
+    def fromBytes(data: Array[Byte]) = if (data eq null) null else {
       var msb = 0L
       var lsb = 0L
       var i = 0
-      while(i < 8) {
+      while (i < 8) {
         msb = (msb << 8) | (data(i) & 0xff)
         i += 1
       }
-      while(i < 16) {
+      while (i < 16) {
         lsb = (lsb << 8) | (data(i) & 0xff)
         i += 1
       }

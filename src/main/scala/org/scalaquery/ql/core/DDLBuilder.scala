@@ -8,7 +8,7 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
   import profile.sqlUtils._
 
   protected class ColumnDDLBuilder(protected val column: NamedColumn[_]) {
-  	
+
     protected val tmDelegate = column.typeMapper(profile)
     protected var sqlType: String = null
     protected var notNull = !tmDelegate.nullable
@@ -18,19 +18,19 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
     init()
 
     protected def init() {
-      for(o <- column.options) handleColumnOption(o)
-      if(sqlType eq null) sqlType = mapTypeName(tmDelegate)
+      for (o <- column.options) handleColumnOption(o)
+      if (sqlType eq null) sqlType = mapTypeName(tmDelegate)
     }
 
-    protected def handleColumnOption(o: ColumnOption[_,_]): Unit = o match {
-      case ColumnOption.DBType(s) => sqlType = s
-      case ColumnOption.NotNull => notNull = true
-      case ColumnOption.Nullable => notNull = false
+    protected def handleColumnOption(o: ColumnOption[_, _]): Unit = o match {
+      case ColumnOption.DBType(s)  => sqlType = s
+      case ColumnOption.NotNull    => notNull = true
+      case ColumnOption.Nullable   => notNull = false
       case ColumnOption.PrimaryKey => primaryKey = true
-      case ColumnOption.Default(v) => defaultLiteral = 
-      	column.asInstanceOf[NamedColumn[Any]].typeMapper(profile).value2SQLLiteral(v)
+      case ColumnOption.Default(v) => defaultLiteral =
+        column.asInstanceOf[NamedColumn[Any]].typeMapper(profile).value2SQLLiteral(v)
       case ColumnOption.AutoInc => autoIncrement = true
-      case _ =>
+      case _                    =>
     }
 
     def appendColumn(sb: StringBuilder) {
@@ -40,10 +40,10 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
     }
 
     protected def appendOptions(sb: StringBuilder) {
-      if(defaultLiteral ne null) sb append " DEFAULT " append defaultLiteral
-      if(notNull) sb append " NOT NULL"
-      if(autoIncrement) sb append " AUTO_INCREMENT"
-      if(primaryKey) sb append " PRIMARY KEY"
+      if (defaultLiteral ne null) sb append " DEFAULT " append defaultLiteral
+      if (notNull) sb append " NOT NULL"
+      if (autoIncrement) sb append " AUTO_INCREMENT"
+      if (primaryKey) sb append " PRIMARY KEY"
     }
   }
 
@@ -53,8 +53,8 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
     val createTable = {
       val b = new StringBuilder append "CREATE TABLE " append quote(table.tableName) append " ("
       var first = true
-      for(n <- table.create_*) {
-        if(first) first = false
+      for (n <- table.create_*) {
+        if (first) first = false
         else b append ","
         createColumnDDLBuilder(n).appendColumn(b)
       }
@@ -64,8 +64,8 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
     val createIndexes = table.indexes.map(createIndex)
     val foreignKeys = table.foreignKeys
     val primaryKeys = table.primaryKeys
-    if(primaryKeys.size > 1)
-      Fail("Table "+table.tableName+" defines multiple primary keys")
+    if (primaryKeys.size > 1)
+      Fail("Table " + table.tableName + " defines multiple primary keys")
     new DDL {
       val createPhase1 = Iterable(createTable) ++ primaryKeys.map(createPrimaryKey) ++ createIndexes
       val createPhase2 = foreignKeys.map(createForeignKey)
@@ -76,7 +76,7 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
 
   protected def createIndex(idx: Index) = {
     val b = new StringBuilder append "CREATE "
-    if(idx.unique) b append "UNIQUE "
+    if (idx.unique) b append "UNIQUE "
     b append "INDEX " append quote(idx.name) append " ON " append quote(table.tableName) append "("
     addIndexColumnList(idx.on, b, idx.table.tableName)
     b append ")"
@@ -129,15 +129,15 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
 
   protected def addColumnList(columns: IndexedSeq[Node], sb: StringBuilder, requiredTableName: String, typeInfo: String) = {
     var first = true
-    for(c <- columns) c match {
-      case n:NamedColumn[_] =>
-        if(first) first = false
+    for (c <- columns) c match {
+      case n: NamedColumn[_] =>
+        if (first) first = false
         else sb append ","
         sb append quote(n.name)
-        if(requiredTableName != n.table.asInstanceOf[Table[_]].tableName)
-          Fail("All columns in "+typeInfo+" must belong to table "+requiredTableName)
-      case _ => Fail("Cannot use column "+c+
-        " in "+typeInfo+" (only named columns are allowed)")
+        if (requiredTableName != n.table.asInstanceOf[Table[_]].tableName)
+          Fail("All columns in " + typeInfo + " must belong to table " + requiredTableName)
+      case _ => Fail("Cannot use column " + c +
+        " in " + typeInfo + " (only named columns are allowed)")
     }
   }
 }

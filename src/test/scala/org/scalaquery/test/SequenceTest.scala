@@ -14,7 +14,7 @@ object SequenceTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem)
 class SequenceTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def test1(): Unit = db withSession { implicit ss:Session=>
+  @Test def test1(): Unit = db withSession { implicit ss: Session =>
     case class User(id: Int, first: String, last: String)
 
     object Users extends Table[Int]("users") {
@@ -29,12 +29,12 @@ class SequenceTest(tdb: TestDB) extends DBTest(tdb) {
     ddl.create
     Users.insertAll(1, 2, 3)
 
-    val q1 = for(u <- Users) yield (mySequence.next, u.id)
+    val q1 = for (u <- Users) yield (mySequence.next, u.id)
     println("q1: " + q1.selectStatement)
     assertEquals(Set((200, 1), (210, 2), (220, 3)), q1.list.toSet)
   }
 
-  @Test def test2(): Unit = db withSession { implicit ss:Session=>
+  @Test def test2(): Unit = db withSession { implicit ss: Session =>
     val s1 = Sequence[Int]("s1")
     val s2 = Sequence[Int]("s2") start 3
     val s3 = Sequence[Int]("s3") start 3 inc 2
@@ -43,7 +43,7 @@ class SequenceTest(tdb: TestDB) extends DBTest(tdb) {
     val s6 = Sequence[Int]("s6") start 3 min 2 max 5
 
     def values(s: Sequence[Int], count: Int = 5, create: Boolean = true) = {
-      if(create) {
+      if (create) {
         val ddl = s.ddl
         ddl.createStatements.foreach(println)
         ddl.create
@@ -56,7 +56,7 @@ class SequenceTest(tdb: TestDB) extends DBTest(tdb) {
     assertEquals(List(1, 2, 3, 4, 5), values(s1))
     assertEquals(List(3, 4, 5, 6, 7), values(s2))
     assertEquals(List(3, 5, 7, 9, 11), values(s3))
-    if(tdb.driver != MySQLDriver) {
+    if (tdb.driver != MySQLDriver) {
       // MySQL sequence emulation does not support non-cycling limited sequences
       assertEquals(List(3, 4, 5), values(s6, 3))
       assertFail(values(s6, 1, false))

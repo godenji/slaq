@@ -3,12 +3,14 @@ package org.scalaquery.ql
 import org.scalaquery.ql.core.Profile
 import org.scalaquery.util.UnaryNode
 
-class Sequence[T] private[Sequence] (val name: String,
-    val _minValue: Option[T],
-    val _maxValue: Option[T],
-    val _increment: Option[T],
-    val _start: Option[T],
-    val _cycle: Boolean)(implicit val typeMapper: TypeMapper[T], val integral: Integral[T]) { seq =>
+class Sequence[T] private[Sequence] (
+  val name: String,
+  val _minValue: Option[T],
+  val _maxValue: Option[T],
+  val _increment: Option[T],
+  val _start: Option[T],
+  val _cycle: Boolean
+)(implicit val typeMapper: TypeMapper[T], val integral: Integral[T]) { seq =>
 
   def min(v: T) = new Sequence[T](name, Some(v), _maxValue, _increment, _start, _cycle)
   def max(v: T) = new Sequence[T](name, _minValue, Some(v), _increment, _start, _cycle)
@@ -20,18 +22,18 @@ class Sequence[T] private[Sequence] (val name: String,
 
   final def curr = Sequence.Currval(this)
 
-  def ddl(implicit profile:Profile): DDL = profile.buildSequenceDDL(this)
+  def ddl(implicit profile: Profile): DDL = profile.buildSequenceDDL(this)
 }
 
 object Sequence {
-  def apply[T : TypeMapper : Integral](name: String) = new Sequence[T](name, None, None, None, None, false)
+  def apply[T: TypeMapper: Integral](name: String) = new Sequence[T](name, None, None, None, None, false)
 
-  final case class Nextval[T : TypeMapper](seq: Sequence[T]) extends OperatorColumn[T] with SimpleFunction with UnaryNode {
+  final case class Nextval[T: TypeMapper](seq: Sequence[T]) extends OperatorColumn[T] with SimpleFunction with UnaryNode {
     val name = "nextval"
     val child = ConstColumn(seq.name)(TypeMapper.StringTypeMapper)
   }
 
-  final case class Currval[T : TypeMapper](seq: Sequence[T]) extends OperatorColumn[T] with SimpleFunction with UnaryNode {
+  final case class Currval[T: TypeMapper](seq: Sequence[T]) extends OperatorColumn[T] with SimpleFunction with UnaryNode {
     val name = "currval"
     val child = ConstColumn(seq.name)(TypeMapper.StringTypeMapper)
   }

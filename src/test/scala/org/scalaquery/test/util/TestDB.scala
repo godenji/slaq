@@ -3,7 +3,11 @@ package org.scalaquery.test.util
 import java.util.Properties
 import org.scalaquery.ql.core.Profile
 import org.scalaquery.ql.driver.{
-	H2Driver, SQLiteDriver, PostgresDriver, MySQLDriver, HsqldbDriver
+  H2Driver,
+  SQLiteDriver,
+  PostgresDriver,
+  MySQLDriver,
+  HsqldbDriver
 }
 import org.scalaquery.ResultSetInvoker
 import org.scalaquery.session._
@@ -18,12 +22,12 @@ object TestDBOptions {
   def testDBPath = {
     val f = new File(testDBDir)
     val s = f.getPath().replace('\\', '/')
-    if(f.isAbsolute) s else "./" + s
+    if (f.isAbsolute) s else "./" + s
   }
   lazy val dbProps = {
     val p = new Properties
     val f = new File("test-dbs", "databases.properties")
-    if(f.isFile) {
+    if (f.isFile) {
       val in = new FileInputStream(f)
       try { p.load(in) } finally { in.close() }
     }
@@ -31,8 +35,8 @@ object TestDBOptions {
   }
   lazy val testDBs = Option(dbProps.getProperty("testDBs")).map(_.split(',').map(_.trim).toSet)
   def isInternalEnabled(db: String) = testDBs.map(_.contains(db)).getOrElse(true)
-  def isExternalEnabled(db: String) = isInternalEnabled(db) && "true" == dbProps.getProperty(db+".enabled")
-  def get(db: String, o: String) = Option(dbProps.getProperty(db+"."+o))
+  def isExternalEnabled(db: String) = isInternalEnabled(db) && "true" == dbProps.getProperty(db + ".enabled")
+  def get(db: String, o: String) = Option(dbProps.getProperty(db + "." + o))
 }
 
 abstract class TestDB(val confName: String) {
@@ -48,49 +52,51 @@ abstract class TestDB(val confName: String) {
   def cleanUp() {}
   def deleteDBFiles(prefix: String) {
     def deleteRec(f: File): Boolean = {
-      if(f.isDirectory()) f.listFiles.forall(deleteRec _) && f.delete()
+      if (f.isDirectory()) f.listFiles.forall(deleteRec _) && f.delete()
       else f.delete()
     }
     val dir = new File(TestDBOptions.testDBDir)
-    if(!dir.isDirectory) throw new IOException("Directory "+TestDBOptions.testDBDir+" not found")
-    for(f <- dir.listFiles if f.getName startsWith prefix) {
-      val p = TestDBOptions.testDBDir+"/"+f.getName
-      if(deleteRec(f)) println("[Deleted database file "+p+"]")
-      else throw new IOException("Couldn't delete database file "+p)
+    if (!dir.isDirectory) throw new IOException("Directory " + TestDBOptions.testDBDir + " not found")
+    for (f <- dir.listFiles if f.getName startsWith prefix) {
+      val p = TestDBOptions.testDBDir + "/" + f.getName
+      if (deleteRec(f)) println("[Deleted database file " + p + "]")
+      else throw new IOException("Couldn't delete database file " + p)
     }
   }
   def isEnabled = TestDBOptions.isInternalEnabled(confName)
   def getLocalTables(implicit session: Session): List[String] = {
-    val tables = ResultSetInvoker[(String,String,String)](_.conn.getMetaData().getTables("", "", null, null))
+    val tables = ResultSetInvoker[(String, String, String)](_.conn.getMetaData().getTables("", "", null, null))
     tables.list.map(_._3).sorted
   }
   def assertTablesExist(tables: String*)(implicit session: Session) {
-    for(t <- tables) {
-      try Q[Int]+"select 1 from "+driver.sqlUtils.quote(t)+" where 1 < 0" list catch { case _: Exception =>
-        Assert.fail("Table "+t+" should exist")
+    for (t <- tables) {
+      try Q[Int] + "select 1 from " + driver.sqlUtils.quote(t) + " where 1 < 0" list catch {
+        case _: Exception =>
+          Assert.fail("Table " + t + " should exist")
       }
     }
   }
   def assertNotTablesExist(tables: String*)(implicit session: Session) {
-    for(t <- tables) {
+    for (t <- tables) {
       try {
-        Q[Int]+"select 1 from "+driver.sqlUtils.quote(t)+" where 1 < 0" list;
-        Assert.fail("Table "+t+" should not exist")
+        Q[Int] + "select 1 from " + driver.sqlUtils.quote(t) + " where 1 < 0" list;
+        Assert.fail("Table " + t + " should not exist")
       } catch { case _: Exception => }
     }
   }
   def assertUnquotedTablesExist(tables: String*)(implicit session: Session) {
-    for(t <- tables) {
-      try Q[Int]+"select 1 from "+t+" where 1 < 0" list catch { case _: Exception =>
-        Assert.fail("Table "+t+" should exist")
+    for (t <- tables) {
+      try Q[Int] + "select 1 from " + t + " where 1 < 0" list catch {
+        case _: Exception =>
+          Assert.fail("Table " + t + " should exist")
       }
     }
   }
   def assertNotUnquotedTablesExist(tables: String*)(implicit session: Session) {
-    for(t <- tables) {
+    for (t <- tables) {
       try {
-        Q[Int]+"select 1 from "+t+" where 1 < 0" list;
-        Assert.fail("Table "+t+" should not exist")
+        Q[Int] + "select 1 from " + t + " where 1 < 0" list;
+        Assert.fail("Table " + t + " should not exist")
       } catch { case _: Exception => }
     }
   }
@@ -100,12 +106,12 @@ abstract class TestDB(val confName: String) {
     try {
       var in: InputStream = new FileInputStream(src)
       try {
-        if(src.getName.endsWith(".gz")) in = new GZIPInputStream(in)
+        if (src.getName.endsWith(".gz")) in = new GZIPInputStream(in)
         val buf = new Array[Byte](4096)
         var cont = true
-        while(cont) {
+        while (cont) {
           val len = in.read(buf)
-          if(len < 0) cont = false
+          if (len < 0) cont = false
           else out.write(buf, 0, len)
         }
       } finally in.close()
@@ -140,8 +146,8 @@ class ExternalTestDB(confName: String, val driver: Profile) extends TestDB(confN
   override def createDB() = Database.forURL(url, driver = jdbcDriver, user = configuredUserName, password = password)
 
   override def cleanUpBefore() {
-    if(drop.length > 0 || create.length > 0) {
-      println("[Creating test database "+this+"]")
+    if (drop.length > 0 || create.length > 0) {
+      println("[Creating test database " + this + "]")
       Database.forURL(adminDBURL, driver = jdbcDriver, user = configuredUserName, password = password) withSession { implicit s: Session =>
         Q.u + drop execute;
         Q.u + create execute
@@ -150,8 +156,8 @@ class ExternalTestDB(confName: String, val driver: Profile) extends TestDB(confN
   }
 
   override def cleanUpAfter() {
-    if(drop.length > 0) {
-      println("[Dropping test database "+this+"]")
+    if (drop.length > 0) {
+      println("[Dropping test database " + this + "]")
       Database.forURL(adminDBURL, driver = jdbcDriver, user = configuredUserName, password = password) withSession { implicit s: Session =>
         Q.u + drop execute
       }
@@ -163,7 +169,7 @@ abstract class HsqlDB(confName: String) extends TestDB(confName) {
   val jdbcDriver = "org.hsqldb.jdbcDriver"
   val driver = HsqldbDriver
   override def getLocalTables(implicit session: Session): List[String] = {
-    val tables = ResultSetInvoker[(String,String,String)](_.conn.getMetaData().getTables(null, "PUBLIC", null, null))
+    val tables = ResultSetInvoker[(String, String, String)](_.conn.getMetaData().getTables(null, "PUBLIC", null, null))
     tables.list.map(_._3).sorted
   }
   override def userName = "sa"
@@ -180,8 +186,8 @@ object TestDB {
   }
 
   def H2Disk(to: DBTestObject) = new TestDB("h2disk") {
-    override val dbName = "h2-"+to.testClassName
-    val url = "jdbc:h2:"+TestDBOptions.testDBPath+"/"+dbName
+    override val dbName = "h2-" + to.testClassName
+    val url = "jdbc:h2:" + TestDBOptions.testDBPath + "/" + dbName
     val jdbcDriver = "org.h2.Driver"
     val driver = H2Driver
     override def cleanUp() = deleteDBFiles(dbName)
@@ -189,12 +195,12 @@ object TestDB {
 
   def HsqldbMem(to: DBTestObject) = new HsqlDB("hsqldbmem") {
     override val dbName = "test1"
-    val url = "jdbc:hsqldb:mem:"+dbName+";user=SA;password=;shutdown=true"
+    val url = "jdbc:hsqldb:mem:" + dbName + ";user=SA;password=;shutdown=true"
   }
 
   def HsqldbDisk(to: DBTestObject) = new HsqlDB("hsqldbmem") {
-    override val dbName = "hsqldb-"+to.testClassName
-    val url = "jdbc:hsqldb:file:"+TestDBOptions.testDBPath+"/"+dbName+";user=SA;password=;shutdown=true;hsqldb.applog=0"
+    override val dbName = "hsqldb-" + to.testClassName
+    val url = "jdbc:hsqldb:file:" + TestDBOptions.testDBPath + "/" + dbName + ";user=SA;password=;shutdown=true;hsqldb.applog=0"
     override def cleanUp() = deleteDBFiles(dbName)
   }
 
@@ -203,8 +209,8 @@ object TestDB {
   }
 
   def SQLiteDisk(to: DBTestObject) = {
-    val prefix = "sqlite-"+to.testClassName
-    new SQLiteTestDB("jdbc:sqlite:"+TestDBOptions.testDBPath+"/"+prefix+".db", "sqlitedisk") {
+    val prefix = "sqlite-" + to.testClassName
+    new SQLiteTestDB("jdbc:sqlite:" + TestDBOptions.testDBPath + "/" + prefix + ".db", "sqlitedisk") {
       override val dbName = prefix
       override def cleanUp() = deleteDBFiles(prefix)
     }
@@ -212,7 +218,7 @@ object TestDB {
 
   def Postgres(to: DBTestObject) = new ExternalTestDB("postgres", PostgresDriver) {
     override def getLocalTables(implicit session: Session) = {
-      val tables = ResultSetInvoker[(String,String,String)](_.conn.getMetaData().getTables("", "public", null, null))
+      val tables = ResultSetInvoker[(String, String, String)](_.conn.getMetaData().getTables("", "public", null, null))
       tables.list.map(_._3).filter(s => !s.toLowerCase.endsWith("_pkey") && !s.toLowerCase.endsWith("_id_seq")).sorted
     }
   }
