@@ -14,7 +14,7 @@ lazy val root = (project in file(".")).
       scalaVersion := scalaRelease,
       scalacOptions ++= Seq(
         // note: tests FAIL with optimise enabled
-        "-opt:l:classpath",
+        "-opt:l:inline",
         "-unchecked", "-deprecation", "-feature",
         "-Ywarn-unused-import",
         "-language:implicitConversions", "-language:postfixOps", 
