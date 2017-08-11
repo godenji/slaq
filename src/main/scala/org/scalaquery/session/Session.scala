@@ -157,8 +157,10 @@ class BaseSession private[session] (db: Database) extends Session {
         else conn.commit()
         done = true
         res
-      } finally if (!done) conn.rollback()
-    } finally {
+      }
+      finally if (!done) conn.rollback()
+    }
+    finally {
       conn.setAutoCommit(true)
       inTransaction = false
     }

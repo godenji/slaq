@@ -59,8 +59,10 @@ abstract class StatementInvoker[-P, +R] extends Invoker[P, R] { self =>
         }
         doClose = false
         Right(pri)
-      } else Left(st.getUpdateCount)
-    } finally if (doClose) st.close()
+      }
+      else Left(st.getUpdateCount)
+    }
+    finally if (doClose) st.close()
   }
 
   protected def extractValue(pr: PositionedResult): R

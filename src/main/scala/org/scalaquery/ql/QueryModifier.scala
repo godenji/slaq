@@ -57,12 +57,12 @@ object TakeDrop {
   def take(modifiers: List[QueryModifier], node: Column[Int]) =
     extract[TakeDrop](modifiers) {
       case Some(TakeDrop(None, d, _)) => TakeDrop(Some(node), d, compareNode = d)
-      case _                          => TakeDrop(Some(node), None)
+      case _ => TakeDrop(Some(node), None)
     }
   def drop(modifiers: List[QueryModifier], node: Column[Int]) =
     extract[TakeDrop](modifiers) {
       case Some(TakeDrop(t, None, _)) => TakeDrop(t, Some(node), compareNode = t)
-      case _                          => TakeDrop(None, Some(node))
+      case _ => TakeDrop(None, Some(node))
     }
 
   /*

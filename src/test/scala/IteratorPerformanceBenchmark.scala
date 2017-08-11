@@ -35,7 +35,8 @@ object IteratorPerformanceBenchmark {
           val it = inv.elements()
           try {
             while (it.hasNext) buf += it.next
-          } finally { it.close() }
+          }
+          finally { it.close() }
         }
         measure("elements.foreach") { inv.elements().foreach(i => buf += i) }
         r += 1

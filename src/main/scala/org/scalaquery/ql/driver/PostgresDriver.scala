@@ -66,7 +66,7 @@ class PostgresQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Opti
 
     case TakeDrop(Some(t), None, _) => appendLimitValue(b += " LIMIT ", t)
     case TakeDrop(None, Some(d), _) => appendLimitValue(b += " OFFSET ", d)
-    case _                          =>
+    case _ =>
   }
 
   override protected def appendGroupClause(b: SqlBuilder): Unit =
@@ -126,8 +126,8 @@ class PostgresQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Opti
           x match {
             // aggregrate column, no need to append
             case _: SimpleFunction | ColumnOps.CountDistinct(_) =>
-            case _: Table[_] | _: Table.Alias                   => matchTable(x)
-            case nc: NamedColumn[_]                             => matchColumn(nc)
+            case _: Table[_] | _: Table.Alias => matchTable(x)
+            case nc: NamedColumn[_] => matchColumn(nc)
             case p: Projection[_] =>
               p.nodeChildren.foreach {
                 case (nc: NamedColumn[_]) =>
@@ -139,7 +139,7 @@ class PostgresQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Opti
           }
         }
       case _: Table[_] | _: Table.Alias => matchTable(node)
-      case _                            => //println(s"outer fallback $node")
+      case _ => //println(s"outer fallback $node")
     }
   }
 }
@@ -153,7 +153,8 @@ class PostgresDDLBuilder(table: Table[_], profile: PostgresDriver) extends DDLBu
       if (autoIncrement) {
         sb append "SERIAL"
         autoIncrement = false
-      } else sb append sqlType
+      }
+      else sb append sqlType
       appendOptions(sb)
     }
   }

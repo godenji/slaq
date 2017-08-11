@@ -25,7 +25,7 @@ final class InsertInvoker[T, U](unpackable: Unpackable[T, U], profile: Profile) 
   def insert[V, TT](value: V)(implicit ev: PackedUnpackedUnion[TT, U, V], session: Session): Int =
     ev.fold(
       u =>
-      insertValue(u),
+        insertValue(u),
       (t, unpack) => insertExpr(t)(unpack, session)
     )(value)
 

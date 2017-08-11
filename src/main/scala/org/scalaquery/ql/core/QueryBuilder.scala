@@ -94,13 +94,13 @@ abstract class QueryBuilder(
    * OperatorColumn show
    */
   private final def show[T](c: OperatorColumn[T], b: SqlBuilder): Unit = c match {
-    case Cols.Is(l, NullColumn)           =>
+    case Cols.Is(l, NullColumn) =>
       b += '('; expr(l, b); b += " IS NULL)"
-    case Cols.Is(l, r)                    =>
+    case Cols.Is(l, r) =>
       b += '('; expr(l, b); b += '='; expr(r, b); b += ')'
     case Cols.Not(Cols.Is(l, NullColumn)) =>
       b += '('; expr(l, b); b += " IS NOT NULL)"
-    case Cols.Not(e)                      =>
+    case Cols.Not(e) =>
       b += "(NOT "; expr(e, b); b += ')'
 
     case fk: ForeignKey[_, _] =>

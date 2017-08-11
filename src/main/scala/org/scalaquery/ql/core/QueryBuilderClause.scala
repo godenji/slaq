@@ -90,7 +90,8 @@ trait QueryBuilderClause { self: QueryBuilder =>
     if (isDrop) {
       if (Some(dropColumn) == compareColumn) None
       else Some(takeColumn)
-    } else if (Some(takeColumn) == compareColumn) Some(dropColumn)
+    }
+    else if (Some(takeColumn) == compareColumn) Some(dropColumn)
     else None
   }
 

@@ -23,7 +23,8 @@ object MFunctionColumn {
       "getFunctionColumns",
       classOf[String], classOf[String], classOf[String], classOf[String]
     )
-  } catch { case _: NoSuchMethodException => null }
+  }
+  catch { case _: NoSuchMethodException => null }
 
   def getFunctionColumns(functionPattern: MQName, columnNamePattern: String = "%") = {
     /* to support Java pre-1.6 use:
@@ -43,9 +44,9 @@ object MFunctionColumn {
                                     functionPattern.name, columnNamePattern)
     ) { r =>
         MFunctionColumn(MQName.from(r), r<<, r<<, r<<, r<<, r<<, r<<, r<<, r<<, r.nextShort match {
-          case DatabaseMetaData.functionNoNulls  => Some(false)
+          case DatabaseMetaData.functionNoNulls => Some(false)
           case DatabaseMetaData.functionNullable => Some(true)
-          case _                                 => None
+          case _ => None
         }, r<<, r<<, r<<, DatabaseMeta.yesNoOpt(r), r<<)
       }
   }

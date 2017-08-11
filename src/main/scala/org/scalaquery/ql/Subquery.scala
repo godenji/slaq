@@ -26,9 +26,9 @@ object Union {
   def query[P, U, O >: P, T >: U, R](left: Query[P, U], right: Query[O, T], all: Boolean)(unpackable: Unpackable[_ <: P, _ <: U], reify: Reify[P, R]): Query[R, U] = {
 
     def mapper(n: Node) = n match {
-      case c: Column[_]             => c.typeMapper
+      case c: Column[_] => c.typeMapper
       case SubqueryColumn(_, _, tm) => tm
-      case _                        => Fail("Expected Column or SubqueryColumn")
+      case _ => Fail("Expected Column or SubqueryColumn")
     }
     def f[PP](unpackable: Unpackable[PP, _ <: U], node: Node) = Unpackable(
       unpackable.value match {

@@ -27,7 +27,7 @@ object DatabaseMeta {
       case t: Throwable =>
         (t match {
           case i: InvocationTargetException => i.getCause()
-          case other                        => other
+          case other => other
         }) match {
           case a: AbstractMethodError => null
           case other                  => throw other

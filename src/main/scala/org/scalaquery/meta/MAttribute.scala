@@ -21,9 +21,9 @@ object MAttribute {
     _.metaData.getAttributes(typePattern.catalog_?, typePattern.schema_?, typePattern.name, attributeNamePattern)
   ) { r =>
       MAttribute(MQName.from(r), r<<, r<<, r<<, r<<, r<<, r<<, r.nextInt match {
-        case DatabaseMetaData.attributeNoNulls  => Some(false)
+        case DatabaseMetaData.attributeNoNulls => Some(false)
         case DatabaseMetaData.attributeNullable => Some(true)
-        case _                                  => None
+        case _ => None
       }, r<<, r<<, r.skip.skip<<, r<<, DatabaseMeta.yesNoOpt(r), MQName.optionalFrom(r), r<<)
     }
 }

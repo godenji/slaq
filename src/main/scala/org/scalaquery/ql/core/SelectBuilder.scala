@@ -24,7 +24,7 @@ trait SelectBuilder { self: QueryBuilder with QueryBuilderAction =>
     def build(b: SqlBuilder, rename: Boolean): Unit = {
       val takeNone = queryModifiers[TakeDrop] match {
         case TakeDrop(Some(ConstColumn(0)), _, _) :: _ => true
-        case _                                         => false
+        case _ => false
       }
       selectSlot = b.createSlot
       selectSlot += "SELECT "

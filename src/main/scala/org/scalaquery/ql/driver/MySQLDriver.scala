@@ -70,8 +70,8 @@ class MySQLQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[
   override protected def show(c: Node, b: SqlBuilder): Unit = c match {
     case EscFunction("concat", l, r) =>
       b += "concat("; expr(l, b); b += ','; expr(r, b); b += ')'
-    case Sequence.Nextval(seq)       => b += s"${quote(seq.name + "_nextval")}()"
-    case Sequence.Currval(seq)       => b += s"${quote(seq.name + "_currval")}()"
+    case Sequence.Nextval(seq) => b += s"${quote(seq.name + "_nextval")}()"
+    case Sequence.Currval(seq) => b += s"${quote(seq.name + "_currval")}()"
     case a @ AsColumnOf(ch, name) =>
       val tn = name.getOrElse(mapTypeName(a.typeMapper(profile)))
       b += "{fn convert("; expr(ch, b); b += s", $tn)}"
@@ -87,7 +87,7 @@ class MySQLQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[
     case TakeDrop(Some(t), None, _) => appendLimitValue(b += " LIMIT ", t)
     case TakeDrop(None, Some(d), _) =>
       appendLimitValue(b += " LIMIT ", d); b += ",18446744073709551615"
-    case _                          =>
+    case _ =>
   }
 
   override protected def appendOrdering(o: Ordering, b: SqlBuilder) {
@@ -96,7 +96,8 @@ class MySQLQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[
       b += "isnull("
       expr(o.by, b)
       b += "),"
-    } else if (o.nullOrdering == Ordering.NullsFirst && desc) {
+    }
+    else if (o.nullOrdering == Ordering.NullsFirst && desc) {
       b += "isnull("
       expr(o.by, b)
       b += ") desc,"
@@ -134,7 +135,8 @@ class MySQLSequenceDDLBuilder[T](seq: Sequence[T], profile: MySQLDriver) extends
         s"if(id-${-increment}<$minValue,$maxValue,id-${-increment})"
       else
         s"if(id+${increment}>$maxValue,$minValue,id+${increment})"
-    } else {
+    }
+    else {
       "id+(" + increment + ")"
     }
     new DDL {

@@ -130,7 +130,8 @@ class SQLiteQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option
       b += '('
       expr(o.by, b)
       b += ") is null,"
-    } else if (o.nullOrdering == Ordering.NullsFirst && desc) {
+    }
+    else if (o.nullOrdering == Ordering.NullsFirst && desc) {
       b += '('
       expr(o.by, b)
       b += ") is null desc,"
@@ -148,7 +149,7 @@ class SQLiteQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option
     case TakeDrop(Some(t), None, _) => appendLimitValue(b += " LIMIT ", t)
     case TakeDrop(None, Some(d), _) =>
       appendLimitValue(b += " LIMIT ", d); b += ",-1"
-    case _                          =>
+    case _ =>
   }
 
   override protected def show(c: Node, b: SqlBuilder): Unit = c match {
@@ -160,15 +161,15 @@ class SQLiteQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option
     case StdFunction("exists", q: Query[_, _]) =>
       // SQLite rejects double parens around sub-expression
       b += "exists"; show(q, b)
-    case EscFunction("ucase", ch, _)   =>
+    case EscFunction("ucase", ch, _) =>
       b += "upper("; expr(ch, b); b += ')'
-    case EscFunction("lcase", ch, _)   =>
+    case EscFunction("lcase", ch, _) =>
       b += "lower("; expr(ch, b); b += ')'
-    case EscFunction("mod", l, r)      =>
+    case EscFunction("mod", l, r) =>
       b += '('; expr(l, b); b += '%'; expr(r, b); b += ')'
     case EscFunction("ceiling", ch, _) =>
       b += "round("; expr(ch, b); b += "+0.5)"
-    case EscFunction("floor", ch, _)   =>
+    case EscFunction("floor", ch, _) =>
       b += "round("; expr(ch, b); b += "-0.5)"
     case EscFunction("user", _, _)     => b += "''"
     case EscFunction("database", _, _) => b += "''"

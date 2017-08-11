@@ -81,7 +81,8 @@ abstract class TestDB(val confName: String) {
       try {
         Q[Int] + "select 1 from " + driver.sqlUtils.quote(t) + " where 1 < 0" list;
         Assert.fail("Table " + t + " should not exist")
-      } catch { case _: Exception => }
+      }
+      catch { case _: Exception => }
     }
   }
   def assertUnquotedTablesExist(tables: String*)(implicit session: Session) {
@@ -97,7 +98,8 @@ abstract class TestDB(val confName: String) {
       try {
         Q[Int] + "select 1 from " + t + " where 1 < 0" list;
         Assert.fail("Table " + t + " should not exist")
-      } catch { case _: Exception => }
+      }
+      catch { case _: Exception => }
     }
   }
   def copy(src: File, dest: File) {
@@ -114,8 +116,10 @@ abstract class TestDB(val confName: String) {
           if (len < 0) cont = false
           else out.write(buf, 0, len)
         }
-      } finally in.close()
-    } finally out.close()
+      }
+      finally in.close()
+    }
+    finally out.close()
   }
   def canGetLocalTables = true
 }

@@ -101,7 +101,8 @@ trait MutatingStatementInvoker[-P, R]
             }
           })
         }
-      } finally { pr.close() }
+      }
+      finally { pr.close() }
     )
   }
 }

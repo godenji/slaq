@@ -90,7 +90,8 @@ class MetaTest(tdb: TestDB) extends DBTest(tdb) {
         if (tdb.driver == SQLiteDriver)
           try {
             for (i <- t.getIndexInfo()) println("    " + i)
-          } catch { case _: SQLException => null }
+          }
+          catch { case _: SQLException => null }
         else for (i <- t.getIndexInfo()) println("    " + i)
       }
 

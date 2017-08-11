@@ -73,7 +73,8 @@ class HsqldbDDLBuilder(table: Table[_], profile: HsqldbDriver) extends DDLBuilde
       addIndexColumnList(idx.on, sb, idx.table.tableName)
       sb append ')'
       sb.toString
-    } else super.createIndex(idx)
+    }
+    else super.createIndex(idx)
   }
 }
 
@@ -118,7 +119,7 @@ class HsqldbQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option
 
     case TakeDrop(Some(t), None, _) => appendLimitValue(b += " LIMIT ", t)
     case TakeDrop(None, Some(d), _) => appendLimitValue(b += " OFFSET ", d)
-    case _                          =>
+    case _ =>
   }
 }
 

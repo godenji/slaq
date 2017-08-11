@@ -50,13 +50,13 @@ class H2QueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[Que
       appendLimitValue(b += " OFFSET ", d, compFn(true))
 
     case TakeDrop(Some(t), None, _) => appendLimitValue(b += " LIMIT ", t)
-    case _                          =>
+    case _ =>
   }
 }
 
 class H2SQLUtils extends SQLUtils {
   override def mapTypeName(tmd: TypeMapperDelegate[_]): String = tmd.sqlType match {
     case java.sql.Types.VARCHAR => "VARCHAR"
-    case _                      => super.mapTypeName(tmd)
+    case _ => super.mapTypeName(tmd)
   }
 }

@@ -22,8 +22,8 @@ object MBestRowIdentifierColumn {
     ) { r =>
         MBestRowIdentifierColumn(Scope(r<<), r<<, r<<, r<<, r<<, r.skip<<, r.nextShort match {
           case DatabaseMetaData.bestRowNotPseudo => Some(false)
-          case DatabaseMetaData.bestRowPseudo    => Some(true)
-          case _                                 => None
+          case DatabaseMetaData.bestRowPseudo => Some(true)
+          case _ => None
         })
       }
 

@@ -14,7 +14,8 @@ final class SqlBuilder extends SqlBuilder.Segment { self =>
       if (segments.isEmpty || segments.last.isInstanceOf[SqlBuilder]) {
         currentStringSegment = new StringSegment
         segments += currentStringSegment
-      } else currentStringSegment = segments.last.asInstanceOf[StringSegment]
+      }
+      else currentStringSegment = segments.last.asInstanceOf[StringSegment]
     }
     currentStringSegment
   }

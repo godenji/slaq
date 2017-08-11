@@ -116,7 +116,8 @@ trait Invoker[-P, +R] { self =>
         val cont = _iter.asInstanceOf[Cont[RR, B]]
         _iter = cont.k(El(it.next))
       }
-    } finally it.close()
+    }
+    finally it.close()
     _iter
   }
 
