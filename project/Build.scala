@@ -56,7 +56,9 @@ object ApplicationBuild
 					"--expert", "-q", "-S", fmppSrc.getPath, "-O", output.getPath,
 					"--replace-extensions=fm, scala", "-M", "execute(**/*.fm), ignore(**/*)"
 				)
-				toError(r.run("fmpp.tools.CommandLine", cp.files, args, s.log))
+        r.run("fmpp.tools.CommandLine", cp.files, args, s.log).foreach(
+          sys.error
+        )
 				(output ** "*.scala").get.toSet
 			}
     cachedFun(inFiles).toSeq
