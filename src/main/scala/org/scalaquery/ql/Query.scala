@@ -50,12 +50,16 @@ sealed abstract class Query[+P, +U] extends Node {
     new QueryWrap[P, U](unpackable, conditions, modifiers)
   }
 
+  def subquery[U2 >: U, R](implicit reify: Reify[P, R]) = {
+    Subquery.query(this)(unpackable, reify)
+  }
+
   def union[P2 >: P, U2 >: U, R](right: Query[P2, U2])(implicit reify: Reify[P2, R]): Query[R, U] = union(right, false)
 
   def unionAll[P2 >: P, U2 >: U, R](right: Query[P2, U2])(implicit reify: Reify[P2, R]): Query[R, U] = union(right, true)
 
   private def union[P2 >: P, U2 >: U, R](right: Query[P2, U2], all: Boolean)(implicit reify: Reify[P, R]) =
-    Union.query(this, right, all)(unpackable, reify)
+    Subquery.union(this, right, all)(unpackable, reify)
 
   def take(num: Int): Query[P, U] = take(ConstColumn(num))
   def drop(num: Int): Query[P, U] = drop(ConstColumn(num))

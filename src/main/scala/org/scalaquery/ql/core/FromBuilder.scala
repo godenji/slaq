@@ -72,6 +72,10 @@ trait FromBuilder { self: QueryBuilder with QueryBuilderAction =>
       table match {
         case Table.Alias(t: Table[_]) => show(t)
         case t: Table[_]              => show(t)
+        case Subquery(q: Query[_, _], rename) =>
+          b += "("
+          subQueryBuilder(q).Select.build(b, rename)
+          b += s") ${quote(alias)}"
         case Subquery(Union(all, sqs), rename) =>
           b += s"($lp"
           var first = true

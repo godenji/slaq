@@ -54,7 +54,12 @@ abstract class QueryBuilder(
             delimit( // delegate is Join, show parent Table
               show(p.product.productElement(i).asInstanceOf[Table[_]], b)
             )
-          case (n, _) => delimit(expr(n, b))
+          case (n: ProductNode, _) =>
+            n.nodeChildren.foreach { x =>
+              delimit(expr(x, b))
+            }
+          case (n, _) =>
+            delimit(expr(n, b))
         }
       case j: Join => // query yields a single table (i.e. non-product/projection)
         val t = query.unpackable.value.asInstanceOf[Table[_]]
