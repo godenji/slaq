@@ -38,7 +38,7 @@ lazy val root = (project in file(".")).
       logBuffered := false,
       offline := true,
       makePomConfiguration ~= (
-        _.copy(configurations = Some(Seq(Compile, Runtime)))
+        _.withConfigurations(Some(Vector(Compile, Runtime)))
       )
     ):_*
   )

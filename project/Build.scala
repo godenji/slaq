@@ -11,17 +11,17 @@ object ApplicationBuild
 
   /* FMPP Task */
   lazy val fmpp = TaskKey[Seq[File]]("fmpp")
-  lazy val fmppConfig = config("fmpp") hide
+  lazy val FmppConfig = config("fmpp") hide
   lazy val fmppSettings =
     inConfig(Compile)(Seq(sourceGenerators += fmpp, fmpp := fmppTask.value)) ++
       Seq(
         libraryDependencies += (
-          "net.sourceforge.fmpp" % "fmpp" % "0.9.15" % fmppConfig.name
+          "net.sourceforge.fmpp" % "fmpp" % "0.9.15" % FmppConfig.name
         ),
-        ivyConfigurations += fmppConfig,
-        fullClasspath in fmppConfig := (
+        ivyConfigurations += FmppConfig,
+        fullClasspath in FmppConfig := (
           update.map(
-            _ select configurationFilter(fmppConfig.name) map Attributed.blank
+            _ select configurationFilter(FmppConfig.name) map Attributed.blank
           )
         ).value,
         // Add generated sources to sources JAR
@@ -40,22 +40,20 @@ object ApplicationBuild
 
   lazy val fmppTask = Def.task {
     val (cp, r, output, s, srcDir) = (
-      (fullClasspath in fmppConfig).value, (runner in fmpp).value,
+      (fullClasspath in FmppConfig).value, (runner in fmpp).value,
       sourceManaged.value, streams.value, sourceDirectory.value
     )
     val fmppSrc = srcDir / "scala"
     val inFiles = (fmppSrc ** "*.fm" get).toSet
     val cachedFun =
-      FileFunction.cached(s.cacheDirectory / "fmpp", outStyle = FilesInfo.exists) {
-        (in: Set[File]) =>
-
+      FileFunction.cached(s.cacheDirectory / "fmpp") { (in: Set[File]) =>
           IO.delete(output ** "*.scala" get)
           val args = List(
             "--expert", "-q", "-S", fmppSrc.getPath, "-O", output.getPath,
             "--replace-extensions=fm, scala", "-M", "execute(**/*.fm), ignore(**/*)"
           )
-          r.run("fmpp.tools.CommandLine", cp.files, args, s.log).foreach(
-            sys.error
+          r.run("fmpp.tools.CommandLine", cp.files, args, s.log).failed.foreach(
+            sys error _.getMessage
           )
           (output ** "*.scala").get.toSet
       }
