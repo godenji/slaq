@@ -8,7 +8,7 @@ import org.scalaquery.session.Session
  */
 object CodeGen {
 
-  def output(table: MTable, out: PrintWriter)(implicit session: Session) {
+  def output(table: MTable, out: PrintWriter)(implicit session: Session): Unit = {
     val columns = table.getColumns.list
     val pkeys = table.getPrimaryKeys.mapResult(k => (k.column, k)).list.toMap
     if (!columns.isEmpty) {
@@ -22,7 +22,7 @@ object CodeGen {
     }
   }
 
-  def output(c: MColumn, pkey: Option[MPrimaryKey], out: PrintWriter)(implicit session: Session) {
+  def output(c: MColumn, pkey: Option[MPrimaryKey], out: PrintWriter)(implicit session: Session): Unit = {
     out.print("  def " + mkScalaName(c.column, false) + " = column[" + scalaTypeFor(c) + "](\"" + c.column + "\"")
     for (n <- c.sqlTypeName) {
       out.print(", O DBType \"" + n + "")

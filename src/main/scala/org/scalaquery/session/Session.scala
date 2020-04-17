@@ -134,11 +134,11 @@ class BaseSession private[session] (db: Database) extends Session {
     }
   }
 
-  def close() {
+  def close(): Unit = {
     if (open) conn.close()
   }
 
-  def rollback() {
+  def rollback(): Unit = {
     if (conn.getAutoCommit) Fail(
       "Cannot roll back session in auto-commit mode"
     )

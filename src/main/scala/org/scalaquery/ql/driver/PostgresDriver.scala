@@ -148,7 +148,7 @@ class PostgresDDLBuilder(table: Table[_], profile: PostgresDriver) extends DDLBu
   import profile.sqlUtils._
 
   protected class PostgresColumnDDLBuilder(column: NamedColumn[_]) extends ColumnDDLBuilder(column) {
-    override def appendColumn(sb: StringBuilder) {
+    override def appendColumn(sb: StringBuilder): Unit = {
       sb append quote(column.name) append ' '
       if (autoIncrement) {
         sb append "SERIAL"

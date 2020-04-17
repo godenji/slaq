@@ -81,7 +81,7 @@ trait Invoker[-P, +R] { self =>
   /**
    * Execute the statement and call f for each converted row of the result set.
    */
-  final def foreach(param: P, f: R => Unit)(implicit session: Session) {
+  final def foreach(param: P, f: R => Unit)(implicit session: Session): Unit = {
     val it = elements(param)
     try { it.foreach(f) } finally { it.close() }
   }
@@ -91,7 +91,7 @@ trait Invoker[-P, +R] { self =>
    *
    * @param maxRows Maximum number of rows to read from the result (0 for unlimited).
    */
-  final def foreach(param: P, f: R => Unit, maxRows: Int)(implicit session: Session) {
+  final def foreach(param: P, f: R => Unit, maxRows: Int)(implicit session: Session): Unit = {
     val it = elementsTo(param, maxRows)
     try { it.foreach(f) } finally { it.close() }
   }

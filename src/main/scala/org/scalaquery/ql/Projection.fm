@@ -10,7 +10,7 @@ sealed trait Projection[T <: Product]
   type V = T
   val product = this
 
-  final def setParameter(profile:Profile, ps: PositionedParameters, value: Option[T]) {
+  final def setParameter(profile:Profile, ps: PositionedParameters, value: Option[T]): Unit = {
     for(i <- 0 until productArity) {
       productElement(i).asInstanceOf[Column[Any]].setParameter(
       	profile, ps, value.map(_.productElement(i))
@@ -18,7 +18,7 @@ sealed trait Projection[T <: Product]
     }
   }
 
-  final def updateResult(profile:Profile, rs: PositionedResult, value: T) {
+  final def updateResult(profile:Profile, rs: PositionedResult, value: T): Unit = {
   	for(i <- 0 until productArity)
   		productElement(i).asInstanceOf[Column[Any]].
   			updateResult(profile, rs, value.productElement(i))

@@ -19,7 +19,7 @@ abstract class StaticQuery[-P, +R](query: String, rconv: GetResult[R], pconv: Se
 
   def +(s: String) = copy(query + s)
   def +?[T](v: T)(implicit p: SetParameter[T]) = copy(query + '?', new SetParameter[P] {
-    def apply(param: P, pp: PositionedParameters) {
+    def apply(param: P, pp: PositionedParameters): Unit = {
       pconv(param, pp)
       p(v, pp)
     }

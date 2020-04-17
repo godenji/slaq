@@ -28,7 +28,7 @@ final class SqlBuilder extends SqlBuilder.Segment { self =>
 
   def +?=(f: Setter) = { ss.setters append f; ss.sb append '?'; this }
 
-  def sep[T](sequence: Traversable[T], separator: String)(f: T => Unit) {
+  def sep[T](sequence: Traversable[T], separator: String)(f: T => Unit): Unit = {
     var first = true
     for (x <- sequence) {
       if (first) first = false else self += separator
@@ -90,7 +90,7 @@ object SqlBuilder {
     val sb = new StringBuilder(32)
     val setters = new ArrayBuffer[Setter]
 
-    def appendTo(res: StringBuilder, setters: ArrayBuffer[Setter]) {
+    def appendTo(res: StringBuilder, setters: ArrayBuffer[Setter]): Unit = {
       res append sb
       setters ++= this.setters
     }

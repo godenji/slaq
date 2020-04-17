@@ -67,19 +67,19 @@ trait MutatingStatementInvoker[-P, R]
         var current: R = null.asInstanceOf[R]
         val mu = new ResultSetMutator[R] {
           def row = current
-          def row_=(value: R) {
+          def row_=(value: R): Unit = {
             pr.restart
             updateRowValues(pr, value)
             rs.updateRow()
           }
-          def insert(value: R) {
+          def insert(value: R): Unit = {
             rs.moveToInsertRow()
             pr.restart
             updateRowValues(pr, value)
             rs.insertRow()
             rs.moveToCurrentRow()
           }
-          def delete() {
+          def delete(): Unit = {
             rs.deleteRow()
             if (previousAfterDelete) rs.previous()
           }
@@ -93,7 +93,7 @@ trait MutatingStatementInvoker[-P, R]
             def row = Fail("After end of result set")
             def row_=(value: R) = Fail("After end of result set")
             def delete() = Fail("After end of result set")
-            def insert(value: R) {
+            def insert(value: R): Unit = {
               rs.moveToInsertRow()
               pr.restart
               updateRowValues(pr, value)

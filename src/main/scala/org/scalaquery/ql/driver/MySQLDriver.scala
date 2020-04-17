@@ -90,7 +90,7 @@ class MySQLQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[
     case _ =>
   }
 
-  override protected def appendOrdering(o: Ordering, b: SqlBuilder) {
+  override protected def appendOrdering(o: Ordering, b: SqlBuilder): Unit = {
     val desc = o.isInstanceOf[Ordering.Desc]
     if (o.nullOrdering == Ordering.NullsLast && !desc) {
       b += "isnull("

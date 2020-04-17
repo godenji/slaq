@@ -17,7 +17,7 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
     protected var defaultLiteral: String = null
     init()
 
-    protected def init() {
+    protected def init(): Unit = {
       for (o <- column.options) handleColumnOption(o)
       if (sqlType eq null) sqlType = mapTypeName(tmDelegate)
     }
@@ -33,13 +33,13 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
       case _                    =>
     }
 
-    def appendColumn(sb: StringBuilder) {
+    def appendColumn(sb: StringBuilder): Unit = {
       sb append quote(column.name) append ' '
       sb append sqlType
       appendOptions(sb)
     }
 
-    protected def appendOptions(sb: StringBuilder) {
+    protected def appendOptions(sb: StringBuilder): Unit = {
       if (defaultLiteral ne null) sb append " DEFAULT " append defaultLiteral
       if (notNull) sb append " NOT NULL"
       if (autoIncrement) sb append " AUTO_INCREMENT"
@@ -89,7 +89,7 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
     sb.toString
   }
 
-  protected def addForeignKey(fk: ForeignKey[_ <: Table[_], _], sb: StringBuilder) {
+  protected def addForeignKey(fk: ForeignKey[_ <: Table[_], _], sb: StringBuilder): Unit = {
     sb append "CONSTRAINT " append quote(fk.name) append " FOREIGN KEY("
     addForeignKeyColumnList(fk.linearizedSourceColumns, sb, table.tableName)
     sb append ") REFERENCES " append quote(fk.targetTable.tableName) append "("
@@ -104,7 +104,7 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
     sb.toString
   }
 
-  protected def addPrimaryKey(pk: PrimaryKey, sb: StringBuilder) {
+  protected def addPrimaryKey(pk: PrimaryKey, sb: StringBuilder): Unit = {
     sb append "CONSTRAINT " append quote(pk.name) append " PRIMARY KEY("
     addPrimaryKeyColumnList(pk.columns, sb, table.tableName)
     sb append ")"

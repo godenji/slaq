@@ -76,7 +76,7 @@ class SQLiteDDLBuilder(table: Table[_], profile: SQLiteDriver)
   extends DDLBuilder(table, profile) {
 
   protected class SQLiteColumnDDLBuilder(column: NamedColumn[_]) extends ColumnDDLBuilder(column) {
-    override protected def appendOptions(sb: StringBuilder) {
+    override protected def appendOptions(sb: StringBuilder): Unit = {
       if (defaultLiteral ne null) sb append " DEFAULT " append defaultLiteral
       if (autoIncrement) sb append " PRIMARY KEY AUTOINCREMENT"
       else if (notNull) sb append " NOT NULL"
@@ -124,7 +124,7 @@ class SQLiteQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option
   protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
     new SQLiteQueryBuilder(query, nc, Some(this), profile)
 
-  override protected def appendOrdering(o: Ordering, b: SqlBuilder) {
+  override protected def appendOrdering(o: Ordering, b: SqlBuilder): Unit = {
     val desc = o.isInstanceOf[Ordering.Desc]
     if (o.nullOrdering == Ordering.NullsLast && !desc) {
       b += '('

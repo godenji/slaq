@@ -21,8 +21,8 @@ sealed abstract class PositionedResult(val rs: ResultSet)
   final def hasMoreColumns = pos < numColumns
 
   final def skip = { pos += 1; this }
-  final def restart { pos = startPos }
-  final def rewind { pos = Int.MinValue }
+  final def restart: Unit = { pos = startPos }
+  final def rewind: Unit = { pos = Int.MinValue }
 
   def nextRow = {
     val ret = (pos == Int.MinValue) || rs.next
@@ -180,7 +180,7 @@ abstract class PositionedResultIterator[+T](_rs: ResultSet, maxRows: Int)
     }
   }
 
-  final def close() {
+  final def close(): Unit = {
     if (!closed) {
       closeUnderlying()
       closed = true
@@ -190,5 +190,5 @@ abstract class PositionedResultIterator[+T](_rs: ResultSet, maxRows: Int)
   protected def extractValue(): T
   protected def closeUnderlying(): Unit
 
-  final override def foreach[U](f: T => U) { while (nextRow) f(extractValue()) }
+  final override def foreach[U](f: T => U): Unit = { while (nextRow) f(extractValue()) }
 }

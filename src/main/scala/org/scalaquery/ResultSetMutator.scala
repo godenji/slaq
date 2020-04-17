@@ -10,12 +10,12 @@ trait ResultSetMutator[T] {
   /**
    * Update the current row.
    */
-  def row_=(value: T)
+  def row_=(value: T): Unit
 
   /**
    * Insert a new row.
    */
-  def insert(value: T)
+  def insert(value: T): Unit
 
   /**
    * Delete the current row.
