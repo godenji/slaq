@@ -1,6 +1,7 @@
 package org.scalaquery
 
 import scala.collection.immutable.Map
+import scala.collection.Factory
 import scala.collection.generic.CanBuildFrom
 import org.scalaquery.session.Session
 import org.scalaquery.util.CloseableIterator
@@ -54,13 +55,13 @@ trait Invoker[-P, +R] { self =>
   final def list(param: P)(implicit session: Session) = build[List[R]](param)
 
   final def toMap[T, U](param: P)(implicit session: Session, ev: R <:< (T, U)): Map[T, U] =
-    build[Map[T, U]](param)(session, implicitly[CanBuildFrom[Nothing, (T, U), Map[T, U]]].asInstanceOf[CanBuildFrom[Nothing, R, Map[T, U]]])
+    build[Map[T, U]](param)(session, implicitly[Factory[(T, U), Map[T, U]]].asInstanceOf[Factory[R, Map[T, U]]])
 
   /**
    * Execute the statement and return a fully materialized collection of the specified type.
    */
-  final def build[T](param: P)(implicit session: Session, canBuildFrom: CanBuildFrom[Nothing, R, T]): T = {
-    val b = canBuildFrom()
+  final def build[T](param: P)(implicit session: Session, canBuildFrom: Factory[R, T]): T = {
+    val b = canBuildFrom.newBuilder
     foreach(param, { x => b += x }, 0)
     b.result()
   }
@@ -74,7 +75,7 @@ trait Invoker[-P, +R] { self =>
     /**
      * Execute the statement and return a fully materialized collection.
      */
-    def apply[RR >: R]()(implicit session: Session, canBuildFrom: CanBuildFrom[Nothing, RR, C[RR]]) =
+    def apply[RR >: R]()(implicit session: Session, canBuildFrom: Factory[RR, C[RR]]) =
       build[C[RR]](().asInstanceOf[P])(session, canBuildFrom)
   }
 

@@ -34,7 +34,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
     def * = userID ~ orderID ~ product ~ shipped ~ rebate
   }
 
-  @Test def test() {
+  @Test def test(): Unit = {
     db withSession { implicit ss: Session =>
 
       val ddl = Users.ddl ++ Orders.ddl

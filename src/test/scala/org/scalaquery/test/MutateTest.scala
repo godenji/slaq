@@ -14,7 +14,7 @@ object MutateTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem)
 class MutateTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def test() {
+  @Test def test(): Unit = {
 
     case class User(id: Int, first: String, last: String)
     object Users extends Table[User]("users") {

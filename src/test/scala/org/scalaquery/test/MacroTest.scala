@@ -7,7 +7,7 @@ import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.session._
 import org.scalaquery.test.util._
 import org.scalaquery.test.util.TestDB._
-import godenji.macros.isomorphism._
+import godenji.iso._
 
 object MacroTest extends DBTestObject(H2Mem)
 
@@ -16,7 +16,7 @@ case class UserId(value: Int) extends AnyVal with MappedTo[Int]
 class MacroTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def testMappedEntity() {
+  @Test def testMappedEntity(): Unit = {
 
     case class User(id: UserId, first: String, last: String)
 
@@ -35,7 +35,7 @@ class MacroTest(tdb: TestDB) extends DBTest(tdb) {
     }
   }
 
-  @Test def testMappedType() {
+  @Test def testMappedType(): Unit = {
 
     sealed trait Bool
     case object True extends Bool

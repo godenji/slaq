@@ -21,7 +21,7 @@ class PagingTest(tdb: TestDB) extends DBTest(tdb) {
     def * = id
   }
 
-  @Test def test() {
+  @Test def test(): Unit = {
     db withSession { implicit ss: Session =>
 
       IDs.ddl.create;

@@ -37,7 +37,7 @@ class MetaTest(tdb: TestDB) extends DBTest(tdb) {
     def userFK = foreignKey("user_fk", userID, Users)(_.id)
   }
 
-  @Test def test() {
+  @Test def test(): Unit = {
 
     db withSession { implicit ss: Session =>
 

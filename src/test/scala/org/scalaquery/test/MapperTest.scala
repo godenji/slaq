@@ -14,7 +14,7 @@ object MapperTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, Hsqldb
 class MapperTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def testMappedEntity() {
+  @Test def testMappedEntity(): Unit = {
 
     case class User(id: Option[Int], first: String, last: String)
 
@@ -58,7 +58,7 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
     }
   }
 
-  @Test def testUpdate() {
+  @Test def testUpdate(): Unit = {
 
     case class Data(a: Int, b: Int)
 
@@ -84,7 +84,7 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
     }
   }
 
-  @Test def testMappedType() {
+  @Test def testMappedType(): Unit = {
 
     sealed trait Bool
     case object True extends Bool

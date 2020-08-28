@@ -25,14 +25,14 @@ sealed trait Projection[T <: Product]
   }
 
   final def getAllColumnTypeMappers = 
-  	0.until(productArity).flatMap[TypeMapper[_], Vector[TypeMapper[_]]](
+  	0.until(productArity).flatMap[TypeMapper[_]](
     	i => productElement(i).asInstanceOf[Column[_]].getAllColumnTypeMappers
-    )(collection.breakOut)
+    ).to(IndexedSeq)
 
   final def getLinearizedNodes: IndexedSeq[Node] =
     (0 until productArity).map(i => 
     	Node(productElement(i).asInstanceOf[Column[Any]])
-    )(collection.breakOut)
+    ).to(IndexedSeq)
 
   @inline final def <>[R](f: T => R, g: R => Option[T]): 
   	MappedProjection[R,T] = new MappedProjection(this, f, g)

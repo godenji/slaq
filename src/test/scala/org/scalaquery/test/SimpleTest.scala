@@ -15,7 +15,7 @@ class SimpleTest(tdb: TestDB) extends DBTest(tdb) {
 
   case class User(id: Int, name: String)
 
-  @Test def test() {
+  @Test def test(): Unit = {
     def getUsers(id: Option[Int]) = {
       val q = Q[User] + "select id, name from users "
       id map { q + "where id =" +? _ } getOrElse q

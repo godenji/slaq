@@ -31,7 +31,7 @@ class UnionTest(tdb: TestDB) extends DBTest(tdb) {
     def departmentIs(dept: String) = manager in Managers.filter(_.department is dept).map(_.id)
   }
 
-  @Test def test() {
+  @Test def test(): Unit = {
     db withSession { implicit ss: Session =>
 
       (Managers.ddl ++ Employees.ddl) create

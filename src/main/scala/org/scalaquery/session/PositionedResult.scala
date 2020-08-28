@@ -5,6 +5,7 @@ import java.io.Closeable
 import org.scalaquery.simple.GetResult
 import org.scalaquery.util.CloseableIterator
 import collection.generic.CanBuildFrom
+import collection.Factory
 
 /**
  * A database result positioned at a row and column.
@@ -126,8 +127,8 @@ sealed abstract class PositionedResult(val rs: ResultSet)
    */
   def close(): Unit
 
-  final def build[C[_], R](gr: GetResult[R])(implicit canBuildFrom: CanBuildFrom[Nothing, R, C[R]]): C[R] = {
-    val b = canBuildFrom()
+  final def build[C[_], R](gr: GetResult[R])(implicit canBuildFrom: Factory[R, C[R]]): C[R] = {
+    val b = canBuildFrom.newBuilder
     while (nextRow) b += gr(this)
     b.result()
   }
@@ -135,7 +136,7 @@ sealed abstract class PositionedResult(val rs: ResultSet)
   final def to[C[_]] = new To[C]()
 
   final class To[C[_]] private[PositionedResult] () {
-    def apply[R](gr: GetResult[R])(implicit session: Session, canBuildFrom: CanBuildFrom[Nothing, R, C[R]]) =
+    def apply[R](gr: GetResult[R])(implicit session: Session, canBuildFrom: Factory[R, C[R]]) =
       build[C, R](gr)
   }
 }

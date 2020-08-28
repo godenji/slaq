@@ -10,7 +10,7 @@ object StatementParametersTest extends DBTestObject(H2Mem)
 
 class StatementParametersTest(tdb: TestDB) extends DBTest(tdb) {
 
-  @Test def testExplicit() {
+  @Test def testExplicit(): Unit = {
     println("*** Explicit ***")
     db withSession { s1: Session =>
       pr("start")(s1)
@@ -28,7 +28,7 @@ class StatementParametersTest(tdb: TestDB) extends DBTest(tdb) {
     }
   }
 
-  @Test def testImplicit() {
+  @Test def testImplicit(): Unit = {
     println("*** Implicit ***")
     db withSession { implicit session: Session =>
       pr("start")
@@ -56,7 +56,7 @@ class StatementParametersTest(tdb: TestDB) extends DBTest(tdb) {
     s"$msg: ${ss.cursorType} ${ss.concurrencyType} ${ss.holdabilityType}"
   )
 
-  def check(t: ResultSetType, c: ResultSetConcurrency, h: ResultSetHoldability)(implicit ss: Session) {
+  def check(t: ResultSetType, c: ResultSetConcurrency, h: ResultSetHoldability)(implicit ss: Session): Unit = {
     assertEquals(ss.cursorType, t)
     assertEquals(ss.concurrencyType, c)
     assertEquals(ss.holdabilityType, h)

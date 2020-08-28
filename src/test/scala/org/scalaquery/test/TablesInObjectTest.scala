@@ -9,7 +9,7 @@ import org.scalaquery.ql.driver.H2Driver.Implicit._
 import org.scalaquery.ql.Table
 
 object TablesInObjectTest {
-  def main(args: Array[String]) { new TablesInObjectTest().test1() }
+  def main(args: Array[String]): Unit = { new TablesInObjectTest().test1() }
 
   object Categories extends Table[Int]("categories") {
     def id = column[Int]("id")

@@ -27,7 +27,7 @@ class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
     def * = userID ~ orderID ~ product
   }
 
-  @Test def test() {
+  @Test def test(): Unit = {
     db withSession { implicit ss: Session =>
 
       (Users.ddl ++ Orders.ddl).createStatements foreach println

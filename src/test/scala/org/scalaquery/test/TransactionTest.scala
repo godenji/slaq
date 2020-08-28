@@ -13,7 +13,7 @@ object TransactionTest extends DBTestObject(H2Disk, SQLiteDisk, Postgres, MySQL,
 class TransactionTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def test() {
+  @Test def test(): Unit = {
 
     val T = new Table[Int]("t") {
       def a = column[Int]("a")
@@ -38,10 +38,10 @@ class TransactionTest(tdb: TestDB) extends DBTest(tdb) {
     }
     db.withTransaction { implicit ss: Session =>
       val res = for {
-        a <- Right(T.insert(1)).right
-        b <- Right(bInsert).right
+        a <- Right(T.insert(1))
+        b <- Right(bInsert)
       } yield (a, b)
-      assertEquals((1, 1), res.right.get)
+      assertEquals(Right((1, 1)), res)
       ss.rollback()
     }
     assertEquals(None, db withSession { implicit ss: Session => q.firstOption })

@@ -51,7 +51,7 @@ final class InsertInvoker[T, U](unpackable: Unpackable[T, U], profile: Profile) 
     if (!useBatchUpdates || (
       values.isInstanceOf[IndexedSeq[_]] && values.length < 2
     )) Some(
-      (0 /: values) { _ + insertValue(_) }
+      values.foldLeft(0) { _ + insertValue(_) }
     )
     else session.withTransaction {
       session.withPreparedStatement(insertStatement) { st =>

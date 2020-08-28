@@ -49,8 +49,8 @@ abstract class TestDB(val confName: String) {
   def createDB() = Database.forURL(url, driver = jdbcDriver)
   def cleanUpBefore() = cleanUp()
   def cleanUpAfter() = cleanUp()
-  def cleanUp() {}
-  def deleteDBFiles(prefix: String) {
+  def cleanUp(): Unit = {}
+  def deleteDBFiles(prefix: String): Unit = {
     def deleteRec(f: File): Boolean = {
       if (f.isDirectory()) f.listFiles.forall(deleteRec _) && f.delete()
       else f.delete()
@@ -68,7 +68,7 @@ abstract class TestDB(val confName: String) {
     val tables = ResultSetInvoker[(String, String, String)](_.conn.getMetaData().getTables("", "", null, null))
     tables.list.map(_._3).sorted
   }
-  def assertTablesExist(tables: String*)(implicit session: Session) {
+  def assertTablesExist(tables: String*)(implicit session: Session): Unit = {
     for (t <- tables) {
       try Q[Int] + "select 1 from " + driver.sqlUtils.quote(t) + " where 1 < 0" list catch {
         case _: Exception =>
@@ -76,7 +76,7 @@ abstract class TestDB(val confName: String) {
       }
     }
   }
-  def assertNotTablesExist(tables: String*)(implicit session: Session) {
+  def assertNotTablesExist(tables: String*)(implicit session: Session): Unit = {
     for (t <- tables) {
       try {
         Q[Int] + "select 1 from " + driver.sqlUtils.quote(t) + " where 1 < 0" list;
@@ -85,7 +85,7 @@ abstract class TestDB(val confName: String) {
       catch { case _: Exception => }
     }
   }
-  def assertUnquotedTablesExist(tables: String*)(implicit session: Session) {
+  def assertUnquotedTablesExist(tables: String*)(implicit session: Session): Unit = {
     for (t <- tables) {
       try Q[Int] + "select 1 from " + t + " where 1 < 0" list catch {
         case _: Exception =>
@@ -93,7 +93,7 @@ abstract class TestDB(val confName: String) {
       }
     }
   }
-  def assertNotUnquotedTablesExist(tables: String*)(implicit session: Session) {
+  def assertNotUnquotedTablesExist(tables: String*)(implicit session: Session): Unit = {
     for (t <- tables) {
       try {
         Q[Int] + "select 1 from " + t + " where 1 < 0" list;
@@ -102,7 +102,7 @@ abstract class TestDB(val confName: String) {
       catch { case _: Exception => }
     }
   }
-  def copy(src: File, dest: File) {
+  def copy(src: File, dest: File): Unit = {
     dest.createNewFile()
     val out = new FileOutputStream(dest)
     try {
@@ -149,7 +149,7 @@ class ExternalTestDB(confName: String, val driver: Profile) extends TestDB(confN
 
   override def createDB() = Database.forURL(url, driver = jdbcDriver, user = configuredUserName, password = password)
 
-  override def cleanUpBefore() {
+  override def cleanUpBefore(): Unit = {
     if (drop.length > 0 || create.length > 0) {
       println("[Creating test database " + this + "]")
       Database.forURL(adminDBURL, driver = jdbcDriver, user = configuredUserName, password = password) withSession { implicit s: Session =>
@@ -159,7 +159,7 @@ class ExternalTestDB(confName: String, val driver: Profile) extends TestDB(confN
     }
   }
 
-  override def cleanUpAfter() {
+  override def cleanUpAfter(): Unit = {
     if (drop.length > 0) {
       println("[Dropping test database " + this + "]")
       Database.forURL(adminDBURL, driver = jdbcDriver, user = configuredUserName, password = password) withSession { implicit s: Session =>

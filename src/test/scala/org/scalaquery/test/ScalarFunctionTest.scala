@@ -40,8 +40,8 @@ class ScalarFunctionTest(tdb: TestDB) extends DBTest(tdb) {
     checkLit(-17.5)
     checkLit(17.5f)
     checkLit(-17.5f)
-    checkLit(42l)
-    checkLit(-42l)
+    checkLit(42L)
+    checkLit(-42L)
     checkLit("foo")
 
     check(Query("42".asColumnOf[Int]), 42)

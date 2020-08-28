@@ -13,7 +13,7 @@ object DataTypeTest extends DBTestObject(H2Mem, SQLiteMem, HsqldbMem, MySQL, Pos
 class DataTypeTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def testByteArray() {
+  @Test def testByteArray(): Unit = {
     object T extends Table[(Int, Array[Byte])]("test") {
       def id = column[Int]("id")
       def data = column[Array[Byte]]("data")
@@ -42,7 +42,7 @@ class DataTypeTest(tdb: TestDB) extends DBTest(tdb) {
     T.ddl.createStatements foreach println
     T.ddl.create;
 
-    def test(data: List[(Int, Int, Long, Short, Byte)]) {
+    def test(data: List[(Int, Int, Long, Short, Byte)]): Unit = {
       T.insertAll(data: _*)
       val q = for { t <- T; _ <- Query orderBy t.id } yield t
       assertEquals(data, q.list)

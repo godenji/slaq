@@ -19,7 +19,7 @@ final class ProductLinearizer(sub: IndexedSeq[ValueLinearizer[_]]) extends Value
 
   def getLinearizedNodes: IndexedSeq[Node] =
     (0 until sub.length).flatMap(i => sub(i).
-      asInstanceOf[ValueLinearizer[Any]].getLinearizedNodes)(collection.breakOut)
+      asInstanceOf[ValueLinearizer[Any]].getLinearizedNodes).to(IndexedSeq)
 
   def setParameter(profile: Profile, ps: PositionedParameters, value: Option[Product]) =
     for (i <- 0 until sub.length)

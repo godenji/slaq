@@ -17,7 +17,7 @@ object Benchmark {
     for (i <- 0 to COUNT) test1(false)
     val t1 = System.nanoTime()
     val total = (t1 - t0) / 1000000.0
-    println(COUNT + " runs tooks " + total + " ms (" + (total * 1000.0 / COUNT) + " µs per run)")
+    println(s"$COUNT runs tooks $total ms (${total * 1000.0 / COUNT} µs per run)")
   }
 
   object Users extends Table[(Int, String, String)]("users") {
@@ -33,7 +33,7 @@ object Benchmark {
     def * = userID ~ orderID
   }
 
-  def test1(print: Boolean) {
+  def test1(print: Boolean): Unit = {
     val q1 = for (u <- Users) yield u
     val q2 = for {
       u <- Users

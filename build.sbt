@@ -1,11 +1,7 @@
 import ApplicationBuild._
 
 lazy val root = (project in file(".")).
-  settings(
-    _settings(
-      appName, Seq(Libs.valueClassBindableRoot) ++ appDeps
-    )
-  ).
+  settings(_settings(appName, appDeps)).
   settings(
     fmppSettings ++ Seq(
       name := appName,
@@ -16,9 +12,13 @@ lazy val root = (project in file(".")).
         // note: tests FAIL with optimise enabled
         "-opt:l:inline",
         "-unchecked", "-deprecation", "-feature",
-        "-Ywarn-unused-import",
+        //"-Ywarn-unused-import",
         "-language:implicitConversions", "-language:postfixOps", 
         "-language:higherKinds", "-language:existentials"
+      ),
+      libraryDependencies ++= Seq(
+        "org.scala-lang.modules" %% "scala-parallel-collections" % "0.2.0",
+        "io.github.godenji" %% "isomorphic" % "0.1.7"
       ),
       description := "A type-safe database API for Scala",
       homepage := Some(url("http://scalaquery.org/")),

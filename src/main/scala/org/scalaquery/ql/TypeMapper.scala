@@ -38,7 +38,7 @@ sealed trait TypeMapper[T] extends (Profile => TypeMapperDelegate[T]) { self =>
 object TypeMapper {
   @inline implicit final def typeMapper2OptionTypeMapper[T](implicit t: TypeMapper[T]): OptionTypeMapper[T] = t.createOptionTypeMapper
 
-  import godenji.macros.isomorphism._
+  import godenji.iso._
   @inline implicit final def mappableType[T <: MappedToBase](implicit iso: Isomorphism[T], tm: TypeMapper[T#Underlying]): BaseTypeMapper[T] =
     MappedTypeMapper.base[T, T#Underlying](iso.map, iso.comap)
 

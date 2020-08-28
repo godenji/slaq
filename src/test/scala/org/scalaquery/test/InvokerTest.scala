@@ -16,7 +16,7 @@ object InvokerTest extends DBTestObject(H2Mem)
 class InvokerTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def testCollections() {
+  @Test def testCollections(): Unit = {
 
     val T = new Table[Int]("t") {
       def a = column[Int]("a")
@@ -58,7 +58,7 @@ class InvokerTest(tdb: TestDB) extends DBTest(tdb) {
     }
   }
 
-  @Test def testMap() {
+  @Test def testMap(): Unit = {
 
     val T = new Table[(Int, String)]("t") {
       def k = column[Int]("k")
@@ -78,7 +78,7 @@ class InvokerTest(tdb: TestDB) extends DBTest(tdb) {
     }
   }
 
-  @Test def testLazy() {
+  @Test def testLazy(): Unit = {
 
     val T = new Table[Int]("t") {
       def a = column[Int]("a")
@@ -90,7 +90,7 @@ class InvokerTest(tdb: TestDB) extends DBTest(tdb) {
       _ <- Query orderBy t.a
     } yield t
 
-    def setUp(implicit session: Session) {
+    def setUp(implicit session: Session): Unit = {
       T.ddl.create
       for (g <- 1 to 1000 grouped 100)
         T.insertAll(g: _*)
@@ -107,9 +107,9 @@ class InvokerTest(tdb: TestDB) extends DBTest(tdb) {
     }
 
     val it = f()
-    it.use { assertEquals((1 to 1000).toList, it.toStream.toList) }
+    it.use { assertEquals((1 to 1000).toList, it.to(LazyList)) }
     assertFail(g())
     val it2 = f()
-    it2.use { assertEquals((1 to 1000).toList, it2.toStream.toList) }
+    it2.use { assertEquals((1 to 1000).toList, it2.to(LazyList)) }
   }
 }

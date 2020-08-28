@@ -13,7 +13,7 @@ trait Node {
   def isNamedTable = false
 
   def nodeNamedChildren: Seq[(Node, String)] =
-    nodeChildren.toStream.zip(Stream.from(0).map(_.toString))
+    nodeChildren.to(LazyList).zip(LazyList.from(0).map(_.toString))
 
   def dump(dc: Node.DumpContext, prefix: String, name: String): Unit = {
     val (alias, isFresh) =

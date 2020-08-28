@@ -5,6 +5,7 @@ import org.scalaquery.ql.{Query, Table}
 import org.scalaquery.ql.driver.{Driver}, Driver.Implicit._
 import org.scalaquery.ql.TypeMapper._
 import org.scalaquery.util.NamingContext
+import scala.collection.parallel.CollectionConverters._
 
 object BenchmarkPar {
 
@@ -18,7 +19,7 @@ object BenchmarkPar {
     items.par.foreach(i => test1(false))
     val t1 = System.nanoTime()
     val total = (t1 - t0) / 1000000.0
-    println(COUNT + " runs tooks " + total + " ms (" + (total * 1000.0 / COUNT) + " µs per run)")
+    println(s"$COUNT runs tooks $total ms (${total * 1000.0 / COUNT} µs per run)")
   }
 
   object Users extends Table[(Int, String, String)]("users") {

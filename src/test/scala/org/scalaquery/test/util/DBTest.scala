@@ -1,6 +1,6 @@
 package org.scalaquery.test.util
 
-import scala.collection.JavaConverters
+import scala.jdk.CollectionConverters._
 import org.junit.Assert._
 import org.junit.{Before, After}
 import org.junit.runner.{JUnitCore, RunWith}
@@ -33,5 +33,5 @@ abstract class DBTestObject(dbs: TestDB.TestDBSpec*) {
   }
   def main(args: Array[String]) = JUnitCore.main(testClassName)
   @Parameters def parameters =
-    JavaConverters.seqAsJavaList(dbs.map(n => n(this)).filter(_.isEnabled).map(to => Array(to)))
+    dbs.map(n => n(this)).filter(_.isEnabled).map(to => Array(to)).asJava
 }

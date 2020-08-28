@@ -15,7 +15,7 @@ object BlobTest extends DBTestObject(H2Mem, /* SQLiteMem, Postgres, HsqldbMem, *
 class BlobTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def testBlob() {
+  @Test def testBlob(): Unit = {
     object T extends Table[(Int, Blob)]("test") {
       def id = column[Int]("id")
       def data = column[Blob]("data")

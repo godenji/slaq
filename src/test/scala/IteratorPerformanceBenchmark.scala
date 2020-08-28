@@ -5,7 +5,7 @@ import org.scalaquery.ql.Table
 import org.scalaquery.ql.driver.H2Driver.Implicit._
 
 object IteratorPerformanceBenchmark {
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     val Props = new Table[(String, String)]("properties") {
       def key = column[String]("key", O.PrimaryKey)
       def value = column[String]("value")
@@ -19,7 +19,7 @@ object IteratorPerformanceBenchmark {
       val inv = Query(Props).invoker
 
       val buf = new ArrayBuffer[(String, String)]
-      def measure(s: String)(f: => Any) {
+      def measure(s: String)(f: => Any): Unit = {
         val t0 = System.currentTimeMillis()
         var i = 0
         while (i < count) { buf.clear; f; i += 1; assert(buf.length == size) }

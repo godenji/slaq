@@ -14,7 +14,7 @@ object NestingTest extends DBTestObject(H2Mem /*, SQLiteMem, Postgres, MySQL, Hs
 class NestingTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def testNestedTuples() {
+  @Test def testNestedTuples(): Unit = {
 
     object T extends Table[(Int, String, String)]("T") {
       def a = column[Int]("A")

@@ -14,7 +14,7 @@ object MiscTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMe
 class MiscTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit._
 
-  @Test def isNotAndOrTest() {
+  @Test def isNotAndOrTest(): Unit = {
 
     object T extends Table[(String, String)]("users") {
       def a = column[String]("a")
@@ -43,7 +43,7 @@ class MiscTest(tdb: TestDB) extends DBTest(tdb) {
     }
   }
 
-  @Test def testNullability() {
+  @Test def testNullability(): Unit = {
 
     object T1 extends Table[String]("t1") {
       def a = column[String]("a")
@@ -81,7 +81,7 @@ class MiscTest(tdb: TestDB) extends DBTest(tdb) {
     }
   }
 
-  @Test def testLike() {
+  @Test def testLike(): Unit = {
 
     object T1 extends Table[String]("t1") {
       def a = column[String]("a")

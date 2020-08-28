@@ -22,7 +22,7 @@ object StatementVerify {
       def * = userID ~ orderID
     }
 
-    def dump(n: String, q: Query[ColumnBase[_], _]) {
+    def dump(n: String, q: Query[ColumnBase[_], _]): Unit = {
       val nc = NamingContext()
       q.dump(n + ": ", nc)
       println(Driver.buildSelect(q, nc))
@@ -31,7 +31,7 @@ object StatementVerify {
 
     val q1 = for (u <- Users) yield u
 
-    val q1b = q1.mapResult { case (id, f, l) => id + ". " + f + " " + l }
+    val q1b = q1.mapResult { case (id, f, l) => s"${id}.$f $l" }
 
     val q2 = for {
       u <- Users
