@@ -1,44 +1,69 @@
 import ApplicationBuild._
 
 lazy val root = (project in file(".")).
-  settings(_settings(appName, appDeps)).
+  settings(publishSettings("slaq")).
+  settings(fmppSettings).
   settings(
-    fmppSettings ++ Seq(
-      name := appName,
-      organizationName := "ScalaQuery", 
-      organization := "org.scalaquery",
-      scalaVersion := scalaRelease,
-      scalacOptions ++= Seq(
-        // note: tests FAIL with optimise enabled
-        "-opt:l:inline",
-        "-unchecked", "-deprecation", "-feature",
-        //"-Ywarn-unused-import",
-        "-language:implicitConversions", "-language:postfixOps", 
-        "-language:higherKinds", "-language:existentials"
-      ),
-      libraryDependencies ++= Seq(
-        "org.scala-lang.modules" %% "scala-parallel-collections" % "0.2.0",
-        "io.github.godenji" %% "isomorphic" % "0.1.7"
-      ),
-      description := "A type-safe database API for Scala",
-      homepage := Some(url("http://scalaquery.org/")),
-      startYear := Some(2008),
-      licenses += (
-        "Two-clause BSD-style license", 
-        url("http://github.com/szeiger/scala-query/blob/master/LICENSE.txt")
-      ),
-      testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v"),
-      repoKind := ((Keys.version)(v => 
-        if(v.trim.endsWith("SNAPSHOT")) "snapshots" else "releases")
-      ).value,
-      scalacOptions in doc ++= ((Keys.version).map(v => 
-        Seq("-doc-title", "ScalaQuery", "-doc-version", v))
-      ).value,
-      parallelExecution in Test := false,
-      logBuffered := false,
-      offline := true,
-      makePomConfiguration ~= (
-        _.withConfigurations(Some(Vector(Compile, Runtime)))
-      )
-    ):_*
+    name := "slaq",
+    organization := "io.github.godenji",
+    sonatypeProfileName in ThisBuild := organization.value,
+    version := "0.10.7",
+    scalaVersion := "2.13.3",
+    scalacOptions ++= Seq(
+      "-opt:l:inline",
+      "-unchecked", "-deprecation", "-feature",
+      "-Ywarn-unused",
+      "-language:implicitConversions", "-language:postfixOps",
+      "-language:higherKinds", "-language:existentials"
+    ),
+    libraryDependencies ++= appDeps,
+    credentials ++= {
+      val creds = Path.userHome / ".sonatype" / organization.value
+      if (creds.exists) Seq(Credentials(creds)) else Nil
+    },
+    testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v"),
+    parallelExecution in Test := false,
+    logBuffered := false,
   )
+
+def publishSettings(projectName: String) = Seq(
+  pomExtra := pomDetail,
+  publishMavenStyle := true,
+  publishArtifact in Test := false,
+  publishArtifact in (Compile, packageDoc) := true,
+  publishArtifact in (Compile, packageSrc) := true,
+  pomIncludeRepository := { _ => false },
+  buildInfoKeys := Seq[BuildInfoKey](version),
+  buildInfoPackage := projectName,
+  publishTo := getPublishToRepo.value
+)
+
+def getPublishToRepo = Def.setting {
+  if (isSnapshot.value)
+    Some(Opts.resolver.sonatypeSnapshots)
+  else
+    Some(Opts.resolver.sonatypeStaging)
+}
+
+def pomDetail =
+  <inceptionYear>2014</inceptionYear>
+  <url>https://github.com/godenji/slaq</url>
+  <description>A type-safe database API for Scala</description>
+  <licenses>
+    <license>
+      <name>Two-clause BSD-style license</name>
+      <url>https://github.com/godenji/slaq/blob/master/LICENSE.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>git@github.com:godenji/slaq.git</url>
+    <connection>scm:git:git@github.com:godenji/slaq</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>godenji</id>
+      <name>N.S. Cutler</name>
+      <url>https://github.com/godenji</url>
+    </developer>
+  </developers>

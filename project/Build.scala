@@ -3,13 +3,8 @@ import Keys._
 import scala.language.postfixOps
 
 object ApplicationBuild
-  extends meta.Build with Dependencies with MyBuildSettings {
+  extends Dependencies {
 
-  val repoKind = SettingKey[String](
-    "repo-kind", "Maven repository kind (\"snapshots\" or \"releases\")"
-  )
-
-  /* FMPP Task */
   lazy val fmpp = TaskKey[Seq[File]]("fmpp")
   lazy val FmppConfig = config("fmpp") hide
   lazy val fmppSettings =
