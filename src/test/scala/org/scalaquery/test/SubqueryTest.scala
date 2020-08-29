@@ -67,27 +67,6 @@ class SubqueryTest(tdb: TestDB) extends DBTest(tdb) with SubqueryModel {
     } yield (c, p, (c.id.sum, p.id.sum))
     println(q.pretty)
     q.foreach(x => println("  " + x))
-
-    //    val q = for {
-    //      c <- Categories
-    //      p <- Posts leftJoin (_.id is c.id)
-    //      _ <- Query groupBy c.id orderBy p.id
-    //    } yield (c, p, (c.id.sum, p.id.sum))
-    //
-    //    val sub = for {
-    //      (a, b, cnt) <- q.subquery
-    //      c <- Categories leftJoin (_.id is a.id)
-    //    } yield (a, b, cnt)
-    //    println(sub.pretty)
-    //    sub.foreach(x => println("  " + x))
-
-    //    val q1 = for {
-    //      c <- Categories
-    //      p <- Posts if c.id is p.category
-    //      _ <- Query orderBy p.id
-    //    } yield p.id ~ c.id ~ c.name ~ p.title
-    //assertEquals(List((2, 1), (3, 2), (4, 3), (5, 2)), q1.map(p => p._1 ~ p._2).list)
-    assertEquals(false, true)
-
+    assertEquals(Some((Some(4), Some(4))), q.list().reverse.headOption.map(_._3))
   }
 }
