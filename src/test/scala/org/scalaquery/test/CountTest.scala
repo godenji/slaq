@@ -25,16 +25,16 @@ class CountTest(tdb: TestDB) extends DBTest(tdb) {
     val q1 = Query(TestTable.id.count)
     q1.dump("q1: ")
     println("q1: " + q1.selectStatement)
-    assertEquals(5, q1.first)
+    assertEquals(5, q1.first())
 
     val q2 = TestTable.map(_.id.count)
     q2.dump("q2: ")
     println("q2: " + q2.selectStatement)
-    assertEquals(5, q2.first)
+    assertEquals(5, q2.first())
 
     val q3 = TestTable.filter(_.id < 3).map(_.id.count)
     q3.dump("q3: ")
     println("q3: " + q3.selectStatement)
-    assertEquals(2, q3.first)
+    assertEquals(2, q3.first())
   }
 }

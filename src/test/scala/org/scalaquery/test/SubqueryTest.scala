@@ -36,13 +36,13 @@ class SubqueryTest(tdb: TestDB) extends DBTest(tdb) with SubqueryModel {
 
     (Categories.ddl ++ Posts.ddl) create
 
-    Categories insertAll (
+    Categories.insertAll(
       Categories(1, "Scala"),
       Categories(2, "ScalaQuery"),
       Categories(3, "Windows"),
       Categories(4, "Software")
     )
-    Posts.title ~ Posts.category ~ Posts.category2 insertAll (
+    (Posts.title ~ Posts.category ~ Posts.category2).insertAll(
       ("Test Post", -1, 1),
       ("Formal Language Processing in Scala, Part 5", 1, 1),
       ("Efficient Parameterized Queries in ScalaQuery", 2, 2),

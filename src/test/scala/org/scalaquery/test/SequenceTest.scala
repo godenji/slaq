@@ -31,7 +31,7 @@ class SequenceTest(tdb: TestDB) extends DBTest(tdb) {
 
     val q1 = for (u <- Users) yield (mySequence.next, u.id)
     println("q1: " + q1.selectStatement)
-    assertEquals(Set((200, 1), (210, 2), (220, 3)), q1.list.toSet)
+    assertEquals(Set((200, 1), (210, 2), (220, 3)), q1.list().toSet)
   }
 
   @Test def test2(): Unit = db withSession { implicit ss: Session =>
@@ -50,7 +50,7 @@ class SequenceTest(tdb: TestDB) extends DBTest(tdb) {
       }
       val q = Query(s.next)
       println(q.selectStatement)
-      1 to count map (_ => q.first)
+      1 to count map (_ => q.first())
     }
 
     assertEquals(List(1, 2, 3, 4, 5), values(s1))

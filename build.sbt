@@ -3,6 +3,7 @@ import ApplicationBuild._
 lazy val root = (project in file(".")).
   settings(publishSettings("slaq")).
   settings(fmppSettings).
+  settings(scalaFixSettings).
   settings(
     name := "slaq",
     organization := "io.github.godenji",
@@ -12,7 +13,7 @@ lazy val root = (project in file(".")).
     scalacOptions ++= Seq(
       "-opt:l:inline",
       "-unchecked", "-deprecation", "-feature",
-      "-Ywarn-unused",
+      "-Ywarn-unused:-implicits",
       "-language:implicitConversions", "-language:postfixOps",
       "-language:higherKinds", "-language:existentials"
     ),
@@ -23,8 +24,16 @@ lazy val root = (project in file(".")).
     },
     testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v"),
     parallelExecution in Test := false,
-    logBuffered := false,
+    logBuffered := false
   )
+
+def scalaFixSettings = Seq(
+  semanticdbEnabled := true,
+  semanticdbOptions += "-P:semanticdb:synthetics:on",
+  semanticdbVersion := scalafixSemanticdb.revision,
+  ThisBuild / scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value),
+  scalafixDependencies += "org.scala-lang" %% "scala-rewrites" % "0.1.2"
+)
 
 def publishSettings(projectName: String) = Seq(
   pomExtra := pomDetail,

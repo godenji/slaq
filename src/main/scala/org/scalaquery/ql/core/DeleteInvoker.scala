@@ -16,7 +16,7 @@ final class DeleteInvoker[T](
   def delete(implicit session: Session): Int =
     session.withPreparedStatement(deleteStatement) { st =>
       built.setter(new PositionedParameters(st), null)
-      st.executeUpdate
+      st.executeUpdate()
     }
   def deleteInvoker: this.type = this
 }

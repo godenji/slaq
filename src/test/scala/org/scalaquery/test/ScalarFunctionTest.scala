@@ -17,11 +17,11 @@ class ScalarFunctionTest(tdb: TestDB) extends DBTest(tdb) {
   @Test def test = db withSession { implicit ss: Session =>
     def check[T](q: Query[ColumnBase[T], T], exp: T*) = {
       println("Executing: " + q.selectStatement)
-      assertEquals(exp.toSet, q.list.toSet)
+      assertEquals(exp.toSet, q.list().toSet)
     }
     def checkIn[T](q: Query[ColumnBase[T], T], exp: T*) = {
       println("Executing: " + q.selectStatement)
-      val found = q.list.toSet
+      val found = q.list().toSet
       assert(found.forall(exp contains _), "all of result " + found + " should be in expected " + exp)
     }
 

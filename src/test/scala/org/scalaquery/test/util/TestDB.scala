@@ -66,11 +66,11 @@ abstract class TestDB(val confName: String) {
   def isEnabled = TestDBOptions.isInternalEnabled(confName)
   def getLocalTables(implicit session: Session): List[String] = {
     val tables = ResultSetInvoker[(String, String, String)](_.conn.getMetaData().getTables("", "", null, null))
-    tables.list.map(_._3).sorted
+    tables.list().map(_._3).sorted
   }
   def assertTablesExist(tables: String*)(implicit session: Session): Unit = {
     for (t <- tables) {
-      try Q[Int] + "select 1 from " + driver.sqlUtils.quote(t) + " where 1 < 0" list catch {
+      try Q[Int] + "select 1 from " + driver.sqlUtils.quote(t) + " where 1 < 0" list() catch {
         case _: Exception =>
           Assert.fail("Table " + t + " should exist")
       }
@@ -79,7 +79,7 @@ abstract class TestDB(val confName: String) {
   def assertNotTablesExist(tables: String*)(implicit session: Session): Unit = {
     for (t <- tables) {
       try {
-        Q[Int] + "select 1 from " + driver.sqlUtils.quote(t) + " where 1 < 0" list;
+        Q[Int] + "select 1 from " + driver.sqlUtils.quote(t) + " where 1 < 0" list();
         Assert.fail("Table " + t + " should not exist")
       }
       catch { case _: Exception => }
@@ -87,7 +87,7 @@ abstract class TestDB(val confName: String) {
   }
   def assertUnquotedTablesExist(tables: String*)(implicit session: Session): Unit = {
     for (t <- tables) {
-      try Q[Int] + "select 1 from " + t + " where 1 < 0" list catch {
+      try Q[Int] + "select 1 from " + t + " where 1 < 0" list() catch {
         case _: Exception =>
           Assert.fail("Table " + t + " should exist")
       }
@@ -96,7 +96,7 @@ abstract class TestDB(val confName: String) {
   def assertNotUnquotedTablesExist(tables: String*)(implicit session: Session): Unit = {
     for (t <- tables) {
       try {
-        Q[Int] + "select 1 from " + t + " where 1 < 0" list;
+        Q[Int] + "select 1 from " + t + " where 1 < 0" list();
         Assert.fail("Table " + t + " should not exist")
       }
       catch { case _: Exception => }
@@ -153,8 +153,8 @@ class ExternalTestDB(confName: String, val driver: Profile) extends TestDB(confN
     if (drop.length > 0 || create.length > 0) {
       println("[Creating test database " + this + "]")
       Database.forURL(adminDBURL, driver = jdbcDriver, user = configuredUserName, password = password) withSession { implicit s: Session =>
-        Q.u + drop execute;
-        Q.u + create execute
+        Q.u + drop execute();
+        Q.u + create execute()
       }
     }
   }
@@ -163,7 +163,7 @@ class ExternalTestDB(confName: String, val driver: Profile) extends TestDB(confN
     if (drop.length > 0) {
       println("[Dropping test database " + this + "]")
       Database.forURL(adminDBURL, driver = jdbcDriver, user = configuredUserName, password = password) withSession { implicit s: Session =>
-        Q.u + drop execute
+        Q.u + drop execute()
       }
     }
   }
@@ -174,7 +174,7 @@ abstract class HsqlDB(confName: String) extends TestDB(confName) {
   val driver = HsqldbDriver
   override def getLocalTables(implicit session: Session): List[String] = {
     val tables = ResultSetInvoker[(String, String, String)](_.conn.getMetaData().getTables(null, "PUBLIC", null, null))
-    tables.list.map(_._3).sorted
+    tables.list().map(_._3).sorted
   }
   override def userName = "sa"
 }
@@ -223,7 +223,7 @@ object TestDB {
   def Postgres(to: DBTestObject) = new ExternalTestDB("postgres", PostgresDriver) {
     override def getLocalTables(implicit session: Session) = {
       val tables = ResultSetInvoker[(String, String, String)](_.conn.getMetaData().getTables("", "public", null, null))
-      tables.list.map(_._3).filter(s => !s.toLowerCase.endsWith("_pkey") && !s.toLowerCase.endsWith("_id_seq")).sorted
+      tables.list().map(_._3).filter(s => !s.toLowerCase.endsWith("_pkey") && !s.toLowerCase.endsWith("_id_seq")).sorted
     }
   }
 

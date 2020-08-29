@@ -2,7 +2,6 @@ package org.scalaquery
 
 import scala.collection.immutable.Map
 import scala.collection.Factory
-import scala.collection.generic.CanBuildFrom
 import org.scalaquery.session.Session
 import org.scalaquery.util.CloseableIterator
 import org.scalaquery.iter._
@@ -115,7 +114,7 @@ trait Invoker[-P, +R] { self =>
     try {
       while (it.hasNext && !_iter.isInstanceOf[Done[_, _]]) {
         val cont = _iter.asInstanceOf[Cont[RR, B]]
-        _iter = cont.k(El(it.next))
+        _iter = cont.k(El(it.next()))
       }
     }
     finally it.close()

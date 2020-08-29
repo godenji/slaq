@@ -37,13 +37,13 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
     ddl create;
     tdb.assertTablesExist("categories", "posts")
 
-    Categories insertAll (
+    Categories.insertAll(
       (1, "Scala"),
       (2, "ScalaQuery"),
       (3, "Windows"),
       (4, "Software")
     )
-    Posts.title ~ Posts.category.? insertAll (
+    (Posts.title ~ Posts.category.?).insertAll(
       ("Test Post", None),
       ("Formal Language Processing in Scala, Part 5", Some(1)),
       ("Efficient Parameterized Queries in ScalaQuery", Some(2)),
@@ -59,7 +59,7 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
     q1.dump("Manual join: ")
     println("Manual join: " + q1.selectStatement)
     q1.foreach(x => println("  " + x))
-    assertEquals(List((2, 1), (3, 2), (4, 3), (5, 2)), q1.map(p => (p._1, p._2)).list)
+    assertEquals(List((2, 1), (3, 2), (4, 3), (5, 2)), q1.map(p => (p._1, p._2)).list())
 
     val q2 = for {
       p <- Posts
@@ -69,7 +69,7 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
     q2.dump("Foreign-key join: ")
     println("Foreign-key join: " + q2.selectStatement)
     q2.foreach(x => println("  " + x))
-    assertEquals(List((2, 1), (3, 2), (4, 3), (5, 2)), q2.map(p => (p._1, p._2)).list)
+    assertEquals(List((2, 1), (3, 2), (4, 3), (5, 2)), q2.map(p => (p._1, p._2)).list())
 
     val ddl2 = Categories.ddl ++ Posts.ddl
     ddl2.dropStatements foreach println
@@ -102,12 +102,12 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
     ddl.createStatements foreach println
     ddl create;
 
-    B insertAll (
+    B.insertAll(
       (1, 2, "b12"),
       (3, 4, "b34"),
       (5, 6, "b56")
     )
-    A insertAll (
+    A.insertAll(
       (1, 2, "a12"),
       (3, 4, "a34")
     )
@@ -118,7 +118,7 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
     } yield (a.s, b.s)
     println("Multiple rows: " + q1.selectStatement)
     q1.foreach(x => println("  " + x))
-    assertEquals(Set(("a12", "b12"), ("a34", "b34")), q1.list.toSet)
+    assertEquals(Set(("a12", "b12"), ("a34", "b34")), q1.list().toSet)
   }
 
   @Test def testCombinedJoin(): Unit = db withSession { implicit ss: Session =>
@@ -150,8 +150,8 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
       _ <- Query orderBy a.s
     } yield a.s
     println("q1: " + q1.selectStatement)
-    println("    " + q1.list)
-    assertEquals(List("a", "a", "b"), q1.list)
+    println("    " + q1.list())
+    assertEquals(List("a", "a", "b"), q1.list())
 
     val q2 = for {
       c <- C
@@ -159,8 +159,8 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
       _ <- Query orderBy a.s
     } yield a.s
     println("q2: " + q2.selectStatement)
-    println("    " + q2.list)
-    assertEquals(List("a", "c"), q2.list)
+    println("    " + q2.list())
+    assertEquals(List("a", "c"), q2.list())
 
     val q3 = for {
       b <- B
@@ -169,7 +169,7 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
       _ <- Query orderBy a.s
     } yield a.s
     println("q3: " + q3.selectStatement)
-    println("    " + q3.list)
-    assertEquals(List("a", "a"), q3.list)
+    println("    " + q3.list())
+    assertEquals(List("a", "a"), q3.list())
   }
 }

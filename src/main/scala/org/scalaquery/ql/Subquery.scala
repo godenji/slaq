@@ -39,7 +39,7 @@ object Subquery {
       unpackable.value match {
         case t: Table[_] =>
           t.mapOp(_ => Subquery(node, false)).asInstanceOf[PP]
-        case o =>
+        case _ =>
           val p = Subquery(node, true)
           var pos = 0
           unpackable.mapOp { n =>

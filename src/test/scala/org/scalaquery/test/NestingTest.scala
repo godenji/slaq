@@ -48,7 +48,7 @@ class NestingTest(tdb: TestDB) extends DBTest(tdb) {
         _ <- Query.orderBy(c, a)
       } yield a ~ b ~ c ~ 5
       println("q1b: " + q1b.selectStatement)
-      println(q1b.list)
+      println(q1b.list())
       assertEquals(res1, q1b.to[List]())
 
       val q1c = for {
@@ -57,7 +57,7 @@ class NestingTest(tdb: TestDB) extends DBTest(tdb) {
         _ <- Query.orderBy(c, a)
       } yield (a, b, c, ConstColumn(5))
       println("q1c: " + q1c.selectStatement)
-      println(q1c.list)
+      println(q1c.list())
       assertEquals(res1, q1c.to[List]())
 
       val q1d = for {
@@ -66,7 +66,7 @@ class NestingTest(tdb: TestDB) extends DBTest(tdb) {
         _ <- Query.orderBy(c, a)
       } yield ((a, b), (c, 5))
       println("q1d: " + q1d.selectStatement)
-      println(q1d.list)
+      println(q1d.list())
       assertEquals(res1b, q1d.to[List]())
 
       val res2 = Set((1, "1", 8), (2, "2", 10))
@@ -83,7 +83,7 @@ class NestingTest(tdb: TestDB) extends DBTest(tdb) {
       } yield a ~ b ~ (c * 2)
       q2b.dump("q2b: ")
       println("q2b: " + q2b.selectStatement)
-      println(q2b.list)
+      println(q2b.list())
       assertEquals(res2, q2b.to[Set]())
 
       val q2c = for {
@@ -91,7 +91,7 @@ class NestingTest(tdb: TestDB) extends DBTest(tdb) {
       } yield a ~ b ~ (c * 2)
       q2c.dump("q2c: ")
       println("q2c: " + q2c.selectStatement)
-      println(q2c.list)
+      println(q2c.list())
       assertEquals(res2, q2c.to[Set]())
     }
   }

@@ -4,7 +4,6 @@ import java.sql.{ResultSet, Blob, Clob, Date, Time, Timestamp}
 import java.io.Closeable
 import org.scalaquery.simple.GetResult
 import org.scalaquery.util.CloseableIterator
-import collection.generic.CanBuildFrom
 import collection.Factory
 
 /**
@@ -39,7 +38,7 @@ sealed abstract class PositionedResult(val rs: ResultSet)
   }
 
   private def apply[T](f: T => Unit, o: Option[T]): Unit =
-    o.map(f).getOrElse(updateNull)
+    o.map(f).getOrElse(updateNull())
 
   private def option[T](t: T): Option[T] =
     if (rs wasNull) None else Some(t)
@@ -68,22 +67,22 @@ sealed abstract class PositionedResult(val rs: ResultSet)
   final def nextTime() = apply(rs.getTime _)
   final def nextTimestamp() = apply(rs.getTimestamp _)
 
-  final def nextBigDecimalOption() = option(nextBigDecimal)
-  final def nextBlobOption() = option(nextBlob)
-  final def nextBooleanOption() = option(nextBoolean)
-  final def nextByteOption() = option(nextByte)
-  final def nextBytesOption() = option(nextBytes)
-  final def nextClobOption() = option(nextClob)
-  final def nextDateOption() = option(nextDate)
-  final def nextDoubleOption() = option(nextDouble)
-  final def nextFloatOption() = option(nextFloat)
-  final def nextIntOption() = option(nextInt)
-  final def nextLongOption() = option(nextLong)
-  final def nextObjectOption() = option(nextObject)
-  final def nextShortOption() = option(nextShort)
-  final def nextStringOption() = option(nextString)
-  final def nextTimeOption() = option(nextTime)
-  final def nextTimestampOption() = option(nextTimestamp)
+  final def nextBigDecimalOption() = option(nextBigDecimal())
+  final def nextBlobOption() = option(nextBlob())
+  final def nextBooleanOption() = option(nextBoolean())
+  final def nextByteOption() = option(nextByte())
+  final def nextBytesOption() = option(nextBytes())
+  final def nextClobOption() = option(nextClob())
+  final def nextDateOption() = option(nextDate())
+  final def nextDoubleOption() = option(nextDouble())
+  final def nextFloatOption() = option(nextFloat())
+  final def nextIntOption() = option(nextInt())
+  final def nextLongOption() = option(nextLong())
+  final def nextObjectOption() = option(nextObject())
+  final def nextShortOption() = option(nextShort())
+  final def nextStringOption() = option(nextString())
+  final def nextTimeOption() = option(nextTime())
+  final def nextTimestampOption() = option(nextTimestamp())
 
   final def updateBigDecimal(v: BigDecimal) = apply(
     rs.updateBigDecimal(_, v.bigDecimal)
@@ -136,7 +135,7 @@ sealed abstract class PositionedResult(val rs: ResultSet)
   final def to[C[_]] = new To[C]()
 
   final class To[C[_]] private[PositionedResult] () {
-    def apply[R](gr: GetResult[R])(implicit session: Session, canBuildFrom: Factory[R, C[R]]) =
+    def apply[R](gr: GetResult[R])(implicit canBuildFrom: Factory[R, C[R]]) =
       build[C, R](gr)
   }
 }

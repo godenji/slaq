@@ -31,13 +31,13 @@ class SimpleTest(tdb: TestDB) extends DBTest(tdb) {
     val userForIdAndName = Q[(Int, String), User] + "select id, name from users where id = ? and name = ?"
 
     db withTransaction { implicit ss: Session =>
-      println("Creating user table: " + createTable.first)
+      println("Creating user table: " + createTable.first())
       println("Inserting users:")
-      for (i <- populateUsers) println("  " + i.first)
+      for (i <- populateUsers) println("  " + i.first())
 
       println("All IDs:")
-      for (s <- allIDs.list) println("  " + s)
-      assertEquals(Set(1, 0, 2, 3), allIDs.list.toSet)
+      for (s <- allIDs.list()) println("  " + s)
+      assertEquals(Set(1, 0, 2, 3), allIDs.list().toSet)
 
       println("All IDs with foreach:")
       var s1 = Set[Int]()
@@ -51,7 +51,7 @@ class SimpleTest(tdb: TestDB) extends DBTest(tdb) {
       println("User for ID 2: " + res)
       assertEquals(User(2, "guest"), res)
 
-      assertEquals(User(2, "guest"), userForIdAndName((2, "guest")).first)
+      assertEquals(User(2, "guest"), userForIdAndName((2, "guest")).first())
       assertEquals(None, userForIdAndName((2, "foo")).firstOption)
 
       println("User 2 with foreach:")
@@ -80,7 +80,7 @@ class SimpleTest(tdb: TestDB) extends DBTest(tdb) {
 
       println("All users with elements.foreach:")
       var s5 = Set[User]()
-      for (s <- getUsers(None).elements) {
+      for (s <- getUsers(None).elements()) {
         println("  " + s)
         s5 += s
       }

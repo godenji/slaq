@@ -107,7 +107,7 @@ class HsqldbQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option
 
     /* Hsqldb uses the SQL:2008 syntax for NEXTVAL */
     case Sequence.Nextval(seq) => b += s"(next value for ${quote(seq.name)})"
-    case Sequence.Currval(seq) => Fail("Hsqldb does not support CURRVAL")
+    case Sequence.Currval(_) => Fail("Hsqldb does not support CURRVAL")
     case _                     => super.show(c, b)
   }
 

@@ -94,7 +94,7 @@ class MiscTest(tdb: TestDB) extends DBTest(tdb) {
 
       val q1 = for { t1 <- T1 if t1.a like "foo" } yield t1.a
       println("q1: " + q1.selectStatement)
-      assertEquals(List("foo"), q1.list)
+      assertEquals(List("foo"), q1.list())
 
       val q2 = for { t1 <- T1 if t1.a like "foo%" } yield t1.a
       println("q2: " + q2.selectStatement)

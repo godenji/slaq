@@ -44,12 +44,12 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
       println("Update: " + updateQ.updateStatement)
       updateQ.update(User(None, "Marge", "Simpson"))
 
-      Users.filter(_.id between (1, 2)).foreach(println)
+      Users.filter(_.id.between(1, 2)).foreach(println)
       println("ID 3 -> " + Users.findByID.first(3))
 
       assertEquals(
         Set(User(Some(1), "Homer", "Simpson"), User(Some(2), "Marge", "Simpson")),
-        Users.filter(_.id between (1, 2)).list.toSet
+        Users.filter(_.id.between(1, 2)).list().toSet
       )
       assertEquals(
         User(Some(3), "Carl", "Carlson"),
@@ -79,7 +79,7 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
 
       assertEquals(
         Set(Data(7, 8), Data(3, 4), Data(5, 6)),
-        Query(Ts).list.toSet
+        Query(Ts).list().toSet
       )
     }
   }
@@ -104,9 +104,9 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
     db withSession { implicit ss: Session =>
       T.ddl.create
       T.b.insertAll(False, True)
-      assertEquals(Query(T).list.toSet, Set((1, False), (2, True)))
-      assertEquals(T.filter(_.b =~ (True: Bool)).list.toSet, Set((2, True)))
-      assertEquals(T.filter(_.b =~ (False: Bool)).list.toSet, Set((1, False)))
+      assertEquals(Query(T).list().toSet, Set((1, False), (2, True)))
+      assertEquals(T.filter(_.b =~ (True: Bool)).list().toSet, Set((2, True)))
+      assertEquals(T.filter(_.b =~ (False: Bool)).list().toSet, Set((1, False)))
     }
   }
 }

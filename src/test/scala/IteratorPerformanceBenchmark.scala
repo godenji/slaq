@@ -22,7 +22,7 @@ object IteratorPerformanceBenchmark {
       def measure(s: String)(f: => Any): Unit = {
         val t0 = System.currentTimeMillis()
         var i = 0
-        while (i < count) { buf.clear; f; i += 1; assert(buf.length == size) }
+        while (i < count) { buf.clear(); f; i += 1; assert(buf.length == size) }
         val t1 = System.currentTimeMillis()
         println(s" (${count}x) took ${t1 - t0}ms, size = ${buf.length}")
       }
@@ -34,7 +34,7 @@ object IteratorPerformanceBenchmark {
         measure("elements loop") {
           val it = inv.elements()
           try {
-            while (it.hasNext) buf += it.next
+            while (it.hasNext) buf += it.next()
           }
           finally { it.close() }
         }

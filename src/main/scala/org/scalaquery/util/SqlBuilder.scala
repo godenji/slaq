@@ -63,16 +63,16 @@ object SqlBuilder {
   implicit class StringInterpolator(val sc: StringContext) extends AnyVal {
     @inline final def b(args: Any*)(implicit builder: SqlBuilder): SqlBuilder = {
       val (keys, vals) = (sc.parts.iterator, args.iterator)
-      builder += keys.next
+      builder += keys.next()
       while (keys.hasNext) {
-        vals.next match {
+        vals.next() match {
           case s: String      => builder += s
           case i: Int         => builder += i
           case l: Long        => builder += l
           case c: Char        => builder += c
           case sb: SqlBuilder => builder += sb
         }
-        builder += keys.next
+        builder += keys.next()
       }
       builder
     }

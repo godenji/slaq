@@ -33,7 +33,7 @@ object MFunction {
         namePattern.schema_?, namePattern.name
       )
       catch { case _: SQLException | _: NoSuchMethodException => null }) { r =>
-      MFunction(MQName.from(r), r<<, r.nextShort match {
+      MFunction(MQName.from(r), r<<, r.nextShort() match {
         case 1 /*DatabaseMetaData.functionNoTable*/ => Some(false)
         case 2 /*DatabaseMetaData.functionReturnsTable*/ => Some(true)
         case _ => None

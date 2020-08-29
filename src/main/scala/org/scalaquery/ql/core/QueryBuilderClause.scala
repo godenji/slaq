@@ -18,7 +18,7 @@ trait QueryBuilderClause { self: QueryBuilder =>
     query.modifiers.filter(m.runtimeClass.isInstance(_)).asInstanceOf[List[T]]
 
   protected def appendConditions(b: SqlBuilder): Unit =
-    query.cond.filter { case HavingColumn(x) => false; case _ => true } match {
+    query.cond.filter { case HavingColumn(_) => false; case _ => true } match {
       case Nil =>
       case xs =>
         b += " WHERE "

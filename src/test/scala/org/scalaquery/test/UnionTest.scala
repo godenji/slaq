@@ -64,7 +64,7 @@ class UnionTest(tdb: TestDB) extends DBTest(tdb) {
       println("Combined and sorted: " + q3.selectStatement)
       q3.foreach(o => println("  " + o))
 
-      assertEquals(q3.list, List((2, "Amy"), (7, "Ben"), (8, "Greg"), (6, "Leonard"), (3, "Steve")))
+      assertEquals(q3.list(), List((2, "Amy"), (7, "Ben"), (8, "Greg"), (6, "Leonard"), (3, "Steve")))
     }
   }
 
@@ -81,6 +81,6 @@ class UnionTest(tdb: TestDB) extends DBTest(tdb) {
     val q = f("Peter") union f("Amy")
     q.dump("q: ")
     println(q.selectStatement)
-    assertEquals(Set((1, "Peter", "HR"), (2, "Amy", "IT")), q.list.toSet)
+    assertEquals(Set((1, "Peter", "HR"), (2, "Amy", "IT")), q.list().toSet)
   }
 }

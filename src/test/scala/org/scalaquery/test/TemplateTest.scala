@@ -43,7 +43,7 @@ class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
       def q1 = userNameByID1(3)
       println("q1: " + q1.selectStatement)
       for (t <- q1) println("User: " + t)
-      assertEquals(List("Apu"), q1.list)
+      assertEquals(List("Apu"), q1.list())
 
       val u1 = for {
         u <- Users if u.id is (_: Column[Int])
@@ -75,7 +75,7 @@ class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
       val q2 = userNameByID2(3)
       println("q2: " + userNameByID2.selectStatement)
       for (t <- q2) println("User: " + t)
-      assertEquals(List("Apu"), q2.list)
+      assertEquals(List("Apu"), q2.list())
 
       val userNameByIDRange = for {
         min ~ max <- Params[Int, Int]
@@ -84,7 +84,7 @@ class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
       val q3 = userNameByIDRange((2, 5))
       println("q3: " + userNameByIDRange.selectStatement)
       for (t <- q3) println("User: " + t)
-      assertEquals(List("Marge", "Apu", "Carl", "Lenny"), q3.list)
+      assertEquals(List("Marge", "Apu", "Carl", "Lenny"), q3.list())
 
       val userNameByIDRangeAndProduct = for {
         min ~ max ~ product <- Params[Int, Int, String]
@@ -96,7 +96,7 @@ class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
       val q4 = userNameByIDRangeAndProduct((2, 5, "Product A"))
       println("q4: " + userNameByIDRangeAndProduct.selectStatement)
       for (t <- q4) println("User: " + t)
-      assertEquals(List("Marge", "Apu"), q4.list)
+      assertEquals(List("Marge", "Apu"), q4.list())
 
       def userNameByIDOrAll(id: Option[Int]) = for (
         u <- Users if id.map(u.id is _.bind).getOrElse(ConstColumn(true))
@@ -104,11 +104,11 @@ class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
       val q5a = userNameByIDOrAll(Some(3))
       println("q5a: " + q5a.selectStatement)
       for (t <- q5a) println("User: " + t)
-      assertEquals(List("Apu"), q5a.list)
+      assertEquals(List("Apu"), q5a.list())
       val q5b = userNameByIDOrAll(None)
       println("q5b: " + q5b.selectStatement)
       for (t <- q5b) println("User: " + t)
-      assertEquals(List("Homer", "Marge", "Apu", "Carl", "Lenny"), q5b.list)
+      assertEquals(List("Homer", "Marge", "Apu", "Carl", "Lenny"), q5b.list())
     }
   }
 }

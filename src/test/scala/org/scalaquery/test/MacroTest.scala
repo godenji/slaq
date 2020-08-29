@@ -55,9 +55,9 @@ class MacroTest(tdb: TestDB) extends DBTest(tdb) {
     db withSession { implicit ss: Session =>
       T.ddl.create
       T.b.insertAll(False, True)
-      assertEquals(Query(T).list.toSet, Set((1, False), (2, True)))
-      assertEquals(T.filter(_.b =~ (True: Bool)).list.toSet, Set((2, True)))
-      assertEquals(T.filter(_.b =~ (False: Bool)).list.toSet, Set((1, False)))
+      assertEquals(Query(T).list().toSet, Set((1, False), (2, True)))
+      assertEquals(T.filter(_.b =~ (True: Bool)).list().toSet, Set((2, True)))
+      assertEquals(T.filter(_.b =~ (False: Bool)).list().toSet, Set((1, False)))
     }
   }
 }

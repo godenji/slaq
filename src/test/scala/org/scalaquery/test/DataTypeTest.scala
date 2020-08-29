@@ -25,7 +25,7 @@ class DataTypeTest(tdb: TestDB) extends DBTest(tdb) {
       T.ddl.create;
       T insert ((1, Array[Byte](1, 2, 3)))
       T insert ((2, Array[Byte](4, 5)))
-      assertEquals(Set((1, "123"), (2, "45")), Query(T).list.map { case (id, data) => (id, data.mkString) }.toSet)
+      assertEquals(Set((1, "123"), (2, "45")), Query(T).list().map { case (id, data) => (id, data.mkString) }.toSet)
     }
   }
 
@@ -45,7 +45,7 @@ class DataTypeTest(tdb: TestDB) extends DBTest(tdb) {
     def test(data: List[(Int, Int, Long, Short, Byte)]): Unit = {
       T.insertAll(data: _*)
       val q = for { t <- T; _ <- Query orderBy t.id } yield t
-      assertEquals(data, q.list)
+      assertEquals(data, q.list())
       Query(T).delete
     }
 

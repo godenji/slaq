@@ -29,7 +29,7 @@ class PrimaryKeyTest(tdb: TestDB) extends DBTest(tdb) {
     A.ddl.createStatements foreach println
     A.ddl create;
 
-    A insertAll (
+    A.insertAll(
       (1, 1, "a11"),
       (1, 2, "a12"),
       (2, 1, "a21"),

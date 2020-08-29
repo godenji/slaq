@@ -50,7 +50,7 @@ abstract class QueryBuilder(
     node match {
       case p: ProductNode =>
         p.nodeChildren.zipWithIndex.foreach {
-          case (n: Join, i) =>
+          case (_: Join, i) =>
             delimit( // delegate is Join, show parent Table
               show(p.product.productElement(i).asInstanceOf[Table[_]], b)
             )
@@ -114,7 +114,7 @@ abstract class QueryBuilder(
     case Cols.InSet(e, seq, tm, bind) =>
       if (seq.isEmpty) show(ConstColumn(false), b) else {
         b += '('; expr(e, b); b += " IN ("
-        if (bind) b.sep(seq, ",")(x => b +?= { (p, param) => tm(profile).setValue(x, p) })
+        if (bind) b.sep(seq, ",")(x => b +?= { (p, _) => tm(profile).setValue(x, p) })
         else b += seq.map(tm(profile).value2SQLLiteral).mkString(",")
         b += "))"
       }
@@ -155,7 +155,7 @@ abstract class QueryBuilder(
       b += s"${quote(tableAlias(n))}.${quote(n.name)}"
 
     case c @ BindColumn(v) =>
-      b +?= { (p, param) => c.typeMapper(profile).setValue(v, p) }
+      b +?= { (p, _) => c.typeMapper(profile).setValue(v, p) }
 
     case pc @ ParameterColumn(idx) =>
       b +?= { (p, param) =>
@@ -168,7 +168,7 @@ abstract class QueryBuilder(
 
     case NullColumn         => b += "NULL"
     case c @ ConstColumn(v) => b += c.typeMapper(profile).value2SQLLiteral(v)
-    case HavingColumn(x)    => expr(c, b)
+    case HavingColumn(_)    => expr(c, b)
     case a @ AsColumnOf(ch, name) =>
       val tn = name.getOrElse(mapTypeName(a.typeMapper(profile)))
       b += "cast("; expr(ch, b); b += s" as $tn)"

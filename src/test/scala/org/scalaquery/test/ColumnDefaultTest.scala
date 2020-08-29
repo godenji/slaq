@@ -28,7 +28,7 @@ class ColumnDefaultTest(tdb: TestDB) extends DBTest(tdb) {
       A.ddl.createStatements foreach println
       A.ddl.create
       A.id insert 42
-      assertEquals(List((42, "foo", Some(true))), Query(A).list)
+      assertEquals(List((42, "foo", Some(true))), Query(A).list())
     }
   }
 }

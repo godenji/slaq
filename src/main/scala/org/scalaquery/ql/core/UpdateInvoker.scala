@@ -20,7 +20,7 @@ final class UpdateInvoker[T](
       val pp = new PositionedParameters(st)
       query.unpackable.value.setParameter(profile, pp, Some(value))
       built.setter(pp, null)
-      st.executeUpdate
+      st.executeUpdate()
     }
 
   def updateInvoker: this.type = this

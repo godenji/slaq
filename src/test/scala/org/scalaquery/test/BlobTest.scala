@@ -30,7 +30,7 @@ class BlobTest(tdb: TestDB) extends DBTest(tdb) {
 
       assertEquals(
         Set((1, "123"), (2, "45")),
-        Query(T).list.map { case (id, data) => (id, data.getBytes(1, data.length.toInt).mkString) }.toSet
+        Query(T).list().map { case (id, data) => (id, data.getBytes(1, data.length.toInt).mkString) }.toSet
       )
     }
   }

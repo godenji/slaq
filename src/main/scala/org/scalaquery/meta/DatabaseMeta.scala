@@ -15,7 +15,7 @@ object DatabaseMeta {
 
   def getTableTypes = ResultSetInvoker[String](_.metaData.getTableTypes())
 
-  private[meta] def yesNoOpt(r: PositionedResult) = if (r.hasMoreColumns) r.nextString match {
+  private[meta] def yesNoOpt(r: PositionedResult) = if (r.hasMoreColumns) r.nextString() match {
     case "YES" => Some(true)
     case "NO"  => Some(false)
     case _     => None
@@ -29,7 +29,7 @@ object DatabaseMeta {
           case i: InvocationTargetException => i.getCause()
           case other => other
         }) match {
-          case a: AbstractMethodError => null
+          case _: AbstractMethodError => null
           case other                  => throw other
         }
     }

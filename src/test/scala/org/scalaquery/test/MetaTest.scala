@@ -71,7 +71,7 @@ class MetaTest(tdb: TestDB) extends DBTest(tdb) {
 
       println("Tables from DatabaseMetaData:")
       for (
-        t <- MTable.getTables(None, None, None, None).list if Set("users", "orders") contains t.name.name
+        t <- MTable.getTables(None, None, None, None).list() if Set("users", "orders") contains t.name.name
       ) {
         println("  " + t)
         for (c <- t.getColumns) {
@@ -105,22 +105,22 @@ class MetaTest(tdb: TestDB) extends DBTest(tdb) {
 
       println("Generated code:")
       val out = new PrintWriter(System.out)
-      for (t <- MTable.getTables(None, None, None, None).list if Set("users", "orders") contains t.name.name)
+      for (t <- MTable.getTables(None, None, None, None).list() if Set("users", "orders") contains t.name.name)
         CodeGen.output(t, out)
       out.flush
 
       assertTrue(
         "Tables before deleting",
-        Set("orders", "users") subsetOf MTable.getTables(None, None, None, None).list.map(_.name.name).toSet
+        Set("orders", "users") subsetOf MTable.getTables(None, None, None, None).list().map(_.name.name).toSet
       )
       for (t <- tdb.getLocalTables.sorted) {
         val st = "drop table " + tdb.driver.sqlUtils.quote(t)
         println("Executing statement: " + st)
-        Q.u + st execute
+        Q.u + st execute()
       }
       assertTrue(
         "Tables after deleting",
-        Set("orders", "users") intersect MTable.getTables(None, None, None, None).list.map(_.name.name).toSet isEmpty
+        Set("orders", "users") intersect MTable.getTables(None, None, None, None).list().map(_.name.name).toSet isEmpty
       )
     }
   }

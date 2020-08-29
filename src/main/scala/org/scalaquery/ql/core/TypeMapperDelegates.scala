@@ -34,7 +34,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.BOOLEAN
     def setValue(v: Boolean, p: PositionedParameters) = p.setBoolean(v)
     def setOption(v: Option[Boolean], p: PositionedParameters) = p.setBooleanOption(v)
-    def nextValue(r: PositionedResult) = r.nextBoolean
+    def nextValue(r: PositionedResult) = r.nextBoolean()
     def updateValue(v: Boolean, r: PositionedResult) = r.updateBoolean(v)
   }
 
@@ -43,7 +43,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.BLOB
     def setValue(v: Blob, p: PositionedParameters) = p.setBlob(v)
     def setOption(v: Option[Blob], p: PositionedParameters) = p.setBlobOption(v)
-    def nextValue(r: PositionedResult) = r.nextBlob
+    def nextValue(r: PositionedResult) = r.nextBlob()
     def updateValue(v: Blob, r: PositionedResult) = r.updateBlob(v)
     override def value2SQLLiteral(value: Blob) =
       Fail(
@@ -56,7 +56,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.TINYINT
     def setValue(v: Byte, p: PositionedParameters) = p.setByte(v)
     def setOption(v: Option[Byte], p: PositionedParameters) = p.setByteOption(v)
-    def nextValue(r: PositionedResult) = r.nextByte
+    def nextValue(r: PositionedResult) = r.nextByte()
     def updateValue(v: Byte, r: PositionedResult) = r.updateByte(v)
   }
 
@@ -65,7 +65,7 @@ object TypeMapperDelegates {
     val sqlType = java.sql.Types.BLOB
     def setValue(v: Array[Byte], p: PositionedParameters) = p.setBytes(v)
     def setOption(v: Option[Array[Byte]], p: PositionedParameters) = p.setBytesOption(v)
-    def nextValue(r: PositionedResult) = r.nextBytes
+    def nextValue(r: PositionedResult) = r.nextBytes()
     def updateValue(v: Array[Byte], r: PositionedResult) = r.updateBytes(v)
     override def value2SQLLiteral(value: Array[Byte]) =
       Fail(
@@ -78,7 +78,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.CLOB
     def setValue(v: Clob, p: PositionedParameters) = p.setClob(v)
     def setOption(v: Option[Clob], p: PositionedParameters) = p.setClobOption(v)
-    def nextValue(r: PositionedResult) = r.nextClob
+    def nextValue(r: PositionedResult) = r.nextClob()
     def updateValue(v: Clob, r: PositionedResult) = r.updateClob(v)
   }
 
@@ -87,7 +87,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.DATE
     def setValue(v: Date, p: PositionedParameters) = p.setDate(v)
     def setOption(v: Option[Date], p: PositionedParameters) = p.setDateOption(v)
-    def nextValue(r: PositionedResult) = r.nextDate
+    def nextValue(r: PositionedResult) = r.nextDate()
     def updateValue(v: Date, r: PositionedResult) = r.updateDate(v)
     override def value2SQLLiteral(value: Date) = "{d '" + value.toString + "'}"
   }
@@ -97,7 +97,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.DOUBLE
     def setValue(v: Double, p: PositionedParameters) = p.setDouble(v)
     def setOption(v: Option[Double], p: PositionedParameters) = p.setDoubleOption(v)
-    def nextValue(r: PositionedResult) = r.nextDouble
+    def nextValue(r: PositionedResult) = r.nextDouble()
     def updateValue(v: Double, r: PositionedResult) = r.updateDouble(v)
   }
 
@@ -106,7 +106,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.FLOAT
     def setValue(v: Float, p: PositionedParameters) = p.setFloat(v)
     def setOption(v: Option[Float], p: PositionedParameters) = p.setFloatOption(v)
-    def nextValue(r: PositionedResult) = r.nextFloat
+    def nextValue(r: PositionedResult) = r.nextFloat()
     def updateValue(v: Float, r: PositionedResult) = r.updateFloat(v)
   }
 
@@ -115,7 +115,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.INTEGER
     def setValue(v: Int, p: PositionedParameters) = p.setInt(v)
     def setOption(v: Option[Int], p: PositionedParameters) = p.setIntOption(v)
-    def nextValue(r: PositionedResult) = r.nextInt
+    def nextValue(r: PositionedResult) = r.nextInt()
     def updateValue(v: Int, r: PositionedResult) = r.updateInt(v)
   }
 
@@ -124,7 +124,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.BIGINT
     def setValue(v: Long, p: PositionedParameters) = p.setLong(v)
     def setOption(v: Option[Long], p: PositionedParameters) = p.setLongOption(v)
-    def nextValue(r: PositionedResult) = r.nextLong
+    def nextValue(r: PositionedResult) = r.nextLong()
     def updateValue(v: Long, r: PositionedResult) = r.updateLong(v)
   }
 
@@ -133,7 +133,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.SMALLINT
     def setValue(v: Short, p: PositionedParameters) = p.setShort(v)
     def setOption(v: Option[Short], p: PositionedParameters) = p.setShortOption(v)
-    def nextValue(r: PositionedResult) = r.nextShort
+    def nextValue(r: PositionedResult) = r.nextShort()
     def updateValue(v: Short, r: PositionedResult) = r.updateShort(v)
   }
 
@@ -142,7 +142,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.VARCHAR
     def setValue(v: String, p: PositionedParameters) = p.setString(v)
     def setOption(v: Option[String], p: PositionedParameters) = p.setStringOption(v)
-    def nextValue(r: PositionedResult) = r.nextString
+    def nextValue(r: PositionedResult) = r.nextString()
     def updateValue(v: String, r: PositionedResult) = r.updateString(v)
     override def value2SQLLiteral(value: String) = if (value eq null) "NULL" else {
       val sb = new StringBuilder
@@ -161,7 +161,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.TIME
     def setValue(v: Time, p: PositionedParameters) = p.setTime(v)
     def setOption(v: Option[Time], p: PositionedParameters) = p.setTimeOption(v)
-    def nextValue(r: PositionedResult) = r.nextTime
+    def nextValue(r: PositionedResult) = r.nextTime()
     def updateValue(v: Time, r: PositionedResult) = r.updateTime(v)
     override def value2SQLLiteral(value: Time) = "{t '" + value.toString + "'}"
   }
@@ -171,7 +171,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.TIMESTAMP
     def setValue(v: Timestamp, p: PositionedParameters) = p.setTimestamp(v)
     def setOption(v: Option[Timestamp], p: PositionedParameters) = p.setTimestampOption(v)
-    def nextValue(r: PositionedResult) = r.nextTimestamp
+    def nextValue(r: PositionedResult) = r.nextTimestamp()
     def updateValue(v: Timestamp, r: PositionedResult) = r.updateTimestamp(v)
     override def value2SQLLiteral(value: Timestamp) = "{ts '" + value.toString + "'}"
   }
@@ -181,7 +181,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.INTEGER
     def setValue(v: Unit, p: PositionedParameters) = p.setInt(1)
     def setOption(v: Option[Unit], p: PositionedParameters) = p.setIntOption(v.map(_ => 1))
-    def nextValue(r: PositionedResult) = { r.nextInt; () }
+    def nextValue(r: PositionedResult) = { r.nextInt(); () }
     def updateValue(v: Unit, r: PositionedResult) = r.updateInt(1)
     override def value2SQLLiteral(value: Unit) = "1"
   }
@@ -232,7 +232,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.DECIMAL
     def setValue(v: BigDecimal, p: PositionedParameters) = p.setBigDecimal(v)
     def setOption(v: Option[BigDecimal], p: PositionedParameters) = p.setBigDecimalOption(v)
-    def nextValue(r: PositionedResult) = r.nextBigDecimal
+    def nextValue(r: PositionedResult) = r.nextBigDecimal()
     def updateValue(v: BigDecimal, r: PositionedResult) = r.updateBigDecimal(v)
   }
 
@@ -241,7 +241,7 @@ object TypeMapperDelegates {
     def sqlType = java.sql.Types.NULL
     def setValue(v: Null, p: PositionedParameters) = p.setString(null)
     def setOption(v: Option[Null], p: PositionedParameters) = p.setString(null)
-    def nextValue(r: PositionedResult) = { r.nextString; null }
+    def nextValue(r: PositionedResult) = { r.nextString(); null }
     def updateValue(v: Null, r: PositionedResult) = r.updateNull()
     override def value2SQLLiteral(value: Null) = "NULL"
   }

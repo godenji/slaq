@@ -22,7 +22,7 @@ object MColumn {
   def getColumns(tablePattern: MQName, columnPattern: String) = ResultSetInvoker[MColumn](
     _.metaData.getColumns(tablePattern.catalog_?, tablePattern.schema_?, tablePattern.name, columnPattern)
   ) { r =>
-      MColumn(MQName.from(r), r<<, r<<, r<<, r<<, r.skip<<, r<<, r.nextInt match {
+      MColumn(MQName.from(r), r<<, r<<, r<<, r<<, r.skip<<, r<<, r.nextInt() match {
         case DatabaseMetaData.columnNoNulls => Some(false)
         case DatabaseMetaData.columnNullable => Some(true)
         case _ => None

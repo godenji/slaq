@@ -56,7 +56,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
       val q1 = for (u <- Users) yield u.id ~ u.first ~ u.last
       println("q1: " + q1.selectStatement)
       for (t <- q1) println("User tuple: " + t)
-      val allUsers = q1.mapResult { case (id, f, l) => User(id, f, l.orNull) }.list
+      val allUsers = q1.mapResult { case (id, f, l) => User(id, f, l.orNull) }.list()
       for (u <- allUsers) println("User object: " + u)
 
       val expectedUserTuples = List(
@@ -68,7 +68,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
         (6, "Santa's Little Helper", None),
         (7, "Snowball", None)
       )
-      assertEquals(expectedUserTuples, q1.list)
+      assertEquals(expectedUserTuples, q1.list())
       assertEquals(expectedUserTuples.map { case (id, f, l) => User(id, f, l.orNull) }, allUsers)
 
       val q1b = for (u <- Users) yield u.id ~ u.first.? ~ u.last ~
@@ -78,18 +78,18 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
 
       assertEquals(expectedUserTuples.map {
         case (id, f, l) => (id, Some(f), l, if (id < 3) "low" else if (id < 6) "medium" else "high")
-      }, q1b.list)
+      }, q1b.list())
 
       val q2 = for (u <- Users if u.first is "Apu".bind) yield u.last ~ u.id
       println("q2: " + q2.selectStatement)
-      println("Apu's last name and ID are: " + q2.first)
-      assertEquals((Some("Nahasapeemapetilon"), 3), q2.first)
+      println("Apu's last name and ID are: " + q2.first())
+      assertEquals((Some("Nahasapeemapetilon"), 3), q2.first())
 
       //TODO verifyable non-random test
       for (
         u <- allUsers if u.first != "Apu" & u.first != "Snowball"; i <- 1 to 2
       ) (Orders.userID ~ Orders.product ~ Orders.shipped ~ Orders.rebate).insert((
-        u.id, "Gizmo " + ((scala.math.random * 10) + 1).toInt, i == 2, Some(u.first == "Marge")
+        u.id, "Gizmo " + ((scala.math.random() * 10) + 1).toInt, i == 2, Some(u.first == "Marge")
       ))
 
       val q3 = for (
@@ -111,7 +111,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
       q4.foreach(o => println("  " + o))
       assertEquals(
         Set(("Homer", 2), ("Marge", 4), ("Carl", 6), ("Lenny", 8), ("Santa's Little Helper", 10)),
-        q4.list.toSet
+        q4.list().toSet
       )
 
       def maxOfPer[T <: Table[_]](c: T, m: (T => Column[Int]), p: (T => Column[Int])) =
@@ -126,7 +126,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
       q4b.foreach(o => println("  " + o))
       assertEquals(
         Set(("Homer", 2), ("Marge", 4), ("Carl", 6), ("Lenny", 8), ("Santa's Little Helper", 10)),
-        q4b.list.toSet
+        q4b.list().toSet
       )
 
       val q4c = for (
@@ -141,7 +141,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
       q4c.foreach(o => println("  " + o))
       assertEquals(
         Set(("Carl", Some(6)), ("Lenny", Some(8)), ("Santa's Little Helper", Some(10))),
-        q4c.list.toSet
+        q4c.list().toSet
       )
 
       val q4d = for (
@@ -176,7 +176,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
       println("q5: " + q5.selectStatement)
       println("Users without Orders:")
       q5.foreach { o: (Int, String, Option[String]) => println("  " + o) }
-      assertEquals(List((3, "Apu", Some("Nahasapeemapetilon")), (7, "Snowball", None)), q5.list)
+      assertEquals(List((3, "Apu", Some("Nahasapeemapetilon")), (7, "Snowball", None)), q5.list())
 
       println("q5: " + q5.deleteStatement)
       println("Deleting them...")
@@ -186,8 +186,8 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
 
       val q6 = q5.map(_.id.count)
       println("q6: " + q6.selectStatement)
-      println("Users without Orders left: " + q6.first)
-      assertEquals(0, q6.first)
+      println("Users without Orders left: " + q6.first())
+      assertEquals(0, q6.first())
 
       val q7 = Users.filter(_.first is "Homer".bind).map(_.first)
       println("q7: " + q7.updateStatement)

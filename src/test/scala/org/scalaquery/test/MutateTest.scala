@@ -26,7 +26,7 @@ class MutateTest(tdb: TestDB) extends DBTest(tdb) {
 
     db withSession { implicit ss: Session =>
       Users.ddl.create
-      Users insertAll (
+      Users.insertAll(
         User(1, "Marge", "Bouvier"),
         User(2, "Homer", "Simpson"),
         User(3, "Bart", "Simpson"),
@@ -49,7 +49,7 @@ class MutateTest(tdb: TestDB) extends DBTest(tdb) {
 
       assertEquals(
         Set("Marge Simpson", "Bart Simpson", "Lisa Simpson", "Carl Carlson"),
-        (for (u <- Users) yield u.first ++ " " ++ u.last).list.toSet
+        (for (u <- Users) yield u.first ++ " " ++ u.last).list().toSet
       )
     }
   }
