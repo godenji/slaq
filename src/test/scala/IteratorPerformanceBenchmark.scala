@@ -1,8 +1,8 @@
 import collection.mutable.ArrayBuffer
-import org.scalaquery.session._
-import org.scalaquery.ql._
-import org.scalaquery.ql.Table
-import org.scalaquery.ql.driver.H2Driver.Implicit._
+import slaq.session._
+import slaq.ql._
+import slaq.ql.Table
+import slaq.ql.driver.H2Driver.Implicit._
 
 object IteratorPerformanceBenchmark {
   def main(args: Array[String]): Unit = {

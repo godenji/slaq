@@ -1,0 +1,43 @@
+package slaq.ql
+
+import slaq.Fail
+import slaq.ql.core.{Profile,QueryTemplate}
+
+final class Params[P, C](c: C) {
+  @inline def flatMap[F](f: C => Query[_, F])(implicit profile:Profile): QueryTemplate[P, F] =
+    profile.createQueryTemplate[P, F](f(c))
+  @inline def map[F](f: C => ColumnBase[F])(implicit profile:Profile): QueryTemplate[P, F] =
+    profile.createQueryTemplate[P, F](Query(f(c)))
+    
+  @inline def filter(f: C => Boolean): Params[P, C] = {
+    if(!f(c)) Fail("Match failed when unpacking Params")
+    else this
+  }
+  @inline def withFilter(f: C => Boolean): Params[P, C] = filter(f)
+  
+  //def extract = new LazyParams[P,C](c)
+}
+/*
+final class LazyParams[P, C](c: C) {
+	def flatMap[F](f: C => Query[_,F]) = f(c)
+  def map[F](f: C => ColumnBase[F]) = flatMap{v=> Query(f(v))}
+  
+  def filter(f: C => Boolean): LazyParams[P, C] = {
+    if(!f(c)) Fail("Match failed when unpacking Params")
+    else this
+  }
+  def withFilter(f: C => Boolean): LazyParams[P, C] = filter(f)
+}
+*/
+
+object Params {
+  @inline def apply[P1 : TypeMapper] = new Params[P1, Column[P1]](new ParameterColumn(-1))
+<#list 2..22 as i>
+
+  @inline def apply[<#list 1..i as j>P${j} : TypeMapper<#if i != j>, </#if></#list>] =
+    new Params[(<#list 1..i as j>P${j}<#if i != j>,</#if></#list>), Projection${i}[<#list 1..i as j>P${j}<#if i != j>,</#if></#list>]](new Projection${i}(
+<#list 1..i as j>
+    new ParameterColumn[P${j}](${j-1})<#if i != j>,</#if>
+</#list>  ))
+</#list>
+}

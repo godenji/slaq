@@ -6,20 +6,22 @@
 ##############################################################################
 
 # Use only the following DBs (or use all if not set)
-#testDBs = h2mem, h2disk, hsqldbmem, sqlitemem, sqlitedisk, derbymem, derbydisk, postgres, mysql, sqlserver, access
+#testDBs = h2mem, h2disk, hsqldbmem, sqlitemem, sqlitedisk
+testDBs = postgres,mysql
+#testDBs = mysql
 
 # Store database files in this path instead of the test-dbs dir
 # (ignored by MySQL and in-memory databases)
-#testDir = r:/test-dbs
+testDir = /var/lib/pgsql/test-dbs
 
 # PostgreSQL quick setup:
 # - Install PostgreSQL server with default options
 # - Change password in postgres.password
 # - Set postgres.enabled = true
-postgres.enabled = false
+postgres.enabled = true
 postgres.url = jdbc:postgresql:[DB]
 postgres.user = postgres
-postgres.password = secret
+postgres.password = bu1ddha
 postgres.adminDB = postgres
 postgres.testDB = scala-query-test
 postgres.create = CREATE TABLESPACE slaq_test LOCATION '[DBPATH]'; CREATE DATABASE "[DB]" TEMPLATE = template0 TABLESPACE slaq_test
@@ -32,10 +34,10 @@ postgres.driver = org.postgresql.Driver
 # - Install MySQL Essentials with default options
 # - Change password in mysql.password
 # - Set mysql.enabled = true
-mysql.enabled = false
-mysql.url = jdbc:mysql://localhost/[DB]
+mysql.enabled = true
+mysql.url = jdbc:mysql://localhost/[DB]?zeroDateTimeBehavior=convertToNull&characterEncoding=UTF-8&rewriteBatchedStatements=true&maintainTimeStats=false&cacheServerConfiguration=true&avoidCheckOnDuplicateKeyUpdateInSQL=true&cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048&useServerPrepStmts=false&useLocalSessionState=true
 mysql.user = root
-mysql.password = secret
+mysql.password = bu1ddha
 mysql.adminDB = mysql
 mysql.testDB = scala_query_test
 mysql.create = CREATE DATABASE [DB]
