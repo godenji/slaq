@@ -6,9 +6,10 @@ lazy val root = (project in file(".")).
   settings(scalaFixSettings).
   settings(
     name := "slaq",
+    description := "A type-safe database API for Scala",
     organization := "io.github.godenji",
     sonatypeProfileName in ThisBuild := organization.value,
-    version := "0.10.7",
+    version := "0.10.9",
     scalaVersion := "2.13.3",
     scalacOptions ++= Seq(
       "-opt:l:inline",
@@ -25,7 +26,8 @@ lazy val root = (project in file(".")).
     testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v"),
     parallelExecution in Test := false,
     logBuffered := false
-  )
+  ).
+  enablePlugins(BuildInfoPlugin)
 
 def scalaFixSettings = Seq(
   semanticdbEnabled := true,
@@ -57,7 +59,6 @@ def getPublishToRepo = Def.setting {
 def pomDetail =
   <inceptionYear>2014</inceptionYear>
   <url>https://github.com/godenji/slaq</url>
-  <description>A type-safe database API for Scala</description>
   <licenses>
     <license>
       <name>Two-clause BSD-style license</name>
@@ -70,6 +71,11 @@ def pomDetail =
     <connection>scm:git:git@github.com:godenji/slaq</connection>
   </scm>
   <developers>
+    <developer>
+      <id>szeiger</id>
+      <name>Stefan Zeiger</name>
+      <url>http://szeiger.de</url>
+    </developer>
     <developer>
       <id>godenji</id>
       <name>N.S. Cutler</name>
