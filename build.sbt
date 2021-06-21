@@ -9,7 +9,7 @@ lazy val root = (project in file(".")).
     description := "A type-safe database API for Scala",
     organization := "io.github.godenji",
     sonatypeProfileName in ThisBuild := organization.value,
-    version := "0.10.9",
+    version := "0.10.10",
     scalaVersion := "2.13.6",
     scalacOptions ++= Seq(
       "-opt:l:inline",
