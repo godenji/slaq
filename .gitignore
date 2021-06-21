@@ -13,3 +13,4 @@ target/
 sbt-cache-config/
 sbt-cache-update/
 .metals
+.bsp
