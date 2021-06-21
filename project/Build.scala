@@ -11,7 +11,7 @@ object ApplicationBuild
     inConfig(Compile)(Seq(sourceGenerators += fmpp, fmpp := fmppTask.value)) ++
       Seq(
         libraryDependencies += (
-          "net.sourceforge.fmpp" % "fmpp" % "0.9.15" % FmppConfig.name
+          "net.sourceforge.fmpp" % "fmpp" % "0.9.16" % FmppConfig.name
         ),
         ivyConfigurations += FmppConfig,
         fullClasspath in FmppConfig := (

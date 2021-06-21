@@ -10,7 +10,7 @@ lazy val root = (project in file(".")).
     organization := "io.github.godenji",
     sonatypeProfileName in ThisBuild := organization.value,
     version := "0.10.9",
-    scalaVersion := "2.13.3",
+    scalaVersion := "2.13.6",
     scalacOptions ++= Seq(
       "-opt:l:inline",
       "-unchecked", "-deprecation", "-feature",
@@ -34,7 +34,7 @@ def scalaFixSettings = Seq(
   semanticdbOptions += "-P:semanticdb:synthetics:on",
   semanticdbVersion := scalafixSemanticdb.revision,
   ThisBuild / scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value),
-  scalafixDependencies += "org.scala-lang" %% "scala-rewrites" % "0.1.2"
+  scalafixDependencies += "org.scala-lang" %% "scala-rewrites" % "0.1.3"
 )
 
 def publishSettings(projectName: String) = Seq(
