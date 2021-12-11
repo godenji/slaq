@@ -86,19 +86,13 @@ class MetaTest(tdb: TestDB) extends DBTest(tdb) {
         for (c <- t.getBestRowIdentifier(MBestRowIdentifierColumn.Scope.Session))
           println("    Row identifier for session: " + c)
 
-        //TODO: remove; sqlite 3.8.7 blows up on getIndexInfo(), fixed in to-be-released 3.8.8
-        if (tdb.driver == SQLiteDriver)
-          try {
-            for (i <- t.getIndexInfo()) println("    " + i)
-          }
-          catch { case _: SQLException => null }
-        else for (i <- t.getIndexInfo()) println("    " + i)
+        for (i <- t.getIndexInfo()) println("    " + i)
       }
 
       println("Schemas from DatabaseMetaData:")
       for (t <- MSchema.getSchemas) println("  " + t)
 
-      if (tdb.driver != H2Driver) { // Not supported by H2
+      if (tdb.driver != H2Driver && tdb.driver != SQLiteDriver) { // Not supported by either H2 or SqLite
         println("Client Info Properties from DatabaseMetaData:")
         for (t <- MClientInfoProperty.getClientInfoProperties) println("  " + t)
       }
