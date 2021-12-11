@@ -12,7 +12,7 @@ class SequenceDDLBuilder(seq: Sequence[_], val profile: Profile) {
     seq._increment.foreach { b append " INCREMENT " append _ }
     seq._minValue.foreach { b append " MINVALUE " append _ }
     seq._maxValue.foreach { b append " MAXVALUE " append _ }
-    seq._start.foreach { b append " START " append _ }
+    seq._start.foreach { b append " START WITH " append _ }
     if (seq._cycle) b append " CYCLE"
     new DDL {
       val createPhase1 = Iterable(b.toString)
