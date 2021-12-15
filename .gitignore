@@ -14,3 +14,8 @@ sbt-cache-config/
 sbt-cache-update/
 .metals
 .bsp
+.bloop
+.vscode
+project/.bloop
+project/metals.sbt
+project/project
