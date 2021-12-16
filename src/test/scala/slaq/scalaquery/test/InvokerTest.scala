@@ -14,16 +14,16 @@ import slaq.session.Session
 object InvokerTest extends DBTestObject(H2Mem)
 
 class InvokerTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   @Test def testCollections(): Unit = {
 
-    val T = new Table[Int]("t") {
+    object T extends Table[Int]("t") {
       def a = column[Int]("a")
       def * = a
     }
 
-    db withSession { implicit ss: Session =>
+    db withSession { implicit session =>
       T.ddl.create
       T.insertAll(2, 3, 1, 5, 4)
 
@@ -54,7 +54,7 @@ class InvokerTest(tdb: TestDB) extends DBTest(tdb) {
 
   @Test def testMap(): Unit = {
 
-    val T = new Table[(Int, String)]("t") {
+    object T extends Table[(Int, String)]("t") {
       def k = column[Int]("k")
       def v = column[String]("v")
       def * = k ~ v
@@ -73,7 +73,7 @@ class InvokerTest(tdb: TestDB) extends DBTest(tdb) {
 
   @Test def testLazy(): Unit = {
 
-    val T = new Table[Int]("t") {
+    object T extends Table[Int]("t") {
       def a = column[Int]("a")
       def * = a
     }
@@ -83,7 +83,7 @@ class InvokerTest(tdb: TestDB) extends DBTest(tdb) {
       _ <- Query orderBy t.a
     } yield t
 
-    def setUp(implicit session: Session): Unit = {
+    def setUp(using Session): Unit = {
       T.ddl.create
       for (g <- 1 to 1000 grouped 100)
         T.insertAll(g: _*)

@@ -12,12 +12,12 @@ trait MutatingInvoker[-P, R] extends Invoker[P, R] { self =>
   /**
    * Transform a query's results with an updatable result set.
    */
-  def mutate(param: P, f: ResultSetMutator[R] => Unit, end: ResultSetMutator[R] => Unit)(implicit session: Session): Unit
+  def mutate(param: P, f: ResultSetMutator[R] => Unit, end: ResultSetMutator[R] => Unit)(using session: Session): Unit
 
   /**
    * Transform a query's results with an updatable result set.
    */
-  final def mutate(param: P)(f: ResultSetMutator[R] => Unit)(implicit session: Session): Unit = mutate(param, f, null)(session)
+  final def mutate(param: P)(f: ResultSetMutator[R] => Unit)(using session: Session): Unit = mutate(param, f, null)
 
   override def apply(parameter: P): MutatingUnitInvoker[R] =
     new AppliedInvoker[P, R] with MutatingUnitInvoker[R] {
@@ -29,9 +29,9 @@ trait MutatingInvoker[-P, R] extends Invoker[P, R] { self =>
 trait MutatingUnitInvoker[R] extends UnitInvoker[R] {
   override protected val delegate: MutatingInvoker[Param, R]
 
-  def mutate(f: ResultSetMutator[R] => Unit, end: ResultSetMutator[R] => Unit)(implicit session: Session): Unit = delegate.mutate(appliedParameter, f, end)(session)
+  def mutate(f: ResultSetMutator[R] => Unit, end: ResultSetMutator[R] => Unit)(using session: Session): Unit = delegate.mutate(appliedParameter, f, end)
 
-  final def mutate(f: ResultSetMutator[R] => Unit)(implicit session: Session): Unit = mutate(f, null)(session)
+  final def mutate(f: ResultSetMutator[R] => Unit)(using session: Session): Unit = mutate(f, null)
 }
 
 trait MutatingStatementInvoker[-P, R]
@@ -44,7 +44,7 @@ trait MutatingStatementInvoker[-P, R]
     query, NamingContext()
   )
 
-  @inline final protected def getStatement = built.sql
+  inline final protected def getStatement = built.sql
   def selectStatement = getStatement
 
   final protected def setParam(param: P, st: PreparedStatement): Unit = built.setter(new PositionedParameters(st), param)
@@ -58,7 +58,7 @@ trait MutatingStatementInvoker[-P, R]
   protected val cursor: ResultSetType = ResultSetType.Auto
   protected val previousAfterDelete = false
 
-  def mutate(param: P, f: ResultSetMutator[R] => Unit, end: ResultSetMutator[R] => Unit)(implicit session: Session): Unit = {
+  def mutate(param: P, f: ResultSetMutator[R] => Unit, end: ResultSetMutator[R] => Unit)(using session: Session): Unit = {
 
     results(param, 0, cursor, concurrency).fold(
       _ => Fail("Cannot transform an update result"),

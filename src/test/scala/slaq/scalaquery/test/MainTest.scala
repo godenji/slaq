@@ -12,7 +12,7 @@ import slaq.test.util.TestDB._
 object MainTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 
 class MainTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   case class User(id: Int, first: String, last: String)
 
@@ -175,7 +175,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
       val q5 = Users filter { _.id notIn Orders.map(_.userID) }
       println("q5: " + q5.selectStatement)
       println("Users without Orders:")
-      q5.foreach { o: (Int, String, Option[String]) => println("  " + o) }
+      q5.foreach { (o: (Int, String, Option[String])) => println("  " + o) }
       assertEquals(List((3, "Apu", Some("Nahasapeemapetilon")), (7, "Snowball", None)), q5.list())
 
       println("q5: " + q5.deleteStatement)

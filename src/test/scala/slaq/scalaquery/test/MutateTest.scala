@@ -12,7 +12,7 @@ import slaq.test.util.TestDB._
 object MutateTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem)
 
 class MutateTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   @Test def test(): Unit = {
 
@@ -21,7 +21,10 @@ class MutateTest(tdb: TestDB) extends DBTest(tdb) {
       def id = column[Int]("id", O PrimaryKey, O AutoInc)
       def first = column[String]("first")
       def last = column[String]("last")
-      def * = id ~ first ~ last <> (User, User.unapply _)
+      def * = id ~ first ~ last <> (
+        User.apply _,
+        x => Tuple.fromProductTyped(x)
+      )
     }
 
     db withSession { implicit ss: Session =>

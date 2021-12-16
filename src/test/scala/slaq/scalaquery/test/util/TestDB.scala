@@ -12,7 +12,7 @@ import slaq.ql.driver.{
 import slaq.ResultSetInvoker
 import slaq.session._
 import slaq.simple.{StaticQuery => Q}
-import slaq.simple.GetResult._
+import slaq.simple.GetResult.{given, *}
 import java.util.zip.GZIPInputStream
 import java.io._
 import org.junit.Assert
@@ -64,11 +64,13 @@ abstract class TestDB(val confName: String) {
     }
   }
   def isEnabled = TestDBOptions.isInternalEnabled(confName)
-  def getLocalTables(implicit session: Session): List[String] = {
-    val tables = ResultSetInvoker[(String, String, String)](_.conn.getMetaData().getTables("", "", null, null))
+  def getLocalTables(using Session): List[String] = {
+    val tables = ResultSetInvoker[(String, String, String)](_.conn.getMetaData().getTables("", "", null, null)) {
+      r => (r<<, r<<, r<<)
+    }
     tables.list().map(_._3).sorted
   }
-  def assertTablesExist(tables: String*)(implicit session: Session): Unit = {
+  def assertTablesExist(tables: String*)(using Session): Unit = {
     for (t <- tables) {
       try Q[Int] + "select 1 from " + driver.sqlUtils.quote(t) + " where 1 < 0" list() catch {
         case _: Exception =>
@@ -76,7 +78,7 @@ abstract class TestDB(val confName: String) {
       }
     }
   }
-  def assertNotTablesExist(tables: String*)(implicit session: Session): Unit = {
+  def assertNotTablesExist(tables: String*)(using Session): Unit = {
     for (t <- tables) {
       try {
         Q[Int] + "select 1 from " + driver.sqlUtils.quote(t) + " where 1 < 0" list();
@@ -85,7 +87,7 @@ abstract class TestDB(val confName: String) {
       catch { case _: Exception => }
     }
   }
-  def assertUnquotedTablesExist(tables: String*)(implicit session: Session): Unit = {
+  def assertUnquotedTablesExist(tables: String*)(using Session): Unit = {
     for (t <- tables) {
       try Q[Int] + "select 1 from " + t + " where 1 < 0" list() catch {
         case _: Exception =>
@@ -93,7 +95,7 @@ abstract class TestDB(val confName: String) {
       }
     }
   }
-  def assertNotUnquotedTablesExist(tables: String*)(implicit session: Session): Unit = {
+  def assertNotUnquotedTablesExist(tables: String*)(using Session): Unit = {
     for (t <- tables) {
       try {
         Q[Int] + "select 1 from " + t + " where 1 < 0" list();
@@ -128,7 +130,7 @@ class SQLiteTestDB(dburl: String, confName: String) extends TestDB(confName) {
   val url = dburl
   val jdbcDriver = "org.sqlite.JDBC"
   val driver = SQLiteDriver
-  override def getLocalTables(implicit session: Session) =
+  override def getLocalTables(using Session) =
     super.getLocalTables.filter(s => !s.toLowerCase.contains("sqlite_"))
 }
 
@@ -172,8 +174,10 @@ class ExternalTestDB(confName: String, val driver: Profile) extends TestDB(confN
 abstract class HsqlDB(confName: String) extends TestDB(confName) {
   val jdbcDriver = "org.hsqldb.jdbcDriver"
   val driver = HsqldbDriver
-  override def getLocalTables(implicit session: Session): List[String] = {
-    val tables = ResultSetInvoker[(String, String, String)](_.conn.getMetaData().getTables(null, "PUBLIC", null, null))
+  override def getLocalTables(using Session): List[String] = {
+    val tables = ResultSetInvoker[(String, String, String)](_.conn.getMetaData().getTables(null, "PUBLIC", null, null)) {
+      r => (r<<, r<<, r<<)
+    }
     tables.list().map(_._3).sorted
   }
   override def userName = "sa"
@@ -221,8 +225,10 @@ object TestDB {
   }
 
   def Postgres(to: DBTestObject) = new ExternalTestDB("postgres", PostgresDriver) {
-    override def getLocalTables(implicit session: Session) = {
-      val tables = ResultSetInvoker[(String, String, String)](_.conn.getMetaData().getTables("", "public", null, null))
+    override def getLocalTables(using session: Session) = {
+      val tables = ResultSetInvoker[(String, String, String)](_.conn.getMetaData().getTables("", "public", null, null)) {
+        r => (r<<, r<<, r<<)
+      }
       tables.list().map(_._3).filter(s => !s.toLowerCase.endsWith("_pkey") && !s.toLowerCase.endsWith("_id_seq")).sorted
     }
   }

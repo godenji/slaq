@@ -16,11 +16,11 @@ abstract class ResultSetInvoker[+R] extends UnitInvokerMixin[R] { self =>
 
   protected def createResultSet(session: Session): ResultSet
 
-  def elementsTo(param: Unit, maxRows: Int)(implicit session: Session): CloseableIterator[R] = {
-    val rs = createResultSet(session)
-    if (rs eq null) CloseableIterator.empty
-    else new PositionedResultIterator[R](rs, maxRows) {
-      def closeUnderlying() = rs.close()
+  def elementsTo(param: Unit, maxRows: Int)(using session: Session): CloseableIterator[R] = {
+    val r = createResultSet(session)
+    if (r eq null) CloseableIterator.empty
+    else new PositionedResultIterator[R](r, maxRows) {
+      def closeUnderlying() = r.close()
       def extractValue() = self.extractValue(this)
     }
   }
@@ -29,7 +29,7 @@ abstract class ResultSetInvoker[+R] extends UnitInvokerMixin[R] { self =>
 }
 
 object ResultSetInvoker {
-  def apply[R](f: Session => ResultSet)(implicit conv: PositionedResult => R): UnitInvoker[R] = new ResultSetInvoker[R] {
+  def apply[R](f: Session => ResultSet)(conv: PositionedResult => R): UnitInvoker[R] = new ResultSetInvoker[R] {
     def createResultSet(session: Session) = f(session)
     def extractValue(pr: PositionedResult) = conv(pr)
   }

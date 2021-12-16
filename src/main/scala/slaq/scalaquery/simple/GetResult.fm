@@ -12,32 +12,32 @@ trait GetResult[+T] extends (PositionedResult => T) { self =>
 }
 
 object GetResult {
-  implicit object GetBoolean extends GetResult[Boolean] { def apply(rs: PositionedResult) = rs.nextBoolean() }
-  implicit object GetByte extends GetResult[Byte] { def apply(rs: PositionedResult) = rs.nextByte() }
-  implicit object GetDate extends GetResult[Date] { def apply(rs: PositionedResult) = rs.nextDate() }
-  implicit object GetDouble extends GetResult[Double] { def apply(rs: PositionedResult) = rs.nextDouble() }
-  implicit object GetFloat extends GetResult[Float] { def apply(rs: PositionedResult) = rs.nextFloat() }
-  implicit object GetInt extends GetResult[Int] { def apply(rs: PositionedResult) = rs.nextInt() }
-  implicit object GetLong extends GetResult[Long] { def apply(rs: PositionedResult) = rs.nextLong() }
-  implicit object GetShort extends GetResult[Short] { def apply(rs: PositionedResult) = rs.nextShort() }
-  implicit object GetString extends GetResult[String] { def apply(rs: PositionedResult) = rs.nextString() }
-  implicit object GetTime extends GetResult[Time] { def apply(rs: PositionedResult) = rs.nextTime() }
-  implicit object GetTimestamp extends GetResult[Timestamp] { def apply(rs: PositionedResult) = rs.nextTimestamp() }
+  inline given GetBoolean: GetResult[Boolean] with { def apply(rs: PositionedResult) = rs.nextBoolean() }
+  inline given GetByte: GetResult[Byte] with { def apply(rs: PositionedResult) = rs.nextByte() }
+  inline given GetDate: GetResult[Date] with { def apply(rs: PositionedResult) = rs.nextDate() }
+  inline given GetDouble: GetResult[Double] with { def apply(rs: PositionedResult) = rs.nextDouble() }
+  inline given GetFloat: GetResult[Float] with { def apply(rs: PositionedResult) = rs.nextFloat() }
+  inline given GetInt: GetResult[Int] with { def apply(rs: PositionedResult) = rs.nextInt() }
+  inline given GetLong: GetResult[Long] with { def apply(rs: PositionedResult) = rs.nextLong() }
+  inline given GetShort: GetResult[Short] with { def apply(rs: PositionedResult) = rs.nextShort() }
+  inline given GetString: GetResult[String] with { def apply(rs: PositionedResult) = rs.nextString() }
+  inline given GetTime: GetResult[Time] with { def apply(rs: PositionedResult) = rs.nextTime() }
+  inline given GetTimestamp: GetResult[Timestamp] with { def apply(rs: PositionedResult) = rs.nextTimestamp() }
 
-  implicit object GetBooleanOption extends GetResult[Option[Boolean]] { def apply(rs: PositionedResult) = rs.nextBooleanOption() }
-  implicit object GetByteOption extends GetResult[Option[Byte]] { def apply(rs: PositionedResult) = rs.nextByteOption() }
-  implicit object GetDateOption extends GetResult[Option[Date]] { def apply(rs: PositionedResult) = rs.nextDateOption() }
-  implicit object GetDoubleOption extends GetResult[Option[Double]] { def apply(rs: PositionedResult) = rs.nextDoubleOption() }
-  implicit object GetFloatOption extends GetResult[Option[Float]] { def apply(rs: PositionedResult) = rs.nextFloatOption() }
-  implicit object GetIntOption extends GetResult[Option[Int]] { def apply(rs: PositionedResult) = rs.nextIntOption() }
-  implicit object GetLongOption extends GetResult[Option[Long]] { def apply(rs: PositionedResult) = rs.nextLongOption() }
-  implicit object GetShortOption extends GetResult[Option[Short]] { def apply(rs: PositionedResult) = rs.nextShortOption() }
-  implicit object GetStringOption extends GetResult[Option[String]] { def apply(rs: PositionedResult) = rs.nextStringOption() }
-  implicit object GetTimeOption extends GetResult[Option[Time]] { def apply(rs: PositionedResult) = rs.nextTimeOption() }
-  implicit object GetTimestampOption extends GetResult[Option[Timestamp]] { def apply(rs: PositionedResult) = rs.nextTimestampOption() }
+  inline given GetBooleanOption: GetResult[Option[Boolean]] with { def apply(rs: PositionedResult) = rs.nextBooleanOption() }
+  inline given GetByteOption: GetResult[Option[Byte]] with { def apply(rs: PositionedResult) = rs.nextByteOption() }
+  inline given GetDateOption: GetResult[Option[Date]] with { def apply(rs: PositionedResult) = rs.nextDateOption() }
+  inline given GetDoubleOption: GetResult[Option[Double]] with { def apply(rs: PositionedResult) = rs.nextDoubleOption() }
+  inline given GetFloatOption: GetResult[Option[Float]] with { def apply(rs: PositionedResult) = rs.nextFloatOption() }
+  inline given GetIntOption: GetResult[Option[Int]] with { def apply(rs: PositionedResult) = rs.nextIntOption() }
+  inline given GetLongOption: GetResult[Option[Long]] with { def apply(rs: PositionedResult) = rs.nextLongOption() }
+  inline given GetShortOption: GetResult[Option[Short]] with { def apply(rs: PositionedResult) = rs.nextShortOption() }
+  inline given GetStringOption: GetResult[Option[String]] with { def apply(rs: PositionedResult) = rs.nextStringOption() }
+  inline given GetTimeOption: GetResult[Option[Time]] with { def apply(rs: PositionedResult) = rs.nextTimeOption() }
+  inline given GetTimestampOption: GetResult[Option[Timestamp]] with { def apply(rs: PositionedResult) = rs.nextTimestampOption() }
 
 <#list 2..22 as i>
-  @inline implicit final def createGetTuple${i}[<#list 1..i as j>T${j}<#if i != j>, </#if></#list>](implicit <#list 1..i as j>c${j}: GetResult[T${j}]<#if i != j>, </#if></#list>): GetResult[(<#list 1..i as j>T${j}<#if i != j>, </#if></#list>)] = new GetResult[(<#list 1..i as j>T${j}<#if i != j>, </#if></#list>)] {
+  given createGetTuple${i}[<#list 1..i as j>T${j}<#if i != j>, </#if></#list>](using <#list 1..i as j>c${j}: GetResult[T${j}]<#if i != j>, </#if></#list>): GetResult[(<#list 1..i as j>T${j}<#if i != j>, </#if></#list>)] = new GetResult[(<#list 1..i as j>T${j}<#if i != j>, </#if></#list>)] {
     def apply(rs: PositionedResult) = (<#list 1..i as j>c${j}(rs)<#if i != j>, </#if></#list>)
   }
 </#list>
@@ -47,5 +47,5 @@ object GetResult {
       Fail("Update statements should not return a ResultSet")
   }
 
-  def apply[T](implicit f: (PositionedResult => T)) = new GetResult[T] { def apply(rs: PositionedResult) = f(rs) }
+  def apply[T](f: (PositionedResult => T)) = new GetResult[T] { def apply(rs: PositionedResult) = f(rs) }
 }

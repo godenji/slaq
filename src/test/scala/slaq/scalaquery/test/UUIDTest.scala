@@ -12,7 +12,7 @@ import slaq.session.Session
 object UUIDTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 
 class UUIDTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   object T1 extends Table[(Int, Option[UUID])]("test") {
     def id = column[Int]("id")

@@ -18,7 +18,7 @@ trait DDL { self =>
   def createStatements: Iterator[String] = createPhase1.iterator ++ createPhase2.iterator
 
   /** Create the entities described by this DDL object */
-  def create(implicit session: Session): Unit = session.withTransaction {
+  def create(using session: Session): Unit = session.withTransaction {
     for (s <- createStatements)
       session.withPreparedStatement(s)(_.execute)
   }
@@ -33,7 +33,7 @@ trait DDL { self =>
   def dropStatements: Iterator[String] = dropPhase1.iterator ++ dropPhase2.iterator
 
   /** Drop the entities described by this DDL object */
-  def drop(implicit session: Session): Unit = session.withTransaction {
+  def drop(using session: Session): Unit = session.withTransaction {
     for (s <- dropStatements)
       session.withPreparedStatement(s)(_.execute)
   }

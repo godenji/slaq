@@ -12,9 +12,9 @@ import slaq.test.util.TestDB._
 object InsertTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 
 class InsertTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
-  class TestTable(name: String) extends Table[(Int, String)](name) {
+  class TestTable(table: String) extends Table[(Int, String)](table) {
     def id = column[Int]("id")
     def name = column[String]("name")
     def * = id ~ name

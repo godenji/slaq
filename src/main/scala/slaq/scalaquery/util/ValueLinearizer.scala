@@ -32,7 +32,7 @@ final class ProductLinearizer(sub: IndexedSeq[ValueLinearizer[_]]) extends Value
         updateResult(profile, rs, value.productElement(i))
   }
 
-  def getResult(profile: Profile, rs: PositionedResult): Product = {
+  inline def getResult(profile: Profile, rs: PositionedResult): Product = {
     var i = -1
     def f = { i += 1; sub(i).getResult(profile, rs) }
     sub.length match {

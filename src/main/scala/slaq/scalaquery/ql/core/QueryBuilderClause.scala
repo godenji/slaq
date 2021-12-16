@@ -14,7 +14,7 @@ trait QueryBuilderClause { self: QueryBuilder =>
     appendLimitClause(b)
   }
 
-  protected def queryModifiers[T <: QueryModifier](implicit m: ClassTag[T]) =
+  protected def queryModifiers[T <: QueryModifier](using m: ClassTag[T]) =
     query.modifiers.filter(m.runtimeClass.isInstance(_)).asInstanceOf[List[T]]
 
   protected def appendConditions(b: SqlBuilder): Unit =

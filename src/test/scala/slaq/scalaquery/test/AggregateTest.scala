@@ -3,8 +3,6 @@ package slaq.test
 import org.junit.Test
 import org.junit.Assert._
 import slaq.ql._
-import slaq.ql.TypeMapper._
-import slaq.ql.Table
 import slaq.session._
 import slaq.test.util._
 import slaq.test.util.TestDB._
@@ -12,7 +10,7 @@ import slaq.test.util.TestDB._
 object AggregateTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 
 class AggregateTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   @Test def testAggregates() = db withSession { implicit ss: Session =>
     object T extends Table[(Int, Option[Int])]("t") {

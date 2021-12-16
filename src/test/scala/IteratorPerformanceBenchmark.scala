@@ -2,16 +2,16 @@ import collection.mutable.ArrayBuffer
 import slaq.session._
 import slaq.ql._
 import slaq.ql.Table
-import slaq.ql.driver.H2Driver.Implicit._
+import slaq.ql.driver.H2Driver.Implicit.{given, *}
 
 object IteratorPerformanceBenchmark {
   def main(args: Array[String]): Unit = {
-    val Props = new Table[(String, String)]("properties") {
+    object Props extends Table[(String, String)]("properties") {
       def key = column[String]("key", O.PrimaryKey)
       def value = column[String]("value")
       def * = key ~ value
     }
-    Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver") withSession { implicit ss: Session =>
+    Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver") withSession { implicit session =>
       Props.ddl.create
       val count = 10000
       val size = 1000
@@ -46,7 +46,7 @@ object IteratorPerformanceBenchmark {
 
   /*def main2(args: Array[String]) {
     val inv = new Invoker[Int, String] {
-      def foreach(param: Int, f: String => Unit, maxRows: Int)(implicit session: Session): Unit = {
+      def foreach(param: Int, f: String => Unit, maxRows: Int)(using session: Session): Unit = {
         var i = 0
         while(i < param) {
           f(i.toString)
@@ -54,7 +54,7 @@ object IteratorPerformanceBenchmark {
         }
       }
 
-      def elements(param: Int)(implicit session: Session): CloseableIterator[String] = {
+      def elements(param: Int)(using session: Session): CloseableIterator[String] = {
         new CloseableIterator[String] {
           private[this] var i = 0
           def next() = if(!hasNext) noNext else { val r = i; i += 1; r.toString }

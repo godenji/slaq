@@ -12,7 +12,7 @@ import slaq.test.util.TestDB._
 object NestingTest extends DBTestObject(H2Mem /*, SQLiteMem, Postgres, MySQL, HsqldbMem*/ )
 
 class NestingTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   @Test def testNestedTuples(): Unit = {
 

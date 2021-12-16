@@ -26,7 +26,7 @@ object SimpleFunction {
 
   def unary[T1, R: TypeMapper](fname: String, fn: Boolean = false): (Column[T1] => OperatorColumn[R] with SimpleFunction) = {
     val f = apply(fname, fn);
-    { t1: Column[T1] => f(Seq(t1)) }
+    { (t1: Column[T1]) => f(Seq(t1)) }
   }
 
   def binary[T1, T2, R: TypeMapper](fname: String, fn: Boolean = false): ((Column[T1], Column[T2]) => OperatorColumn[R] with SimpleFunction) = {
@@ -104,7 +104,7 @@ object SimpleExpression {
     val g = apply({
       (ch: Seq[Node], b: SqlBuilder, qb: QueryBuilder) => f(ch(0), b, qb)
     });
-    { t1: Column[T1] => g(Seq(t1)) }
+    { (t1: Column[T1]) => g(Seq(t1)) }
   }
 
   def binary[T1, T2, R: TypeMapper](f: (Node, Node, SqlBuilder, QueryBuilder) => Unit): ((Column[T1], Column[T2]) => OperatorColumn[R] with SimpleExpression) = {

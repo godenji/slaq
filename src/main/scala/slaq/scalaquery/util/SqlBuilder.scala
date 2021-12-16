@@ -60,8 +60,8 @@ object SqlBuilder {
   final type Setter = (PositionedParameters, Any) => Unit
   final case class Result(sql: String, setter: Setter)
 
-  implicit class StringInterpolator(val sc: StringContext) extends AnyVal {
-    @inline final def b(args: Any*)(implicit builder: SqlBuilder): SqlBuilder = {
+  extension (sc: StringContext) {
+    inline final def b(args: Any*)(using builder: SqlBuilder): SqlBuilder = {
       val (keys, vals) = (sc.parts.iterator, args.iterator)
       builder += keys.next()
       while (keys.hasNext) {

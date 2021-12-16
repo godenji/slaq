@@ -8,7 +8,7 @@ import slaq.session.Session
  */
 object CodeGen {
 
-  def output(table: MTable, out: PrintWriter)(implicit session: Session): Unit = {
+  def output(table: MTable, out: PrintWriter)(using Session): Unit = {
     val columns = table.getColumns.list()
     val pkeys = table.getPrimaryKeys.mapResult(k => (k.column, k)).list().toMap
     if (!columns.isEmpty) {

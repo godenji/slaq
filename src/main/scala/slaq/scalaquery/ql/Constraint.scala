@@ -6,14 +6,12 @@ sealed trait Constraint
 
 case class PrimaryKey(name: String, columns: IndexedSeq[Node]) extends Constraint
 
-sealed abstract class ForeignKeyAction(val action: String)
-object ForeignKeyAction {
-  case object Cascade extends ForeignKeyAction("CASCADE")
-  case object Restrict extends ForeignKeyAction("RESTRICT")
-  case object NoAction extends ForeignKeyAction("NO ACTION")
-  case object SetNull extends ForeignKeyAction("SET NULL")
-  case object SetDefault extends ForeignKeyAction("SET DEFAULT")
-}
+enum ForeignKeyAction(val action: String):
+  case Cascade extends ForeignKeyAction("CASCADE")
+  case Restrict extends ForeignKeyAction("RESTRICT")
+  case NoAction extends ForeignKeyAction("NO ACTION")
+  case SetNull extends ForeignKeyAction("SET NULL")
+  case SetDefault extends ForeignKeyAction("SET DEFAULT")
 
 class ForeignKey[TT <: Table[_], P](
   val name: String,

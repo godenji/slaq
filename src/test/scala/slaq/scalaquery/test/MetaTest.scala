@@ -18,7 +18,7 @@ object MetaTest extends DBTestObject(
 )
 
 class MetaTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   object Users extends Table[(Int, String, Option[String])]("users") {
     def id = column[Int]("id", O PrimaryKey)

@@ -43,8 +43,8 @@ sealed abstract class PositionedResult(val rs: ResultSet)
   private def option[T](t: T): Option[T] =
     if (rs wasNull) None else Some(t)
 
-  final def <<[T](implicit f: GetResult[T]): T = f(this)
-  final def <<?[T](implicit f: GetResult[Option[T]]): Option[T] =
+  final def <<[T](using f: GetResult[T]): T = f(this)
+  final def <<?[T](using GetResult[Option[T]]): Option[T] =
     if (hasMoreColumns) this.<< else None
 
   final def nextBigDecimal() = {
@@ -126,7 +126,7 @@ sealed abstract class PositionedResult(val rs: ResultSet)
    */
   def close(): Unit
 
-  final def build[C[_], R](gr: GetResult[R])(implicit canBuildFrom: Factory[R, C[R]]): C[R] = {
+  final def build[C[_], R](gr: GetResult[R])(using canBuildFrom: Factory[R, C[R]]): C[R] = {
     val b = canBuildFrom.newBuilder
     while (nextRow) b += gr(this)
     b.result()
@@ -135,7 +135,7 @@ sealed abstract class PositionedResult(val rs: ResultSet)
   final def to[C[_]] = new To[C]()
 
   final class To[C[_]] private[PositionedResult] () {
-    def apply[R](gr: GetResult[R])(implicit canBuildFrom: Factory[R, C[R]]) =
+    def apply[R](gr: GetResult[R])(using Factory[R, C[R]]) =
       build[C, R](gr)
   }
 }

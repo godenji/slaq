@@ -5,6 +5,7 @@ import java.sql.{Blob, Clob, Date, Time, Timestamp}
 import slaq.session.{PositionedParameters, PositionedResult}
 import slaq.Fail
 import slaq.ql.core.Profile
+
 /**
  * A (usually implicit) TypeMapper object represents a Scala type that can be
  * used as a column type in the database. The actual implementation of the
@@ -13,7 +14,7 @@ import slaq.ql.core.Profile
  * <p>Custom types with a single implementation can implement both traits in
  * one object:</p>
  * <code><pre>
- * implicit object MyTypeMapper
+ * given MyTypeMapper
  *     extends TypeMapper[MyType] with TypeMapperDelegate[MyType] {
  *   def apply(p:Profile) = this
  *   def zero = ...
@@ -29,84 +30,86 @@ sealed trait TypeMapper[T] extends (Profile => TypeMapperDelegate[T]) { self =>
   def createOptionTypeMapper: OptionTypeMapper[T] =
     new OptionTypeMapper[T](self) {
       def apply(profile: Profile) = self(profile).createOptionTypeMapperDelegate
-      def getBaseTypeMapper[U](implicit ev: Option[U] =:= Option[T]): TypeMapper[U] =
+      def getBaseTypeMapper[U](using Option[U] =:= Option[T]): TypeMapper[U] =
         self.asInstanceOf[TypeMapper[U]]
     }
-  def getBaseTypeMapper[U](implicit ev: Option[U] =:= T): TypeMapper[U]
+  def getBaseTypeMapper[U](using Option[U] =:= T): TypeMapper[U]
 }
 
 object TypeMapper {
-  @inline implicit final def typeMapper2OptionTypeMapper[T](implicit t: TypeMapper[T]): OptionTypeMapper[T] = t.createOptionTypeMapper
 
-  import godenji.iso._
-  @inline implicit final def mappableType[T <: MappedToBase](implicit iso: Isomorphism[T], tm: TypeMapper[T#Underlying]): BaseTypeMapper[T] =
-    MappedTypeMapper.base[T, T#Underlying](iso.map, iso.comap)
+  inline given typeMapper2OptionTypeMapper[T](using t: TypeMapper[T]): OptionTypeMapper[T] =
+    t.createOptionTypeMapper
 
-  implicit object BooleanTypeMapper extends BaseTypeMapper[Boolean] {
+  //import godenji.iso._
+  //inline inline given mappableType[T <: MappedTo[_]](using TypeMapper[IdT[T]]): Conversion[Isomorphism[T], BaseTypeMapper[T]] =
+  //  (iso: Isomorphism[T]) => MappedTypeMapper.base[T, IdT[T]](iso.map, iso.comap)
+
+  inline given BooleanTypeMapper: BaseTypeMapper[Boolean] with {
     def apply(profile: Profile) = profile.typeMapperDelegates.booleanTypeMapperDelegate
   }
 
-  implicit object BlobTypeMapper extends BaseTypeMapper[Blob] {
+  inline given BlobTypeMapper: BaseTypeMapper[Blob] with {
     def apply(profile: Profile) = profile.typeMapperDelegates.blobTypeMapperDelegate
   }
 
-  implicit object ByteTypeMapper extends BaseTypeMapper[Byte] with NumericTypeMapper {
+  inline given ByteTypeMapper: BaseTypeMapper[Byte] with NumericTypeMapper with {
     def apply(profile: Profile) = profile.typeMapperDelegates.byteTypeMapperDelegate
   }
 
-  implicit object ByteArrayTypeMapper extends BaseTypeMapper[Array[Byte]] {
+  inline given ByteArrayTypeMapper: BaseTypeMapper[Array[Byte]] with {
     def apply(profile: Profile) = profile.typeMapperDelegates.byteArrayTypeMapperDelegate
   }
 
-  implicit object ClobTypeMapper extends BaseTypeMapper[Clob] {
+  inline given ClobTypeMapper: BaseTypeMapper[Clob] with {
     def apply(profile: Profile) = profile.typeMapperDelegates.clobTypeMapperDelegate
   }
 
-  implicit object DateTypeMapper extends BaseTypeMapper[Date] {
+  inline given DateTypeMapper: BaseTypeMapper[Date] with {
     def apply(profile: Profile) = profile.typeMapperDelegates.dateTypeMapperDelegate
   }
 
-  implicit object DoubleTypeMapper extends BaseTypeMapper[Double] with NumericTypeMapper {
+  inline given DoubleTypeMapper: BaseTypeMapper[Double] with NumericTypeMapper with {
     def apply(profile: Profile) = profile.typeMapperDelegates.doubleTypeMapperDelegate
   }
 
-  implicit object FloatTypeMapper extends BaseTypeMapper[Float] with NumericTypeMapper {
+  inline given FloatTypeMapper: BaseTypeMapper[Float] with NumericTypeMapper with {
     def apply(profile: Profile) = profile.typeMapperDelegates.floatTypeMapperDelegate
   }
 
-  implicit object IntTypeMapper extends BaseTypeMapper[Int] with NumericTypeMapper {
+  inline given IntTypeMapper: BaseTypeMapper[Int] with NumericTypeMapper with {
     def apply(profile: Profile) = profile.typeMapperDelegates.intTypeMapperDelegate
   }
 
-  implicit object LongTypeMapper extends BaseTypeMapper[Long] with NumericTypeMapper {
+  inline given LongTypeMapper: BaseTypeMapper[Long] with NumericTypeMapper with {
     def apply(profile: Profile) = profile.typeMapperDelegates.longTypeMapperDelegate
   }
 
-  implicit object ShortTypeMapper extends BaseTypeMapper[Short] {
+  inline given ShortTypeMapper: BaseTypeMapper[Short] with {
     def apply(profile: Profile) = profile.typeMapperDelegates.shortTypeMapperDelegate
   }
 
-  implicit object StringTypeMapper extends BaseTypeMapper[String] {
+  inline given StringTypeMapper: BaseTypeMapper[String] with {
     def apply(profile: Profile) = profile.typeMapperDelegates.stringTypeMapperDelegate
   }
 
-  implicit object TimeTypeMapper extends BaseTypeMapper[Time] {
+  inline given TimeTypeMapper: BaseTypeMapper[Time] with {
     def apply(profile: Profile) = profile.typeMapperDelegates.timeTypeMapperDelegate
   }
 
-  implicit object TimestampTypeMapper extends BaseTypeMapper[Timestamp] {
+  inline given TimestampTypeMapper: BaseTypeMapper[Timestamp] with {
     def apply(profile: Profile) = profile.typeMapperDelegates.timestampTypeMapperDelegate
   }
 
-  implicit object UnitTypeMapper extends BaseTypeMapper[Unit] {
+  inline given UnitTypeMapper: BaseTypeMapper[Unit] with {
     def apply(profile: Profile) = profile.typeMapperDelegates.unitTypeMapperDelegate
   }
 
-  implicit object UUIDTypeMapper extends BaseTypeMapper[UUID] {
+  inline given UUIDTypeMapper: BaseTypeMapper[UUID] with {
     def apply(profile: Profile) = profile.typeMapperDelegates.uuidTypeMapperDelegate
   }
 
-  implicit object BigDecimalTypeMapper extends BaseTypeMapper[BigDecimal] {
+  inline given BigDecimalTypeMapper: BaseTypeMapper[BigDecimal] with {
     def apply(profile: Profile) = profile.typeMapperDelegates.bigDecimalTypeMapperDelegate
   }
 
@@ -116,7 +119,7 @@ object TypeMapper {
 }
 
 trait BaseTypeMapper[T] extends TypeMapper[T] {
-  def getBaseTypeMapper[U](implicit ev: Option[U] =:= T) =
+  def getBaseTypeMapper[U](using Option[U] =:= T) =
     Fail("A BaseTypeMapper should not have an Option type")
 }
 
@@ -192,7 +195,7 @@ object TypeMapperDelegate {
       yield f.get(null).asInstanceOf[Int] -> f.getName)
 }
 
-abstract class MappedTypeMapper[T, U](implicit tm: TypeMapper[U])
+abstract class MappedTypeMapper[T, U](using tm: TypeMapper[U])
   extends TypeMapper[T] { self =>
 
   def map(t: T): U
@@ -219,8 +222,9 @@ abstract class MappedTypeMapper[T, U](implicit tm: TypeMapper[U])
 }
 
 object MappedTypeMapper {
-  def base[T, U](to: T => U, from: U => T)(implicit tm: TypeMapper[U]): BaseTypeMapper[T] = new MappedTypeMapper[T, U] with BaseTypeMapper[T] {
-    def map(t: T) = to(t)
-    def comap(u: U) = from(u)
-  }
+  inline def base[T, U](to: T => U, from: U => T)(using TypeMapper[U]): BaseTypeMapper[T] =
+    new MappedTypeMapper[T, U] with BaseTypeMapper[T] {
+      def map(t: T) = to(t)
+      def comap(u: U) = from(u)
+    }
 }

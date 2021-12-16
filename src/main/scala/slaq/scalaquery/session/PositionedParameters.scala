@@ -12,7 +12,7 @@ class PositionedParameters(val ps: PreparedStatement) {
     pos = npos
   }
 
-  def >>[T](value: T)(implicit f: SetParameter[T]): Unit = f(value, this)
+  def >>[T](value: T)(using f: SetParameter[T]): Unit = f(value, this)
 
   def setNull(sqlType: Int) = apply(ps.setNull(_, sqlType))
   def setBlob(value: Blob) = apply(ps.setBlob(_, value))

@@ -13,7 +13,7 @@ final class DeleteInvoker[T](
 
   final def deleteStatement = built.sql
 
-  def delete(implicit session: Session): Int =
+  def delete(using session: Session): Int =
     session.withPreparedStatement(deleteStatement) { st =>
       built.setter(new PositionedParameters(st), null)
       st.executeUpdate()

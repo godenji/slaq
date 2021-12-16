@@ -13,8 +13,8 @@ final class GenericQueryBuilder[T](
   _nc: NamingContext,
   _parent: Option[QueryBuilder],
   _profile: T
-)(implicit ev: T =:= Profile)
-  extends QueryBuilder(_query, _nc, _parent, _profile) {
+)(using T =:= Profile)
+  extends QueryBuilder(_query, _nc, _parent, _profile.asInstanceOf[Profile]) {
 
   type Self = QueryBuilder
   protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =

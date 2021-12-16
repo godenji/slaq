@@ -12,7 +12,7 @@ import slaq.test.util.TestDB._
 object MapperTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 
 class MapperTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   @Test def testMappedEntity(): Unit = {
 
@@ -22,9 +22,12 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
       def id = column[Int]("id", O PrimaryKey, O AutoInc)
       def first = column[String]("first")
       def last = column[String]("last")
-      def * = id.? ~ first ~ last <> (User, User.unapply _)
+      def * = id.? ~ first ~ last <> (
+        User.apply _,
+        x => Tuple.fromProductTyped(x)
+      )
       def forInsert = first ~ last <>
-        ({ (f, l) => User(None, f, l) }, { u: User => Some((u.first, u.last)) })
+        ({ (f, l) => User(None, f, l) }, { (u: User) => (u.first, u.last) })
       val findByID = this.createFinderBy(_.id)
     }
 
@@ -65,7 +68,10 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
     object Ts extends Table[Data]("T") {
       def a = column[Int]("A")
       def b = column[Int]("B")
-      def * = a ~ b <> (Data, Data.unapply _)
+      def * = a ~ b <> (
+        Data.apply _,
+        x => Tuple.fromProductTyped(x)  
+      )
     }
 
     db withSession { implicit ss: Session =>
@@ -86,11 +92,12 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
 
   @Test def testMappedType(): Unit = {
 
-    sealed trait Bool
-    case object True extends Bool
-    case object False extends Bool
+    enum Bool:
+      case True extends Bool
+      case False extends Bool
+    import Bool.*
 
-    implicit val boolTypeMapper = MappedTypeMapper.base[Bool, Int](
+    given BaseTypeMapper[Bool] = MappedTypeMapper.base[Bool, Int](
       b => if (b == True) 1 else 0,
       i => if (i == 1) True else False
     )

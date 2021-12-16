@@ -11,7 +11,7 @@ import slaq.session.Session
 object DataTypeTest extends DBTestObject(H2Mem, SQLiteMem, HsqldbMem, MySQL, Postgres)
 
 class DataTypeTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   @Test def testByteArray(): Unit = {
     object T extends Table[(Int, Array[Byte])]("test") {

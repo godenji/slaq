@@ -1,6 +1,5 @@
 package slaq.ql
 
-import TypeMapper._
 import slaq.util.{Node, UnaryNode, BinaryNode}
 
 trait ColumnOps[B1, P1] {
@@ -16,74 +15,74 @@ trait ColumnOps[B1, P1] {
   type BaseTM = BaseTypeMapper[B1]
   type Num = BaseTM with NumericTypeMapper
 
-  def is[P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+  def is[P2, R](e: Column[P2])(using om: OM2Bin[Boolean, P2, R]) =
     om(Is(leftOperand, Node(e)))
-  def =~[P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+  def =~[P2, R](e: Column[P2])(using om: OM2Bin[Boolean, P2, R]) =
     om(Is(leftOperand, Node(e)))
-  def =![P2, R](e: Column[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+  def =![P2, R](e: Column[P2])(using om: OM2Bin[Boolean, P2, R]) =
     om(Not(Is(leftOperand, Node(e))))
 
-  def <[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+  def <[P2, R](e: ColumnBase[P2])(using om: OM2Bin[Boolean, P2, R]) =
     om(Relational("<", leftOperand, Node(e)))
-  def <=[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+  def <=[P2, R](e: ColumnBase[P2])(using om: OM2Bin[Boolean, P2, R]) =
     om(Relational("<=", leftOperand, Node(e)))
-  def >[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+  def >[P2, R](e: ColumnBase[P2])(using om: OM2Bin[Boolean, P2, R]) =
     om(Relational(">", leftOperand, Node(e)))
-  def >=[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[Boolean, P2, R]) =
+  def >=[P2, R](e: ColumnBase[P2])(using om: OM2Bin[Boolean, P2, R]) =
     om(Relational(">=", leftOperand, Node(e)))
 
-  def inSet[R](seq: Iterable[B1])(implicit om: OM2Bin[Boolean, P1, R], tm: BaseTM) =
+  def inSet[R](seq: Iterable[B1])(using om: OM2Bin[Boolean, P1, R], tm: BaseTM) =
     om(InSet(leftOperand, seq, tm, false))
-  def inSetBind[R](seq: Iterable[B1])(implicit om: OM2Bin[Boolean, P1, R], tm: BaseTM) =
+  def inSetBind[R](seq: Iterable[B1])(using om: OM2Bin[Boolean, P1, R], tm: BaseTM) =
     om(InSet(leftOperand, seq, tm, true))
-  def between[P2, P3, R](start: Column[P2], end: Column[P3])(implicit om: OM3[B1, B1, Boolean, P2, P3, R]) = om(Between(leftOperand, start, end))
-  def ifNull[B2, P2, R](e: Column[P2])(implicit om: OM2[B2, Boolean, P2, R]): Column[P2] =
+  def between[P2, P3, R](start: Column[P2], end: Column[P3])(using om: OM3[B1, B1, Boolean, P2, P3, R]) = om(Between(leftOperand, start, end))
+  def ifNull[B2, P2, R](e: Column[P2])(using om: OM2[B2, Boolean, P2, R]): Column[P2] =
     EscFunction[P2]("ifnull", leftOperand, Node(e))(e.typeMapper)
 
-  def +[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
+  def +[P2, R](e: ColumnBase[P2])(using om: OM2Bin[B1, P2, R], tm: Num) =
     om(Arith[B1]("+", leftOperand, Node(e)))
-  def -[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
+  def -[P2, R](e: ColumnBase[P2])(using om: OM2Bin[B1, P2, R], tm: Num) =
     om(Arith[B1]("-", leftOperand, Node(e)))
-  def *[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
+  def *[P2, R](e: ColumnBase[P2])(using om: OM2Bin[B1, P2, R], tm: Num) =
     om(Arith[B1]("*", leftOperand, Node(e)))
-  def /[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
+  def /[P2, R](e: ColumnBase[P2])(using om: OM2Bin[B1, P2, R], tm: Num) =
     om(Arith[B1]("/", leftOperand, Node(e)))
-  def %[P2, R](e: ColumnBase[P2])(implicit om: OM2Bin[B1, P2, R], tm: Num) =
+  def %[P2, R](e: ColumnBase[P2])(using om: OM2Bin[B1, P2, R], tm: Num) =
     om(EscFunction[B1]("mod", leftOperand, Node(e)))
 
-  def abs(implicit om: ToSame, tm: Num) =
+  def abs(using om: ToSame, tm: Num) =
     om(EscFunction[B1]("abs", leftOperand))
-  def ceil(implicit om: ToSame, tm: Num) =
+  def ceil(using om: ToSame, tm: Num) =
     om(EscFunction[B1]("ceiling", leftOperand))
-  def floor(implicit om: ToSame, tm: Num) =
+  def floor(using om: ToSame, tm: Num) =
     om(EscFunction[B1]("floor", leftOperand))
-  def avg(implicit om: ToOption, tm: Num) =
+  def avg(using om: ToOption, tm: Num) =
     om(StdFunction[B1]("avg", leftOperand))
-  def min(implicit om: ToOption, tm: BaseTM) =
+  def min(using om: ToOption, tm: BaseTM) =
     om(StdFunction[B1]("min", leftOperand))
-  def max(implicit om: ToOption, tm: BaseTM) =
+  def max(using om: ToOption, tm: BaseTM) =
     om(StdFunction[B1]("max", leftOperand))
-  def sum(implicit om: ToOption, tm: Num) =
+  def sum(using om: ToOption, tm: Num) =
     om(StdFunction[B1]("sum", leftOperand))
 
-  def &[P2, R](b: ColumnBase[P2])(implicit om: Restr2[Boolean, Boolean, P2, R]) =
+  def &[P2, R](b: ColumnBase[P2])(using om: Restr2[Boolean, Boolean, P2, R]) =
     om(And(leftOperand, Node(b)))
-  def |[P2, R](b: ColumnBase[P2])(implicit om: Restr2[Boolean, Boolean, P2, R]) =
+  def |[P2, R](b: ColumnBase[P2])(using om: Restr2[Boolean, Boolean, P2, R]) =
     om(Or(leftOperand, Node(b)))
-  def unary_![R](implicit om: Restr1[Boolean, Boolean, R]) =
+  def unary_![R](using om: Restr1[Boolean, Boolean, R]) =
     om(Not(leftOperand))
 
-  def length[R](implicit om: Restr1[String, Int, R]) =
+  def length[R](using om: Restr1[String, Int, R]) =
     om(EscFunction[Int]("length", leftOperand))
-  def like[P2, R](e: Column[P2])(implicit om: Restr2[String, Boolean, P2, R]) =
+  def like[P2, R](e: Column[P2])(using om: Restr2[String, Boolean, P2, R]) =
     om(Like(leftOperand, Node(e), None))
-  def like[P2, R](e: Column[P2], esc: Char)(implicit om: Restr2[String, Boolean, P2, R]) =
+  def like[P2, R](e: Column[P2], esc: Char)(using om: Restr2[String, Boolean, P2, R]) =
     om(Like(leftOperand, Node(e), Some(esc)))
-  def ++[P2, R](e: Column[P2])(implicit om: Restr2[String, String, P2, R]) =
+  def ++[P2, R](e: Column[P2])(using om: Restr2[String, String, P2, R]) =
     om(EscFunction[String]("concat", leftOperand, Node(e)))
-  def startsWith[R](s: String)(implicit om: Restr1[String, Boolean, R]) =
+  def startsWith[R](s: String)(using om: Restr1[String, Boolean, R]) =
     om(new StartsWith(leftOperand, s))
-  def endsWith[R](s: String)(implicit om: Restr1[String, Boolean, R]) =
+  def endsWith[R](s: String)(using om: Restr1[String, Boolean, R]) =
     om(new EndsWith(leftOperand, s))
 }
 

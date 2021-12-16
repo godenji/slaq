@@ -2,7 +2,7 @@ package slaq.example
 
 import scala.language.postfixOps
 import slaq.ql.{Query, ColumnBase, Table}
-import slaq.ql.driver.{Driver}, Driver.Implicit._
+import slaq.ql.driver.{Driver}, Driver.Implicit.{given, *}
 import slaq.ql.Table
 import slaq.util.NamingContext
 

@@ -12,7 +12,7 @@ class PostgresDriver extends Profile { self =>
   type TypeMapperDelegatesT = PostgresTypeMapperDelegates
 
   val Implicit = new ImplicitConversions[PostgresDriver] {
-    implicit val driverType = self
+    given driverType: self.type = self
   }
 
   val typeMapperDelegates = new PostgresTypeMapperDelegates

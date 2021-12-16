@@ -14,22 +14,22 @@ final class InsertInvoker[T, U](unpackable: Unpackable[T, U], profile: Profile) 
   def insertStatementFor[TT](query: Query[TT, U]): String =
     profile.buildInsert(unpackable.value, query).sql
 
-  def insertStatementFor[TT](c: TT)(implicit unpack: Unpack[TT, U]): String = insertStatementFor(Query(c))
+  def insertStatementFor[TT](c: TT)(using Unpack[TT, U]): String = insertStatementFor(Query(c))
 
-  def useBatchUpdates(implicit session: Session): Boolean =
+  def useBatchUpdates(using session: Session): Boolean =
     session.capabilities.supportsBatchUpdates
 
   /**
    * Insert a single row.
    */
-  def insert[V, TT](value: V)(implicit ev: PackedUnpackedUnion[TT, U, V], session: Session): Int =
+  def insert[V, TT](value: V)(using ev: PackedUnpackedUnion[TT, U, V], session: Session): Int =
     ev.fold(
       u =>
         insertValue(u),
-      (t, unpack) => insertExpr(t)(unpack, session)
+      (t, unpack) => insertExpr(t)(using unpack, session)
     )(value)
 
-  def insertValue(value: U)(implicit session: Session): Int =
+  def insertValue(value: U)(using session: Session): Int =
     session.withPreparedStatement(insertStatement) { st =>
       st.clearParameters()
       unpackable.linearizer.setParameter(
@@ -38,16 +38,16 @@ final class InsertInvoker[T, U](unpackable: Unpackable[T, U], profile: Profile) 
       st.executeUpdate()
     }
 
-  def insertExpr[TT](c: TT)(implicit unpack: Unpack[TT, U], session: Session): Int =
-    insert(Query(c)(unpack))(session)
+  def insertExpr[TT](c: TT)(using Unpack[TT, U], Session): Int =
+    insert(Query(c))
 
   /**
    * Insert multiple rows. Uses JDBC's batch update feature if supported by
    * the JDBC driver. Returns Some(rowsAffected), or None if the database
    * returned no row count for some part of the batch. If any part of the
-   * batch fails, an exception thrown.
+   * batch fails, an exception is thrown.
    */
-  def insertAll(values: U*)(implicit session: Session): Option[Int] = {
+  def insertAll(values: U*)(using session: Session): Option[Int] = {
     if (!useBatchUpdates || (
       values.isInstanceOf[IndexedSeq[_]] && values.length < 2
     )) Some(
@@ -75,7 +75,7 @@ final class InsertInvoker[T, U](unpackable: Unpackable[T, U], profile: Profile) 
     }
   }
 
-  def insert[TT](query: Query[TT, U])(implicit session: Session): Int = {
+  def insert[TT](query: Query[TT, U])(using session: Session): Int = {
     val sbr = profile.buildInsert(unpackable.value, query)
     session.withPreparedStatement(insertStatementFor(query)) { st =>
       st.clearParameters()
@@ -98,14 +98,14 @@ trait PackedUnpackedUnion[P, U, T] {
 }
 
 object PackedUnpackedUnion extends PackedUnpackedUnionLowPriority {
-  @inline implicit final def packedUnpackedUnionTypeU[P, U, T <: U] =
+  inline given packedUnpackedUnionTypeU[P, U, T <: U]: PackedUnpackedUnion[P, U, T] =
     new PackedUnpackedUnion[P, U, T] {
       def fold[R](f: U => R, g: (P, Unpack[P, U]) => R)(v: T): R = f(v)
     }
 }
 
 class PackedUnpackedUnionLowPriority {
-  @inline implicit final def packedUnpackedUnionTypeP[P, U, T <: P](implicit ev: Unpack[P, U]) =
+  inline given packedUnpackedUnionTypeP[P, U, T <: P](using ev: Unpack[P, U]): PackedUnpackedUnion[P, U, T] =
 
     new PackedUnpackedUnion[P, U, T] {
       def fold[R](f: U => R, g: (P, Unpack[P, U]) => R)(v: T): R = g(v, ev)

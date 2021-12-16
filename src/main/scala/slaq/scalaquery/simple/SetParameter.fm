@@ -9,32 +9,32 @@ import slaq.session.PositionedParameters
 trait SetParameter[-T] extends ((T, PositionedParameters) => Unit)
 
 object SetParameter {
-  implicit object SetBoolean extends SetParameter[Boolean] { def apply(v: Boolean, pp: PositionedParameters): Unit = { pp.setBoolean(v) } }
-  implicit object SetByte extends SetParameter[Byte] { def apply(v: Byte, pp: PositionedParameters): Unit = { pp.setByte(v) } }
-  implicit object SetDate extends SetParameter[Date] { def apply(v: Date, pp: PositionedParameters): Unit = { pp.setDate(v) } }
-  implicit object SetDouble extends SetParameter[Double] { def apply(v: Double, pp: PositionedParameters): Unit = { pp.setDouble(v) } }
-  implicit object SetFloat extends SetParameter[Float] { def apply(v: Float, pp: PositionedParameters): Unit = { pp.setFloat(v) } }
-  implicit object SetInt extends SetParameter[Int] { def apply(v: Int, pp: PositionedParameters): Unit = { pp.setInt(v) } }
-  implicit object SetLong extends SetParameter[Long] { def apply(v: Long, pp: PositionedParameters): Unit = { pp.setLong(v) } }
-  implicit object SetShort extends SetParameter[Short] { def apply(v: Short, pp: PositionedParameters): Unit = { pp.setShort(v) } }
-  implicit object SetString extends SetParameter[String] { def apply(v: String, pp: PositionedParameters): Unit = { pp.setString(v) } }
-  implicit object SetTime extends SetParameter[Time] { def apply(v: Time, pp: PositionedParameters): Unit = { pp.setTime(v) } }
-  implicit object SetTimestamp extends SetParameter[Timestamp] { def apply(v: Timestamp, pp: PositionedParameters): Unit = { pp.setTimestamp(v) } }
+  inline given SetBoolean: SetParameter[Boolean] with { def apply(v: Boolean, pp: PositionedParameters): Unit = { pp.setBoolean(v) } }
+  inline given SetByte: SetParameter[Byte] with { def apply(v: Byte, pp: PositionedParameters): Unit = { pp.setByte(v) } }
+  inline given SetDate: SetParameter[Date] with { def apply(v: Date, pp: PositionedParameters): Unit = { pp.setDate(v) } }
+  inline given SetDouble: SetParameter[Double] with { def apply(v: Double, pp: PositionedParameters): Unit = { pp.setDouble(v) } }
+  inline given SetFloat: SetParameter[Float] with { def apply(v: Float, pp: PositionedParameters): Unit = { pp.setFloat(v) } }
+  inline given SetInt: SetParameter[Int] with { def apply(v: Int, pp: PositionedParameters): Unit = { pp.setInt(v) } }
+  inline given SetLong: SetParameter[Long] with { def apply(v: Long, pp: PositionedParameters): Unit = { pp.setLong(v) } }
+  inline given SetShort: SetParameter[Short] with { def apply(v: Short, pp: PositionedParameters): Unit = { pp.setShort(v) } }
+  inline given SetString: SetParameter[String] with { def apply(v: String, pp: PositionedParameters): Unit = { pp.setString(v) } }
+  inline given SetTime: SetParameter[Time] with { def apply(v: Time, pp: PositionedParameters): Unit = { pp.setTime(v) } }
+  inline given SetTimestamp: SetParameter[Timestamp] with { def apply(v: Timestamp, pp: PositionedParameters): Unit = { pp.setTimestamp(v) } }
 
-  implicit object SetBooleanOption extends SetParameter[Option[Boolean]] { def apply(v: Option[Boolean], pp: PositionedParameters): Unit = { pp.setBooleanOption(v) } }
-  implicit object SetByteOption extends SetParameter[Option[Byte]] { def apply(v: Option[Byte], pp: PositionedParameters): Unit = { pp.setByteOption(v) } }
-  implicit object SetDateOption extends SetParameter[Option[Date]] { def apply(v: Option[Date], pp: PositionedParameters): Unit = { pp.setDateOption(v) } }
-  implicit object SetDoubleOption extends SetParameter[Option[Double]] { def apply(v: Option[Double], pp: PositionedParameters): Unit = { pp.setDoubleOption(v) } }
-  implicit object SetFloatOption extends SetParameter[Option[Float]] { def apply(v: Option[Float], pp: PositionedParameters): Unit = { pp.setFloatOption(v) } }
-  implicit object SetIntOption extends SetParameter[Option[Int]] { def apply(v: Option[Int], pp: PositionedParameters): Unit = { pp.setIntOption(v) } }
-  implicit object SetLongOption extends SetParameter[Option[Long]] { def apply(v: Option[Long], pp: PositionedParameters): Unit = { pp.setLongOption(v) } }
-  implicit object SetShortOption extends SetParameter[Option[Short]] { def apply(v: Option[Short], pp: PositionedParameters): Unit = { pp.setShortOption(v) } }
-  implicit object SetStringOption extends SetParameter[Option[String]] { def apply(v: Option[String], pp: PositionedParameters): Unit = { pp.setStringOption(v) } }
-  implicit object SetTimeOption extends SetParameter[Option[Time]] { def apply(v: Option[Time], pp: PositionedParameters): Unit = { pp.setTimeOption(v) } }
-  implicit object SetTimestampOption extends SetParameter[Option[Timestamp]] { def apply(v: Option[Timestamp], pp: PositionedParameters): Unit = { pp.setTimestampOption(v) } }
+  inline given SetBooleanOption: SetParameter[Option[Boolean]] with { def apply(v: Option[Boolean], pp: PositionedParameters): Unit = { pp.setBooleanOption(v) } }
+  inline given SetByteOption: SetParameter[Option[Byte]] with { def apply(v: Option[Byte], pp: PositionedParameters): Unit = { pp.setByteOption(v) } }
+  inline given SetDateOption: SetParameter[Option[Date]] with { def apply(v: Option[Date], pp: PositionedParameters): Unit = { pp.setDateOption(v) } }
+  inline given SetDoubleOption: SetParameter[Option[Double]] with { def apply(v: Option[Double], pp: PositionedParameters): Unit = { pp.setDoubleOption(v) } }
+  inline given SetFloatOption: SetParameter[Option[Float]] with { def apply(v: Option[Float], pp: PositionedParameters): Unit = { pp.setFloatOption(v) } }
+  inline given SetIntOption: SetParameter[Option[Int]] with { def apply(v: Option[Int], pp: PositionedParameters): Unit = { pp.setIntOption(v) } }
+  inline given SetLongOption: SetParameter[Option[Long]] with { def apply(v: Option[Long], pp: PositionedParameters): Unit = { pp.setLongOption(v) } }
+  inline given SetShortOption: SetParameter[Option[Short]] with { def apply(v: Option[Short], pp: PositionedParameters): Unit = { pp.setShortOption(v) } }
+  inline given SetStringOption: SetParameter[Option[String]] with { def apply(v: Option[String], pp: PositionedParameters): Unit = { pp.setStringOption(v) } }
+  inline given SetTimeOption: SetParameter[Option[Time]] with { def apply(v: Option[Time], pp: PositionedParameters): Unit = { pp.setTimeOption(v) } }
+  inline given SetTimestampOption: SetParameter[Option[Timestamp]] with { def apply(v: Option[Timestamp], pp: PositionedParameters): Unit = { pp.setTimestampOption(v) } }
 
 <#list 2..22 as i>
-  @inline implicit final def createSetTuple${i}[<#list 1..i as j>T${j}<#if i != j>, </#if></#list>](implicit <#list 1..i as j>c${j}: SetParameter[T${j}]<#if i != j>, </#if></#list>): SetParameter[(<#list 1..i as j>T${j}<#if i != j>, </#if></#list>)] = new SetParameter[(<#list 1..i as j>T${j}<#if i != j>, </#if></#list>)] {
+  given createSetTuple${i}[<#list 1..i as j>T${j}<#if i != j>, </#if></#list>](using <#list 1..i as j>c${j}: SetParameter[T${j}]<#if i != j>, </#if></#list>): SetParameter[(<#list 1..i as j>T${j}<#if i != j>, </#if></#list>)] = new SetParameter[(<#list 1..i as j>T${j}<#if i != j>, </#if></#list>)] {
     def apply(param: (<#list 1..i as j>T${j}<#if i != j>, </#if></#list>), pp: PositionedParameters): Unit = {
 <#list 1..i as j>
       c${j}(param._${j}, pp)
@@ -61,9 +61,9 @@ object SetParameter {
       }
   }
 
-  implicit object SetUnit extends SetParameter[Unit] { def apply(none: Unit, pp: PositionedParameters): Unit = () }
+  inline given SetUnit: SetParameter[Unit] with { def apply(none: Unit, pp: PositionedParameters): Unit = () }
 
-  def apply[T](implicit f: (T, PositionedParameters) => Unit) = new SetParameter[T] {
+  def apply[T](using f: (T, PositionedParameters) => Unit) = new SetParameter[T] {
     def apply(v: T, pp: PositionedParameters): Unit = f(v, pp)
   }
 }

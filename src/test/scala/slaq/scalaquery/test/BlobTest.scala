@@ -13,7 +13,7 @@ import slaq.session.Session
 object BlobTest extends DBTestObject(H2Mem, /* SQLiteMem, Postgres, HsqldbMem, */ MySQL)
 
 class BlobTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   @Test def testBlob(): Unit = {
     object T extends Table[(Int, Blob)]("test") {

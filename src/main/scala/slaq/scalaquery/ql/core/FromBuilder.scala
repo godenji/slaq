@@ -32,10 +32,10 @@ trait FromBuilder { self: QueryBuilder with QueryBuilderAction =>
           )
           if (!hasParentAlias) {
             if (isFirst) fromSlot += " FROM "
-            tr.tableJoin.map(createJoin(_, isFirst, numAliases)(fromSlot)).
+            tr.tableJoin.map(createJoin(_, isFirst, numAliases)(using fromSlot)).
               getOrElse {
                 if (!isFirst) fromSlot += ','
-                tableLabel(tr.table, alias)(fromSlot)
+                tableLabel(tr.table, alias)(using fromSlot)
               }
             declaredTables += alias
           }
@@ -45,7 +45,7 @@ trait FromBuilder { self: QueryBuilder with QueryBuilderAction =>
 
     private def createJoin( // numAliases == 1 == single column selected in query
       j: Join, isFirst: Boolean, numAliases: Int
-    )(implicit b: SqlBuilder): Unit = {
+    )(using b: SqlBuilder): Unit = {
 
       val leftAlias = nc.aliasFor(j.left)
       if (isFirst) tableLabel(j.left, leftAlias)
@@ -64,7 +64,7 @@ trait FromBuilder { self: QueryBuilder with QueryBuilderAction =>
       }
     }
 
-    private def tableLabel(table: Node, alias: String)(implicit b: SqlBuilder): Unit = {
+    private def tableLabel(table: Node, alias: String)(using b: SqlBuilder): Unit = {
       def show(t: Table[_]) = {
         t.schemaName.foreach(b += quote(_) += '.')
         b += s"${quote(t.tableName)} ${quote(alias)}"

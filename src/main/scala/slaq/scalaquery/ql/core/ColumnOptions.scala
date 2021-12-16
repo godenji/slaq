@@ -10,15 +10,10 @@ class ColumnOptions {
 }
 object ColumnOptions extends ColumnOptions
 
-abstract class ColumnOption[+T, -P]
-object ColumnOption {
-  case object NotNull extends ColumnOption[Nothing, Profile]
-  case object Nullable extends ColumnOption[Nothing, Profile]
-  case object PrimaryKey extends ColumnOption[Nothing, Profile]
-  case object AutoInc extends ColumnOption[Nothing, Profile]
-  case class Default[T](val defaultValue: T)
-    extends ColumnOption[T, Profile]
-
-  case class DBType(val dbType: String)
-    extends ColumnOption[Nothing, Profile]
-}
+enum ColumnOption[+T, -P]:
+  case NotNull extends ColumnOption[Nothing, Profile]
+  case Nullable extends ColumnOption[Nothing, Profile]
+  case PrimaryKey extends ColumnOption[Nothing, Profile]
+  case AutoInc extends ColumnOption[Nothing, Profile]
+  case Default[T](val defaultValue: T) extends ColumnOption[T, Profile]
+  case DBType(val dbType: String) extends ColumnOption[Nothing, Profile]

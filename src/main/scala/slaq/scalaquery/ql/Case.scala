@@ -4,7 +4,6 @@ import slaq.util.{Node, BinaryNode}
 import slaq.Fail
 
 object Case {
-
   class WhenNode(val left: Node, val right: Node) extends BinaryNode
 
   def If[C <: Column[_]: Queryable](cond: C) = new UntypedWhen(Node(cond))
@@ -28,7 +27,6 @@ object Case {
     extends CaseColumn[Option[B]](clauses, ConstColumn.NULL) {
 
     def If[C <: Column[_]: Queryable](cond: C) = new TypedWhen[B, T](cond, this)
-
     def Else(res: Column[T]): Column[T] = new TypedCaseWithElse[T](clauses, Node(res))
   }
 

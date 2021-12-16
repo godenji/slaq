@@ -12,7 +12,7 @@ import slaq.test.util.TestDB._
 object TemplateTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 
 class TemplateTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   object Users extends Table[(Int, String)]("users") {
     def id = column[Int]("id", O PrimaryKey, O AutoInc)

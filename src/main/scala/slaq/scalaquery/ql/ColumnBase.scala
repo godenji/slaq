@@ -19,7 +19,7 @@ trait ColumnBase[T] extends Node with ValueLinearizer[T] with WithOp {
 }
 
 sealed abstract class Column[T: TypeMapper] extends ColumnBase[T] {
-  final val typeMapper = implicitly[TypeMapper[T]]
+  final val typeMapper = summon[TypeMapper[T]]
   final def getAllColumnTypeMappers = Vector(typeMapper)
   final def getLinearizedNodes = Vector(Node(this))
   def getResult(profile: Profile, rs: PositionedResult): T = {
@@ -31,12 +31,12 @@ sealed abstract class Column[T: TypeMapper] extends ColumnBase[T] {
 
   final def setParameter(profile: Profile, ps: PositionedParameters, value: Option[T]): Unit = typeMapper(profile).setOption(value, ps)
 
-  def getOr[U](n: => U)(implicit ev: Option[U] =:= T): Column[U] =
+  def getOr[U](n: => U)(using Option[U] =:= T): Column[U] =
     new WrappedColumn[U](this)(typeMapper.getBaseTypeMapper) {
       override def getResult(profile: Profile, rs: PositionedResult): U =
         typeMapper(profile).nextValueOrElse(n, rs)
     }
-  def get[U](implicit ev: Option[U] =:= T): Column[U] = getOr[U] {
+  def get[U](using Option[U] =:= T): Column[U] = getOr[U] {
     Fail(s"Read NULL value for column $this")
   }
   final def ~[U](b: Column[U]) = new Projection2[T, U](this, b)

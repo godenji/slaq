@@ -15,7 +15,7 @@ trait Invoker[-P, +R] { self =>
    * Execute the statement and return a CloseableIterator of the converted results.
    * The iterator must either be fully read or closed explicitly.
    */
-  final def elements(param: P)(implicit session: Session) = elementsTo(param, 0)
+  final def elements(param: P)(using Session) = elementsTo(param, 0)
 
   /**
    * Execute the statement and return a CloseableIterator of the converted results.
@@ -23,18 +23,18 @@ trait Invoker[-P, +R] { self =>
    *
    * @param maxRows Maximum number of rows to read from the result (0 for unlimited).
    */
-  def elementsTo(param: P, maxRows: Int)(implicit session: Session): CloseableIterator[R]
+  def elementsTo(param: P, maxRows: Int)(using Session): CloseableIterator[R]
 
   /**
    * Execute the statement and ignore the results.
    */
-  final def execute(param: P)(implicit session: Session): Unit = elements(param)(session).close()
+  final def execute(param: P)(using Session): Unit = elements(param).close()
 
   /**
    * Execute the statement and return the first row of the result set wrapped in
    * Some, or None if the result set is empty.
    */
-  final def firstOption(param: P)(implicit session: Session): Option[R] = {
+  final def firstOption(param: P)(using Session): Option[R] = {
     var res: Option[R] = None
     foreach(param, { x => res = Some(x) }, 1)
     res
@@ -44,22 +44,23 @@ trait Invoker[-P, +R] { self =>
    * Execute the statement and return the first row of the result set.
    * If the result set is empty, a NoSuchElementException is thrown.
    */
-  final def first(param: P)(implicit session: Session): R =
+  final def first(param: P)(using Session): R =
     firstOption(param).getOrElse(throw new NoSuchElementException("Invoker.first"))
 
   /**
    * Execute the statement and return an immutable and fully
    * materialized list of the results.
    */
-  final def list(param: P)(implicit session: Session) = build[List[R]](param)
+  final def list(param: P)(using Session) = build[List[R]](param)
 
-  final def toMap[T, U](param: P)(implicit session: Session, ev: R <:< (T, U)): Map[T, U] =
-    build[Map[T, U]](param)(session, implicitly[Factory[(T, U), Map[T, U]]].asInstanceOf[Factory[R, Map[T, U]]])
+  final def toMap[T, U](param: P)(using Session, R <:< (T, U)): Map[T, U] =
+    inline given Factory[R, Map[T, U]] = summon[Factory[(T, U), Map[T, U]]].asInstanceOf[Factory[R, Map[T, U]]]
+    build[Map[T, U]](param)
 
   /**
    * Execute the statement and return a fully materialized collection of the specified type.
    */
-  final def build[T](param: P)(implicit session: Session, canBuildFrom: Factory[R, T]): T = {
+  final def build[T](param: P)(using session: Session, canBuildFrom: Factory[R, T]): T = {
     val b = canBuildFrom.newBuilder
     foreach(param, { x => b += x }, 0)
     b.result()
@@ -74,14 +75,14 @@ trait Invoker[-P, +R] { self =>
     /**
      * Execute the statement and return a fully materialized collection.
      */
-    def apply[RR >: R]()(implicit session: Session, canBuildFrom: Factory[RR, C[RR]]) =
-      build[C[RR]](().asInstanceOf[P])(session, canBuildFrom)
+    def apply[RR >: R]()(using Session, Factory[RR, C[RR]]) =
+      build[C[RR]](().asInstanceOf[P])
   }
 
   /**
    * Execute the statement and call f for each converted row of the result set.
    */
-  final def foreach(param: P, f: R => Unit)(implicit session: Session): Unit = {
+  final def foreach(param: P, f: R => Unit)(using Session): Unit = {
     val it = elements(param)
     try { it.foreach(f) } finally { it.close() }
   }
@@ -91,7 +92,7 @@ trait Invoker[-P, +R] { self =>
    *
    * @param maxRows Maximum number of rows to read from the result (0 for unlimited).
    */
-  final def foreach(param: P, f: R => Unit, maxRows: Int)(implicit session: Session): Unit = {
+  final def foreach(param: P, f: R => Unit, maxRows: Int)(using Session): Unit = {
     val it = elementsTo(param, maxRows)
     try { it.foreach(f) } finally { it.close() }
   }
@@ -99,18 +100,18 @@ trait Invoker[-P, +R] { self =>
   /**
    * Execute the statement and left-fold the converted rows of the result set.
    */
-  final def foldLeft[B](param: P, z: B)(op: (B, R) => B)(implicit session: Session): B = {
+  final def foldLeft[B](param: P, z: B)(op: (B, R) => B)(using Session): B = {
     var _z = z
-    foreach(param, { e => _z = op(_z, e) })(session)
+    foreach(param, { e => _z = op(_z, e) })
     _z
   }
 
   /**
    * Execute the statement and feed the converted rows of the result set into an iteratee.
    */
-  final def enumerate[B, RR >: R](param: P, iter: IterV[RR, B])(implicit session: Session): IterV[RR, B] = {
+  final def enumerate[B, RR >: R](param: P, iter: IterV[RR, B])(using Session): IterV[RR, B] = {
     var _iter = iter
-    val it = elements(param)(session)
+    val it = elements(param)
     try {
       while (it.hasNext && !_iter.isInstanceOf[Done[_, _]]) {
         val cont = _iter.asInstanceOf[Cont[RR, B]]
@@ -139,8 +140,8 @@ trait Invoker[-P, +R] { self =>
    * If the result type of this Invoker is of the form Option[T], execute the statement
    * and return the first row of the result set, or None if the result set is empty.
    */
-  def firstFlatten[B](param: P)(implicit session: Session, ev: R <:< Option[B]): Option[B] =
-    firstOption(param).map(ev.apply _).getOrElse(None) //.asInstanceOf[Option[B]]
+  def firstFlatten[B](param: P)(using session: Session, ev: R <:< Option[B]): Option[B] =
+    firstOption(param).map(ev.apply _).getOrElse(None)
 }
 
 /**
@@ -151,26 +152,26 @@ trait UnitInvoker[+R] extends Invoker[Unit, R] {
   protected val appliedParameter: Param
   protected val delegate: Invoker[Param, R]
 
-  final def firstOption(implicit session: Session): Option[R] = delegate.firstOption(appliedParameter)
-  final def first()(implicit session: Session): R = delegate.first(appliedParameter)
-  final def list()(implicit session: Session): List[R] = delegate.list(appliedParameter)
-  final def toMap[T, U](implicit session: Session, ev: R <:< (T, U)): Map[T, U] = delegate.toMap(appliedParameter)
-  final def foreach(f: R => Unit)(implicit session: Session): Unit = delegate.foreach(appliedParameter, f)
-  final def foreach(f: R => Unit, maxRows: Int)(implicit session: Session): Unit = delegate.foreach(appliedParameter, f, maxRows)
-  final def elements()(implicit session: Session): CloseableIterator[R] = delegate.elements(appliedParameter)
-  final def elementsTo(maxRows: Int)(implicit session: Session): CloseableIterator[R] = delegate.elementsTo(appliedParameter, maxRows)
-  final def execute()(implicit session: Session): Unit = delegate.execute(appliedParameter)
-  final def foldLeft[B](z: B)(op: (B, R) => B)(implicit session: Session): B = delegate.foldLeft(appliedParameter, z)(op)
-  final def enumerate[B, RR >: R](iter: IterV[RR, B])(implicit session: Session): IterV[RR, B] = delegate.enumerate(appliedParameter, iter)
+  final def firstOption(using Session): Option[R] = delegate.firstOption(appliedParameter)
+  final def first()(using Session): R = delegate.first(appliedParameter)
+  final def list()(using Session): List[R] = delegate.list(appliedParameter)
+  final def toMap[T, U](using Session, R <:< (T, U)): Map[T, U] = delegate.toMap(appliedParameter)
+  final def foreach(f: R => Unit)(using Session): Unit = delegate.foreach(appliedParameter, f)
+  final def foreach(f: R => Unit, maxRows: Int)(using Session): Unit = delegate.foreach(appliedParameter, f, maxRows)
+  final def elements()(using Session): CloseableIterator[R] = delegate.elements(appliedParameter)
+  final def elementsTo(maxRows: Int)(using Session): CloseableIterator[R] = delegate.elementsTo(appliedParameter, maxRows)
+  final def execute()(using Session): Unit = delegate.execute(appliedParameter)
+  final def foldLeft[B](z: B)(op: (B, R) => B)(using Session): B = delegate.foldLeft(appliedParameter, z)(op)
+  final def enumerate[B, RR >: R](iter: IterV[RR, B])(using Session): IterV[RR, B] = delegate.enumerate(appliedParameter, iter)
 
-  def firstFlatten[B](implicit session: Session, ev: R <:< Option[B]): Option[B] =
+  def firstFlatten[B](using session: Session, ev: R <:< Option[B]): Option[B] =
     firstOption.map(ev.apply _).getOrElse(None) //.asInstanceOf[Option[B]]
   override def mapResult[U](f: (R => U)): UnitInvoker[U] = new MappedInvoker(this, f) with UnitInvokerMixin[U]
 }
 
 object UnitInvoker {
   val empty: UnitInvoker[Nothing] = new UnitInvokerMixin[Nothing] {
-    def elementsTo(param: Unit, maxRows: Int)(implicit session: Session) = CloseableIterator.empty
+    def elementsTo(param: Unit, maxRows: Int)(using Session) = CloseableIterator.empty
   }
 }
 
@@ -185,13 +186,13 @@ trait UnitInvokerMixin[+R] extends UnitInvoker[R] {
  */
 trait AppliedInvoker[P, +R] extends UnitInvoker[R] {
   protected type Param = P
-  def elementsTo(param: Unit, maxRows: Int)(implicit session: Session): CloseableIterator[R] = delegate.elementsTo(appliedParameter, maxRows)
+  def elementsTo(param: Unit, maxRows: Int)(using Session): CloseableIterator[R] = delegate.elementsTo(appliedParameter, maxRows)
 }
 
 /**
  * An Invoker which applies a mapping function to all results of another Invoker.
  */
 class MappedInvoker[-P, U, +R](parent: Invoker[P, U], mapper: (U => R)) extends Invoker[P, R] {
-  def elementsTo(param: P, maxRows: Int)(implicit session: Session) =
+  def elementsTo(param: P, maxRows: Int)(using Session) =
     parent.elementsTo(param, maxRows).map(mapper)
 }

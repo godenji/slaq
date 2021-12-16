@@ -12,7 +12,7 @@ import slaq.session.Session
 object CountTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 
 class CountTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   @Test def test() = db withSession { implicit ss: Session =>
     object TestTable extends Table[Int]("TEST") {

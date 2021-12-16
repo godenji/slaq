@@ -12,7 +12,7 @@ import java.sql.{Time, Date, Timestamp}
 object ScalarFunctionTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 
 class ScalarFunctionTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   @Test def test = db withSession { implicit ss: Session =>
     def check[T](q: Query[ColumnBase[T], T], exp: T*) = {

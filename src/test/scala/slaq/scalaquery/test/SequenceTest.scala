@@ -12,7 +12,7 @@ import slaq.test.util.TestDB._
 object SequenceTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem)
 
 class SequenceTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   @Test def test1(): Unit = db withSession { implicit ss: Session =>
     case class User(id: Int, first: String, last: String)

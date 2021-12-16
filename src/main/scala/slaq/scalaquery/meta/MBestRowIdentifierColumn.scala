@@ -20,23 +20,21 @@ object MBestRowIdentifierColumn {
     ResultSetInvoker[MBestRowIdentifierColumn](
       _.metaData.getBestRowIdentifier(table.catalog_?, table.schema_?, table.name, scope.value, nullable)
     ) { r =>
-        MBestRowIdentifierColumn(Scope(r<<), r<<, r<<, r<<, r<<, r.skip<<, r.nextShort() match {
+        MBestRowIdentifierColumn(apply(r<<), r<<, r<<, r<<, r<<, r.skip<<, r.nextShort() match {
           case DatabaseMetaData.bestRowNotPseudo => Some(false)
           case DatabaseMetaData.bestRowPseudo => Some(true)
           case _ => None
         })
       }
+      
+  enum Scope(val value: Int):
+    case Temporary extends Scope(DatabaseMetaData.bestRowTemporary)
+    case Transaction extends Scope(DatabaseMetaData.bestRowTransaction)
+    case Session extends Scope(DatabaseMetaData.bestRowSession)
 
-  sealed abstract class Scope(val value: Int)
-
-  object Scope {
-    final case object Temporary extends Scope(DatabaseMetaData.bestRowTemporary)
-    final case object Transaction extends Scope(DatabaseMetaData.bestRowTransaction)
-    final case object Session extends Scope(DatabaseMetaData.bestRowSession)
-    private[MBestRowIdentifierColumn] def apply(value: Short) = value match {
-      case DatabaseMetaData.bestRowTemporary   => Temporary
-      case DatabaseMetaData.bestRowTransaction => Transaction
-      case DatabaseMetaData.bestRowSession     => Session
-    }
+  private def apply(value: Short) = value match {
+    case DatabaseMetaData.bestRowTemporary   => Scope.Temporary
+    case DatabaseMetaData.bestRowTransaction => Scope.Transaction
+    case DatabaseMetaData.bestRowSession     => Scope.Session
   }
 }

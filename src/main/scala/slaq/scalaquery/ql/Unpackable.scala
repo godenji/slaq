@@ -10,7 +10,7 @@ case class Unpackable[T, U](value: T, unpack: Unpack[T, U]) {
   def mapOp(f: Node => Node) = unpack.mapOp(value, f).asInstanceOf[T]
 
   def reifiedNode = Node(unpack.reify(value))
-  def reifiedUnpackable[R](implicit ev: Reify[T, R]): Unpackable[R, U] =
+  def reifiedUnpackable[R](using Reify[T, R]): Unpackable[R, U] =
     Unpackable(
       unpack.reify(value).asInstanceOf[R],
       unpack.reifiedUnpack.asInstanceOf[Unpack[R, U]]
@@ -18,6 +18,6 @@ case class Unpackable[T, U](value: T, unpack: Unpack[T, U]) {
 
   def zip[T2, U2](s2: Unpackable[T2, U2]) =
     Unpackable[(T, T2), (U, U2)](
-      (value, s2.value), Unpack.unpackTuple2(unpack, s2.unpack)
+      (value, s2.value), Unpack.unpackTuple2(using unpack, s2.unpack)
     )
 }

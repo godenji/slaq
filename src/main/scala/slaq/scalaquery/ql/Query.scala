@@ -24,25 +24,25 @@ sealed abstract class Query[+P, +U] extends Node {
   }
   def >>[P2, U2](q: Query[P2, U2]): Query[P2, U2] = flatMap(_ => q)
 
-  def map[P2, U2](f: P => P2)(implicit unpack: Unpack[P2, U2]): Query[P2, U2] = flatMap {
-    p => Query(f(p))(unpack)
+  def map[P2, U2](f: P => P2)(using Unpack[P2, U2]): Query[P2, U2] = flatMap {
+    p => Query(f(p))
   }
 
-  def filter[T](f: P => T)(implicit qc: Queryable[T]): Query[P, U] =
+  def filter[T](f: P => T)(using qc: Queryable[T]): Query[P, U] =
     new QueryWrap[P, U](
       unpackable, qc(f(unpackable.value), cond), modifiers
     )
-  def withFilter[T](f: P => T)(implicit qc: Queryable[T]): Query[P, U] = filter(f)(qc)
+  def withFilter[T](f: P => T)(using Queryable[T]): Query[P, U] = filter(f)
 
   def groupBy(by: Column[_]*) = new QueryWrap[P, U](
-    unpackable, cond, modifiers ::: by.map(Grouping).toList
+    unpackable, cond, modifiers ::: by.map(Grouping.apply).toList
   )
 
   def orderBy(by: Ordering*) = new QueryWrap[P, U](
     unpackable, cond, modifiers ::: by.toList
   )
 
-  def having[T <: Column[_]](f: P => T)(implicit qc: Queryable[T]): Query[P, U] = {
+  def having[T <: Column[_]](f: P => T)(using qc: Queryable[T]): Query[P, U] = {
     val c = f(unpackable.value)
     val conditions = qc(c, cond).map { x =>
       if (x == c) HavingColumn(c)(c.typeMapper) else x
@@ -50,15 +50,15 @@ sealed abstract class Query[+P, +U] extends Node {
     new QueryWrap[P, U](unpackable, conditions, modifiers)
   }
 
-  def subquery[U2 >: U, R](implicit reify: Reify[P, R]) = {
+  def subquery[U2 >: U, R](using reify: Reify[P, R]) = {
     Subquery.query(this)(unpackable, reify)
   }
 
-  def union[P2 >: P, U2 >: U, R](right: Query[P2, U2])(implicit reify: Reify[P2, R]): Query[R, U] = union(right, false)
+  def union[P2 >: P, U2 >: U, R](right: Query[P2, U2])(using Reify[P2, R]): Query[R, U] = union(right, false)
 
-  def unionAll[P2 >: P, U2 >: U, R](right: Query[P2, U2])(implicit reify: Reify[P2, R]): Query[R, U] = union(right, true)
+  def unionAll[P2 >: P, U2 >: U, R](right: Query[P2, U2])(using Reify[P2, R]): Query[R, U] = union(right, true)
 
-  private def union[P2 >: P, U2 >: U, R](right: Query[P2, U2], all: Boolean)(implicit reify: Reify[P, R]) =
+  private def union[P2 >: P, U2 >: U, R](right: Query[P2, U2], all: Boolean)(using reify: Reify[P, R]) =
     Subquery.union(this, right, all)(unpackable, reify)
 
   def take(num: Int): Query[P, U] = take(ConstColumn(num))
@@ -75,7 +75,7 @@ sealed abstract class Query[+P, +U] extends Node {
   def exists =
     StdFunction[Boolean]("exists", map(_ => ConstColumn(1)))
 
-  def asColumn(implicit ev: P <:< Column[_]): P =
+  def asColumn(using ev: P <:< Column[_]): P =
     ev(unpackable.value).mapOp(_ => this).asInstanceOf[P]
 
   def join[P2, U2](right: Query[P2, U2]) = joinPair(right, jt.Inner)
@@ -109,7 +109,7 @@ class JoinQuery[+P, P2, +U, U2](override val unpackable: Unpackable[_ <: (P, P2)
   /**
    * join tables by column criteria
    */
-  def on[C <: Column[_]: Queryable, R](f: (P, P2) => C)(implicit reify: Reify[(P, P2), R]) =
+  def on[C <: Column[_]: Queryable, R](f: (P, P2) => C)(using Reify[(P, P2), R]) =
     apply[R](
       f(left.unpackable.value, right.unpackable.value)
     )
@@ -117,12 +117,12 @@ class JoinQuery[+P, P2, +U, U2](override val unpackable: Unpackable[_ <: (P, P2)
   /**
    * join tables by foreign key
    */
-  def on[PP >: P <: Table[_], R](f: P2 => ForeignKeyQuery[PP, U2])(implicit reify: Reify[(P, P2), R]) =
+  def on[PP >: P <: Table[_], R](f: P2 => ForeignKeyQuery[PP, U2])(using Reify[(P, P2), R]) =
     apply[R](
       f(right.unpackable.value)
     )
 
-  private def apply[R](on: Node)(implicit reify: Reify[(P, P2), R]): Query[R, (U, U2)] = {
+  private def apply[R](on: Node)(using reify: Reify[(P, P2), R]): Query[R, (U, U2)] = {
     Join.query[P, P2, U, U2, R](
       unpackable, reify, Join(
       left.reified, right.reified, on, joinType
@@ -143,7 +143,7 @@ class QueryWrap[+P, +U](
 
 object Query extends QueryWrap[Unit, Unit](Unpackable((), Unpack.unpackPrimitive[Unit]), Nil, Nil) {
 
-  def apply[P, U](value: P)(implicit unpack: Unpack[P, U]): Query[P, U] = wrapper(Unpackable(value, unpack))
+  def apply[P, U](value: P)(using unpack: Unpack[P, U]): Query[P, U] = wrapper(Unpackable(value, unpack))
 
   def apply[P, U](unpackable: Unpackable[_ <: P, _ <: U]): Query[P, U] = wrapper(unpackable)
 

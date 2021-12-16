@@ -12,7 +12,7 @@ import slaq.test.util.TestDB._
 object ForeignKeyTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 
 class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   @Test def test1(): Unit = db withSession { implicit ss: Session =>
 
@@ -22,7 +22,7 @@ class ForeignKeyTest(tdb: TestDB) extends DBTest(tdb) {
       def * = id ~ name
     }
 
-    val Posts = new Table[(Int, String, Int)]("posts") {
+    object Posts extends Table[(Int, String, Int)]("posts") {
       def id = column[Int]("id", O PrimaryKey, O AutoInc)
       def title = column[String]("title")
       def category = column[Int]("category", O Nullable)

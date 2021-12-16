@@ -27,7 +27,7 @@ class EmbeddingTest(tdb: TestDB) extends DBTest(tdb) {
       (4, "p4u2", 2)
     ).foreach(Q.u1[(Int, String, Int)] + "insert into POSTS values (?, ?, ?)" execute)
 
-    val l1 = Q(GetResult { r => (r.nextString(), r.nextString()) }) + """
+    val l1 = Q(using GetResult { r => (r.nextString(), r.nextString()) }) + """
       select u.NAME, p.NAME
       from USERS u left join POSTS p on u.ID = p.UID
       order by u.NAME, p.NAME

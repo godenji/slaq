@@ -11,10 +11,10 @@ final class UpdateInvoker[T](
   final protected lazy val built =
     profile.buildUpdate(query, NamingContext())
 
-  @inline final protected def getStatement = built.sql
+  inline final protected def getStatement = built.sql
   def updateStatement = getStatement
 
-  def update(value: T)(implicit session: Session): Int =
+  def update(value: T)(using session: Session): Int =
     session.withPreparedStatement(updateStatement) { st =>
       st.clearParameters
       val pp = new PositionedParameters(st)

@@ -55,9 +55,9 @@ abstract class Table[T](
     targetColumns: TT => P,
     onUpdate: ForeignKeyAction = ForeignKeyAction.NoAction,
     onDelete: ForeignKeyAction = ForeignKeyAction.NoAction
-  )(implicit unpackT: Unpack[TT, U], unpackP: Unpack[P, PU]): ForeignKeyQuery[TT, U] = {
+  )(using unpackT: Unpack[TT, U], unpackP: Unpack[P, PU]): ForeignKeyQuery[TT, U] = {
     val targetUnpackable = Unpackable(
-      targetTable.mapOp(Table.Alias), unpackT
+      targetTable.mapOp(Table.Alias.apply), unpackT
     )
     val fk = new ForeignKey(
       name, this, targetUnpackable, targetTable, unpackP,
@@ -66,16 +66,17 @@ abstract class Table[T](
     new ForeignKeyQuery(List(fk), targetUnpackable)
   }
 
-  def primaryKey[TT](name: String, sourceColumns: TT)(implicit unpack: Unpack[TT, _]): PrimaryKey =
+  def primaryKey[TT](name: String, sourceColumns: TT)(using unpack: Unpack[TT, _]): PrimaryKey =
     PrimaryKey(name, unpack.linearizer(sourceColumns).getLinearizedNodes)
 
   def tableConstraints: Iterator[Constraint] =
-    for {
-      m <- getClass().getMethods.iterator
-      if m.getParameterTypes.length == 0 &&
-        classOf[Constraint].isAssignableFrom(m.getReturnType)
-      q = m.invoke(this).asInstanceOf[Constraint]
-    } yield q
+    getClass().getMethods.iterator.filter( m =>
+      m.getParameterTypes.length == 0 &&
+      classOf[Constraint].isAssignableFrom(m.getReturnType)
+    ).map { m =>
+      m.setAccessible(true)
+      m.invoke(this).asInstanceOf[Constraint]
+    }
 
   final def foreignKeys: Iterable[ForeignKey[_ <: Table[_], _]] =
     tableConstraints.collect {
@@ -85,14 +86,17 @@ abstract class Table[T](
   final def primaryKeys: Iterable[PrimaryKey] =
     tableConstraints.collect { case k: PrimaryKey => k }.toIndexedSeq
 
-  def index[TT](name: String, on: TT, unique: Boolean = false)(implicit unpack: Unpack[TT, _]) = new Index(
+  def index[TT](name: String, on: TT, unique: Boolean = false)(using unpack: Unpack[TT, _]) = new Index(
     name, this, unpack.linearizer(on).getLinearizedNodes, unique
   )
 
-  def indexes: Iterable[Index] = (for {
-    m <- getClass().getMethods.view
-    if m.getReturnType == classOf[Index] && m.getParameterTypes.length == 0
-  } yield m.invoke(this).asInstanceOf[Index])
+  def indexes: Iterable[Index] =
+    getClass().getMethods.view.filter( m =>
+      m.getParameterTypes.length == 0 && m.getReturnType == classOf[Index]
+    ).map { m =>
+      m.setAccessible(true)
+      m.invoke(this).asInstanceOf[Index]
+    }
 
   final def getLinearizedNodes = *.getLinearizedNodes
 
@@ -105,7 +109,7 @@ abstract class Table[T](
   final def setParameter(profile: Profile, ps: PositionedParameters, value: Option[T]) =
     *.setParameter(profile, ps, value)
 
-  def ddl(implicit profile: ProfileType): DDL = profile.buildTableDDL(this)
+  def ddl(using profile: ProfileType): DDL = profile.buildTableDDL(this)
 }
 
 object Table {

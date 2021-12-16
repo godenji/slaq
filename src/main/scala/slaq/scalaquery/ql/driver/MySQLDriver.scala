@@ -11,7 +11,7 @@ class MySQLDriver extends Profile { self =>
   type TypeMapperDelegatesT = MySQLTypeMapperDelegates
 
   val Implicit = new ImplicitConversions[MySQLDriver] {
-    implicit val driverType = self
+    given driverType: self.type = self
   }
 
   val typeMapperDelegates = new MySQLTypeMapperDelegates

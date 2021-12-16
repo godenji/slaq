@@ -5,7 +5,7 @@ import org.junit.Test
 import org.junit.Assert._
 import slaq.ql._
 import slaq.ql.TypeMapper._
-import slaq.ql.driver.H2Driver.Implicit._
+import slaq.ql.driver.H2Driver.Implicit.{given, *}
 import slaq.ql.Table
 
 object TablesInObjectTest {
@@ -21,7 +21,7 @@ object TablesInObjectTest {
    * wrong "this" reference into the closure -- where "category" is
    * referenced -- when it is used in a clone()d Posts instance.
    */
-  val Posts = new Table[Int]("posts") {
+  object Posts extends Table[Int]("posts") {
     def category = column[Int]("category")
     def * = category
     def categoryJoin = Categories.filter(_.id =~ category)

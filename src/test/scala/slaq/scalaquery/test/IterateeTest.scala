@@ -14,9 +14,9 @@ import slaq.test.util.TestDB._
 object IterateeTest extends DBTestObject(H2Mem)
 
 class IterateeTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
-  val A = new Table[(String, Int)]("a") {
+  object A extends Table[(String, Int)]("a") {
     def s = column[String]("s", O.PrimaryKey)
     def i = column[Int]("i")
     def * = s ~ i

@@ -11,7 +11,7 @@ import slaq.test.util.TestDB._
 object PrimaryKeyTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem, SQLiteMem)
 
 class PrimaryKeyTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   @Test def test1(): Unit = db withSession { implicit ss: Session =>
 

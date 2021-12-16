@@ -12,7 +12,7 @@ import slaq.test.util.TestDB._
 object UnionTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 
 class UnionTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   object Managers extends Table[(Int, String, String)]("managers") {
     def id = column[Int]("id")

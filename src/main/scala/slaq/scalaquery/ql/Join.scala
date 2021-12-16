@@ -27,14 +27,15 @@ case class Join(
 object Join {
   def query[P, P2, U, U2, R](
     unpackable: Unpackable[_ <: (P, P2), _ <: (U, U2)],
-    reify: Reify[(P, P2), R], join: Join
+    reify: Reify[(P, P2), R],
+    join: Join
   ) = {
 
     def f[PP](unpackable: Unpackable[PP, _ <: (U, U2)]) =
       Unpackable(
         unpackable.mapOp(_ => join), unpackable.unpack
       )
-    val r: Unpackable[R, _ <: (U, U2)] = unpackable.reifiedUnpackable(reify)
+    val r: Unpackable[R, _ <: (U, U2)] = unpackable.reifiedUnpackable(using reify)
     Query[R, (U, U2)](f(r))
   }
 }

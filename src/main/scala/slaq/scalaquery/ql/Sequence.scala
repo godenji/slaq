@@ -10,7 +10,7 @@ class Sequence[T] private[Sequence] (
   val _increment: Option[T],
   val _start: Option[T],
   val _cycle: Boolean
-)(implicit val typeMapper: TypeMapper[T], val integral: Integral[T]) { seq =>
+)(using val typeMapper: TypeMapper[T], val integral: Integral[T]) { seq =>
 
   def min(v: T) = new Sequence[T](name, Some(v), _maxValue, _increment, _start, _cycle)
   def max(v: T) = new Sequence[T](name, _minValue, Some(v), _increment, _start, _cycle)
@@ -22,7 +22,7 @@ class Sequence[T] private[Sequence] (
 
   final def curr = Sequence.Currval(this)
 
-  def ddl(implicit profile: Profile): DDL = profile.buildSequenceDDL(this)
+  def ddl(using profile: Profile): DDL = profile.buildSequenceDDL(this)
 }
 
 object Sequence {

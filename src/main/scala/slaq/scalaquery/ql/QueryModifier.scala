@@ -13,28 +13,27 @@ sealed abstract class Ordering extends QueryModifier {
 }
 
 object Ordering {
+  enum NullOrdering:
+    case NullsDefault, NullsFirst, NullsLast
+  export NullOrdering.*
+
   final case class Asc(
     val by: Node,
-    val nullOrdering: Ordering.NullOrdering = Ordering.NullsDefault
+    val nullOrdering: NullOrdering = NullsDefault
   ) extends Ordering {
     override def toString = "Ordering.Asc"
-    def nullsFirst = copy(nullOrdering = Ordering.NullsFirst)
-    def nullsLast = copy(nullOrdering = Ordering.NullsLast)
+    def nullsFirst = copy(nullOrdering = NullsFirst)
+    def nullsLast = copy(nullOrdering = NullsLast)
   }
 
   final case class Desc(
     val by: Node,
-    val nullOrdering: Ordering.NullOrdering = Ordering.NullsDefault
+    val nullOrdering: NullOrdering = NullsDefault
   ) extends Ordering {
     override def toString = "Ordering.Desc"
-    def nullsFirst = copy(nullOrdering = Ordering.NullsFirst)
-    def nullsLast = copy(nullOrdering = Ordering.NullsLast)
+    def nullsFirst = copy(nullOrdering = NullsFirst)
+    def nullsLast = copy(nullOrdering = NullsLast)
   }
-
-  sealed trait NullOrdering
-  final case object NullsDefault extends NullOrdering
-  final case object NullsFirst extends NullOrdering
-  final case object NullsLast extends NullOrdering
 }
 
 final case class Grouping(val by: Node) extends QueryModifier {
@@ -69,8 +68,7 @@ object TakeDrop {
 	 * extracts first modifier of given T and returns it (if exist) along
 	 * 	with remaining modifiers as (T, List[Others])
 	 */
-  private def extract[T <: QueryModifier](modifiers: List[QueryModifier])(f: Option[T] => T)(implicit m: ClassTag[T]): (T, List[QueryModifier]) = {
-
+  private def extract[T <: QueryModifier](modifiers: List[QueryModifier])(f: Option[T] => T)(using m: ClassTag[T]): (T, List[QueryModifier]) = {
     modifiers.partition(m.runtimeClass.isInstance(_)) match {
       case (x :: _, other) => (f(Some(x.asInstanceOf[T])), other)
       case (_, other)      => (f(None), other)

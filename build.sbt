@@ -1,22 +1,31 @@
 import ApplicationBuild._
 
+val scala3Version = "3.1.1-RC1"
+
 lazy val root = (project in file(".")).
   settings(publishSettings("slaq")).
   settings(fmppSettings).
-  settings(scalaFixSettings).
   settings(
     name := "slaq",
     description := "A type-safe database API for Scala",
     organization := "io.github.godenji",
-    sonatypeProfileName in ThisBuild := organization.value,
+    ThisBuild / sonatypeProfileName := organization.value,
     version := "0.10.10",
-    scalaVersion := "2.13.6",
+    scalaVersion := scala3Version,
     scalacOptions ++= Seq(
-      "-opt:l:inline",
-      "-unchecked", "-deprecation", "-feature",
-      "-Ywarn-unused:-implicits",
-      "-language:implicitConversions", "-language:postfixOps",
-      "-language:higherKinds", "-language:existentials"
+      "-unchecked",
+      "-deprecation",
+      "-feature",
+      "-language:implicitConversions",
+      "-language:postfixOps",
+      "-language:higherKinds",
+      "-language:existentials",
+      //
+      //"-rewrite", "-source", "3.0-migration",
+      //"-Wconf:unused:error",
+      "-Xmigration",
+      "-Yno-generic-signatures",
+      "-Yno-kind-polymorphism"
     ),
     libraryDependencies ++= appDeps,
     credentials ++= {
@@ -24,25 +33,17 @@ lazy val root = (project in file(".")).
       if (creds.exists) Seq(Credentials(creds)) else Nil
     },
     testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v"),
-    parallelExecution in Test := false,
+    Test / parallelExecution := false,
     logBuffered := false
-  ).
-  enablePlugins(BuildInfoPlugin)
-
-def scalaFixSettings = Seq(
-  semanticdbEnabled := true,
-  semanticdbOptions += "-P:semanticdb:synthetics:on",
-  semanticdbVersion := scalafixSemanticdb.revision,
-  ThisBuild / scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value),
-  scalafixDependencies += "org.scala-lang" %% "scala-rewrites" % "0.1.3"
-)
+  )
+  .enablePlugins(BuildInfoPlugin)
 
 def publishSettings(projectName: String) = Seq(
   pomExtra := pomDetail,
   publishMavenStyle := true,
-  publishArtifact in Test := false,
-  publishArtifact in (Compile, packageDoc) := true,
-  publishArtifact in (Compile, packageSrc) := true,
+  Test / publishArtifact := false,
+  Compile / packageDoc / publishArtifact := true,
+  Compile / packageSrc / publishArtifact := true,
   pomIncludeRepository := { _ => false },
   buildInfoKeys := Seq[BuildInfoKey](version),
   buildInfoPackage := projectName,

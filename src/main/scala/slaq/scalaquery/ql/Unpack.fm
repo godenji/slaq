@@ -20,54 +20,54 @@ import slaq.util.{Node, ValueLinearizer, ProductLinearizer}
 sealed trait Unpack[-P,U] {
   type Packed   = P @annotation.unchecked.uncheckedVariance
   type Unpacked = U
-  
+
   // must return the reified type
   def reify(from: Packed): Any = from
-  
+
   // must return an Unpack for the reified type
   def reifiedUnpack: Unpack[_, Unpacked] = this
-  
+
   def linearizer(from: Packed): ValueLinearizer[_]
-  
+
   def mapOp(x: Packed, f: Node => Node): Any // really returns x.type
 }
 
 object Unpack extends UnpackLowPriority {
   def unpackTable[T <: Table[_], U]: Unpack[T, U] = {
-  	new Unpack[T, U] {
-	    def linearizer(from: Packed): ValueLinearizer[_] = from
-	    def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
-	  }
-	}
+    new Unpack[T, U] {
+      def linearizer(from: Packed): ValueLinearizer[_] = from
+      def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
+    }
+  }
 }
 
 trait UnpackLowPriority extends UnpackLowPriority2 {
-  implicit final def unpackColumnBase[T]: Unpack[ColumnBase[T], T] = {
-	  new Unpack[ColumnBase[T], T] {
-	    def linearizer(from: Packed): ValueLinearizer[_] = from
-	    def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
-	  }
-	}
+  inline given unpackColumnBase[T]: Unpack[ColumnBase[T], T] = {
+    new Unpack[ColumnBase[T], T] {
+      def linearizer(from: Packed): ValueLinearizer[_] = from
+      def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
+    }
+  }
 
-  implicit final def unpackPrimitive[T]
-  	(implicit tm: TypeMapper[T]): Unpack[T, T] = { 
-  	
-  	new Unpack[T, T] {
-	    override def reify(from: Packed) = ConstColumn(from)
-	    override def reifiedUnpack = unpackColumnBase[T]
-	    def linearizer(from: Packed): ValueLinearizer[_] = ConstColumn(from)
-	    def mapOp(from: Packed, f: Node => Node) = from
-	  }
-	}
+  inline given unpackPrimitive[T]
+    (using TypeMapper[T]): Unpack[T, T] = {
+
+    new Unpack[T, T] {
+      override def reify(from: Packed) = ConstColumn(from)
+      override def reifiedUnpack = unpackColumnBase[T]
+      def linearizer(from: Packed): ValueLinearizer[_] = ConstColumn(from)
+      def mapOp(from: Packed, f: Node => Node) = from
+    }
+  }
 }
 
 trait UnpackLowPriority2 {
 <#list 2..22 as i>
-  implicit final def unpackTuple${i}[<#list 1..i as j>T${j}<#if i != j>,</#if></#list>, <#list 1..i as j>U${j}<#if i != j>,</#if></#list>, <#list 1..i as j>R${j}<#if i != j>,</#if></#list>](implicit <#list 1..i as j>u${j}: Unpack[T${j}, U${j}]<#if i != j>, </#if></#list>): Unpack[(<#list 1..i as j>T${j}<#if i != j>,</#if></#list>), (<#list 1..i as j>U${j}<#if i != j>,</#if></#list>)] = new Unpack[(<#list 1..i as j>T${j}<#if i != j>,</#if></#list>), (<#list 1..i as j>U${j}<#if i != j>,</#if></#list>)] {
+  given unpackTuple${i}[<#list 1..i as j>T${j}<#if i != j>,</#if></#list>, <#list 1..i as j>U${j}<#if i != j>,</#if></#list>, <#list 1..i as j>R${j}<#if i != j>,</#if></#list>](using <#list 1..i as j>u${j}: Unpack[T${j}, U${j}]<#if i != j>, </#if></#list>): Unpack[(<#list 1..i as j>T${j}<#if i != j>,</#if></#list>), (<#list 1..i as j>U${j}<#if i != j>,</#if></#list>)] = new Unpack[(<#list 1..i as j>T${j}<#if i != j>,</#if></#list>), (<#list 1..i as j>U${j}<#if i != j>,</#if></#list>)] {
     override def reify(from: Packed) =
       (<#list 1..i as j>u${j}.reify(from._${j})<#if i != j>, </#if></#list>)
     override def reifiedUnpack: Unpack[_, Unpacked] =
-      unpackTuple${i}(<#list 1..i as j>u${j}.reifiedUnpack<#if i != j>, </#if></#list>)
+      unpackTuple${i}(using <#list 1..i as j>u${j}.reifiedUnpack<#if i != j>, </#if></#list>)
     def linearizer(from: Packed) = {
       val sub = Vector(<#list 1..i as j>u${j}.linearizer(from._${j})<#if i != j>, </#if></#list>)
       new ProductLinearizer(sub)
@@ -94,13 +94,13 @@ trait UnpackLowPriority2 {
 sealed trait Reify[-P,R]
 
 object Reify extends ReifyLowPriority {
-  implicit final def reifyColumnBase[T <: ColumnBase[_]]: Reify[T, T] = null
+  inline given [T <: ColumnBase[_]]: Reify[T, T] = null
 }
 
 trait ReifyLowPriority {
-  implicit final def reifyPrimitive[T](implicit tm: TypeMapper[T]): Reify[T, ConstColumn[T]] = null
+  inline given [T](using tm: TypeMapper[T]): Reify[T, ConstColumn[T]] = null
 
 <#list 2..22 as i>
-  implicit final def reifyTuple${i}[<#list 1..i as j>T${j}<#if i != j>,</#if></#list>, <#list 1..i as j>U${j}<#if i != j>,</#if></#list>, <#list 1..i as j>R${j}<#if i != j>,</#if></#list>](implicit <#list 1..i as j>u${j}: Reify[T${j}, R${j}]<#if i != j>, </#if></#list>): Reify[(<#list 1..i as j>T${j}<#if i != j>,</#if></#list>), (<#list 1..i as j>R${j}<#if i != j>,</#if></#list>)] = null
+  given reifyTuple${i}[<#list 1..i as j>T${j}<#if i != j>,</#if></#list>, <#list 1..i as j>U${j}<#if i != j>,</#if></#list>, <#list 1..i as j>R${j}<#if i != j>,</#if></#list>](using <#list 1..i as j>u${j}: Reify[T${j}, R${j}]<#if i != j>, </#if></#list>): Reify[(<#list 1..i as j>T${j}<#if i != j>,</#if></#list>), (<#list 1..i as j>R${j}<#if i != j>,</#if></#list>)] = null
 </#list>
 }

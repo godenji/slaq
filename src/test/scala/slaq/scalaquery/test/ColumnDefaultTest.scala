@@ -12,7 +12,7 @@ import slaq.test.util.TestDB._
 object ColumnDefaultTest extends DBTestObject(H2Mem, SQLiteMem, Postgres, MySQL, HsqldbMem)
 
 class ColumnDefaultTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   case class User(id: Int, first: String, last: String)
 

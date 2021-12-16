@@ -5,59 +5,59 @@ import slaq.session.{PositionedResult, PositionedParameters}
 import slaq.util.{Node, UnaryNode, ProductNode}
 
 sealed trait Projection[T <: Product] 
-	extends ColumnBase[T] with ProductNode with Product {
-	
+  extends ColumnBase[T] with ProductNode with Product {
+
   type V = T
   val product = this
 
   final def setParameter(profile:Profile, ps: PositionedParameters, value: Option[T]): Unit = {
     for(i <- 0 until productArity) {
       productElement(i).asInstanceOf[Column[Any]].setParameter(
-      	profile, ps, value.map(_.productElement(i))
+        profile, ps, value.map(_.productElement(i))
       )
     }
   }
 
   final def updateResult(profile:Profile, rs: PositionedResult, value: T): Unit = {
-  	for(i <- 0 until productArity)
-  		productElement(i).asInstanceOf[Column[Any]].
-  			updateResult(profile, rs, value.productElement(i))
+    for(i <- 0 until productArity)
+      productElement(i).asInstanceOf[Column[Any]].
+      updateResult(profile, rs, value.productElement(i))
   }
 
   final def getAllColumnTypeMappers = 
-  	0.until(productArity).flatMap[TypeMapper[_]](
-    	i => productElement(i).asInstanceOf[Column[_]].getAllColumnTypeMappers
+    0.until(productArity).flatMap[TypeMapper[_]](
+      i => productElement(i).asInstanceOf[Column[_]].getAllColumnTypeMappers
     ).to(IndexedSeq)
 
   final def getLinearizedNodes: IndexedSeq[Node] =
     (0 until productArity).map(i => 
-    	Node(productElement(i).asInstanceOf[Column[Any]])
+      Node(productElement(i).asInstanceOf[Column[Any]])
     ).to(IndexedSeq)
 
-  @inline final def <>[R](f: T => R, g: R => Option[T]): 
-  	MappedProjection[R,T] = new MappedProjection(this, f, g)
+  final def <>[R](f: T => R, g: R => T): 
+    MappedProjection[R,T] = new MappedProjection(this, f, g)
 
   override def toString = s"Projection$productArity"
 }
 
 final class MappedProjection[T, P <: Product](
-	val child: Projection[P], 
-	f: P => T, 
-	g: T => Option[P]) extends ColumnBase[T] with UnaryNode {
-	
+  val child: Projection[P],
+  f: P => T,
+  g: T => P) extends ColumnBase[T] with UnaryNode {
+
   override def toString = "MappedProjection"
   override def nodeDelegate = if(op eq null) Node(child) else op.nodeDelegate
   def getAllColumnTypeMappers = child.getAllColumnTypeMappers
 
   def setParameter(profile:Profile, ps: PositionedParameters, value: Option[T]): Unit =
-    child.setParameter(profile, ps, value.flatMap(g))
-    
-  def getResult(profile:Profile, rs: PositionedResult) = 
-  	f(child.getResult(profile, rs))
-  	
-  def updateResult(profile:Profile, rs: PositionedResult, value: T) = 
-  	child.updateResult(profile, rs, g(value).get)
-  	
+    child.setParameter(profile, ps, value.map(g))
+
+  def getResult(profile:Profile, rs: PositionedResult) =
+   f(child.getResult(profile, rs))
+
+  def updateResult(profile:Profile, rs: PositionedResult, value: T) =
+    child.updateResult(profile, rs, g(value))
+
   def getLinearizedNodes = child.getLinearizedNodes
 }
 
@@ -84,7 +84,7 @@ extends Product${i}[<#list 1..i as j>Column[T${j}]<#if i != j>,</#if></#list>] w
 <#list 1..i as j>
     _${j}.mapOp(f)<#if i != j>,</#if>
 </#list>  ).asInstanceOf[this.type]
-  @inline final def <>[R](f: ((<#list 1..i as j>T${j}<#if i != j>,</#if></#list>) => R), g: (R => Option[V])): MappedProjection[R,V] =
+  final def <>[R](f: ((<#list 1..i as j>T${j}<#if i != j>,</#if></#list>) => R), g: (R => V)): MappedProjection[R,V] =
     <>(t => f(<#list 1..i as j>t._${j}<#if i != j>,</#if></#list>), g)
 }
 

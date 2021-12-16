@@ -3,45 +3,45 @@ package slaq.test
 import org.junit.Test
 import org.junit.Assert._
 import slaq.ql._
-import slaq.ql.TypeMapper._
+import slaq.ql.TypeMapper.{given, *}
 import slaq.session._
 import slaq.test.util._
 import slaq.test.util.TestDB._
-import godenji.iso._
+// import godenji.iso._
 
 object MacroTest extends DBTestObject(H2Mem)
 
-case class UserId(value: Int) extends AnyVal with MappedTo[Int]
+// case class UserId(value: Int) extends AnyVal with MappedTo[Int]
 
 class MacroTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+ import tdb.driver.Implicit.{given, *}
+ 
+//  @Test def testMappedEntity(): Unit = {
+   
+//    case class User(id: UserId, first: String, last: String)
 
-  @Test def testMappedEntity(): Unit = {
+//    object Users extends Table[User]("users") {
+//      def id = column[UserId]("id", O PrimaryKey, O AutoInc)
+//      def first = column[String]("first")
+//      def last = column[String]("last")
+//      def * = id ~ first ~ last <> (User.apply _, User.unapply _)
+//      val findByID = this.createFinderBy(_.id)
+//    }
 
-    case class User(id: UserId, first: String, last: String)
+//    db withSession { implicit ss: Session =>
 
-    object Users extends Table[User]("users") {
-      def id = column[UserId]("id", O PrimaryKey, O AutoInc)
-      def first = column[String]("first")
-      def last = column[String]("last")
-      def * = id ~ first ~ last <> (User.apply _, User.unapply _)
-      val findByID = this.createFinderBy(_.id)
-    }
+//      Users.ddl.create
 
-    db withSession { implicit ss: Session =>
-
-      Users.ddl.create
-
-    }
-  }
+//    }
+//  }
 
   @Test def testMappedType(): Unit = {
+    enum Bool:
+      case True extends Bool
+      case False extends Bool
+    import Bool.*
 
-    sealed trait Bool
-    case object True extends Bool
-    case object False extends Bool
-
-    implicit val boolTypeMapper = MappedTypeMapper.base[Bool, Int](
+    given BaseTypeMapper[Bool] = MappedTypeMapper.base[Bool, Int](
       b => if (b == True) 1 else 0,
       i => if (i == 1) True else False
     )

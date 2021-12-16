@@ -19,7 +19,7 @@ abstract class StatementInvoker[-P, +R] extends Invoker[P, R] { self =>
 
   protected def setParam(param: P, st: PreparedStatement): Unit
 
-  def elementsTo(param: P, maxRows: Int)(implicit session: Session): CloseableIterator[R] =
+  def elementsTo(param: P, maxRows: Int)(using Session): CloseableIterator[R] =
     results(param, maxRows).fold(
       r => new CloseableIterator.Single[R](r.asInstanceOf[R]), identity
     )
@@ -33,7 +33,7 @@ abstract class StatementInvoker[-P, +R] extends Invoker[P, R] { self =>
     cursor: ResultSetType = ForwardOnly,
     concurrency: Concurrency = ReadOnly,
     holdability: Holdability = Holdability.Default
-  )(implicit session: Session): Either[Int, PositionedResultIterator[R]] = {
+  )(using session: Session): Either[Int, PositionedResultIterator[R]] = {
     val currStatement = getStatement
     val statement = (
       if (concurrency.intValue == Updatable.intValue)
@@ -49,11 +49,11 @@ abstract class StatementInvoker[-P, +R] extends Invoker[P, R] { self =>
     try {
       st.setMaxRows(maxRows)
       if (st.execute) {
-        val rs = st.getResultSet
-        val pri = new PositionedResultIterator[R](rs, maxRows) {
+        val r = st.getResultSet
+        val pri = new PositionedResultIterator[R](r, maxRows) {
           def closeUnderlying() = {
             st.close()
-            rs.close()
+            r.close()
           }
           def extractValue() = self.extractValue(this)
         }

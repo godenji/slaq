@@ -11,7 +11,7 @@ sealed class Driver extends Profile { self =>
   type TypeMapperDelegatesT = TypeMapperDelegates
 
   val Implicit = new ImplicitConversions[Driver] {
-    implicit val driverType = self
+    given driverType: self.type = self
   }
 
   val typeMapperDelegates = new TypeMapperDelegates {}

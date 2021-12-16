@@ -28,7 +28,7 @@ class SQLiteDriver extends Profile { self =>
   type TypeMapperDelegatesT = TypeMapperDelegates
 
   val Implicit = new ImplicitConversions[SQLiteDriver] {
-    implicit val driverType = self
+    given driverType: self.type = self
   }
 
   val typeMapperDelegates = new SQLiteTypeMapperDelegates

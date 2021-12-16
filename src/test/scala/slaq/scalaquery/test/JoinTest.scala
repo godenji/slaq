@@ -15,7 +15,10 @@ case class Categories(id: Int, name: String)
 object Categories extends Table[Categories]("cats") {
   def id = column[Int]("id", O PrimaryKey)
   def name = column[String]("name")
-  def * = id ~ name <> (Categories.apply _, Categories.unapply _)
+  def * = id ~ name <> (
+    Categories.apply _,
+    x => Tuple.fromProductTyped(x) 
+  )
 }
 case class Posts(id: Int, title: String, category: Int, category2: Int)
 object Posts extends Table[Posts]("posts") {
@@ -24,11 +27,14 @@ object Posts extends Table[Posts]("posts") {
   def category = column[Int]("category")
   def category2 = column[Int]("category2")
   def catsFk = foreignKey("catsFk", category2, Categories)(_.id)
-  def * = id ~ title ~ category ~ category2 <> (Posts.apply _, Posts.unapply _)
+  def * = id ~ title ~ category ~ category2 <> (
+    Posts.apply _,
+    x => Tuple.fromProductTyped(x)
+  )
 }
 
 class JoinTest(tdb: TestDB) extends DBTest(tdb) {
-  import tdb.driver.Implicit._
+  import tdb.driver.Implicit.{given, *}
 
   @Test def test(): Unit = db withSession { implicit ss: Session =>
 
