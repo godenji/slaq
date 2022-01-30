@@ -11,7 +11,7 @@ trait Profile {
   type ImplicitT <: ImplicitConversions[_ <: Profile]
   type TypeMapperDelegatesT <: TypeMapperDelegates
 
-  def createQueryTemplate[P, R](query: Query[_, R]): QueryTemplate[P, R] = new QueryTemplate[P, R](query, this)
+  def createQueryTemplate[P, R](query: Query[_, R]): QueryTemplate[P, R] = new QueryTemplate[P, R](query.asInstanceOf[Query[P, R]], this)
 
   def createQueryBuilder(query: Query[_, _], nc: NamingContext): QueryBuilder = new GenericQueryBuilder(query, nc, None, this)
 
