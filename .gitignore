@@ -19,3 +19,4 @@ sbt-cache-update/
 project/.bloop
 project/metals.sbt
 project/project
+workspace.code-workspace
