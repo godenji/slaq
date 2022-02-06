@@ -10,7 +10,8 @@ case class Subquery(query: Node, rename: Boolean) extends Node {
 }
 
 case class SubqueryColumn(
-  pos: Int, subquery: Subquery, typeMapper: TypeMapper[_]
+  pos: Int, subquery: Subquery, typeMapper: TypeMapper[_],
+  underlying: Option[MappedProjection[_, _]] = None
 ) extends Node {
 
   def nodeChildren = subquery :: Nil
@@ -43,7 +44,12 @@ object Subquery {
           val p = Subquery(node, true)
           var pos = 0
           unpackable.mapOp { n =>
-            pos += 1; SubqueryColumn(pos, p, mapper(n))
+            pos += 1
+            n match
+              case t: MappedProjection[_, _] =>
+                t.mapOp(_ => SubqueryColumn(pos, p, null, Some(t)))
+              case _ =>
+                SubqueryColumn(pos, p, mapper(n))
           }
       }, unpackable.unpack
     )
@@ -51,7 +57,11 @@ object Subquery {
 
   private def mapper(n: Node) = n match {
     case c: Column[_] => c.typeMapper
-    case SubqueryColumn(_, _, tm) => tm
-    case x => Fail(s"Expected Column or SubqueryColumn but got $x")
+    case SubqueryColumn(_, _, tm, _) => tm
+    case x => Fail(s"""
+Expected Column or SubqueryColumn but got $x, maybe you forgot t.* projection?
+See UnionTest.scala for detailed example of union queries with table projections.
+    """
+    )
   }
 }

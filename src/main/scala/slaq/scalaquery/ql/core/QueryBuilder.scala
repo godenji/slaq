@@ -49,18 +49,26 @@ abstract class QueryBuilder(
     }
     node match {
       case p: ProductNode =>
-        p.nodeChildren.zipWithIndex.foreach {
-          case (_: Join, i) =>
-            delimit( // delegate is Join, show parent Table
-              show(p.product.productElement(i).asInstanceOf[Table[_]], b)
-            )
-          case (n: ProductNode, _) =>
-            n.nodeChildren.foreach { x =>
-              delimit(expr(x, b))
-            }
-          case (n, _) =>
-            delimit(expr(n, b))
+        val xs = p.nodeChildren
+        val hasProjection = xs.collect {
+          case SubqueryColumn(_, q, _, Some(projection)) => q
         }
+        hasProjection.headOption match
+          // hack in star projection for union that yields MappedProjections
+          case Some(q) => b += s"${quote(tableAlias(q))}.*"
+          case None =>
+            xs.zipWithIndex.foreach {
+              case (_: Join, i) =>
+                delimit( // delegate is Join, show parent Table
+                  show(p.product.productElement(i).asInstanceOf[Table[_]], b)
+                )
+              case (n: ProductNode, _) =>
+                n.nodeChildren.foreach { x =>
+                  delimit(expr(x, b))
+                }
+              case (n, _) =>
+                delimit(expr(n, b))
+            }
       case j: Join => // query yields a single table (i.e. non-product/projection)
         val t = query.unpackable.value.asInstanceOf[Table[_]]
         show(
@@ -80,7 +88,7 @@ abstract class QueryBuilder(
     case ta @ Table.Alias(t: Table[_]) => expr(t.mapOp(_ => ta), b)
     case Table.Alias(ta: Table.Alias)  => expr(ta, b) // Union
     case sq @ Subquery(_, _)           => b += s"${quote(tableAlias(sq))}.*"
-    case SubqueryColumn(pos, q, _)     => b += s"${quote(tableAlias(q))}.${quote(s"c$pos")}"
+    case SubqueryColumn(pos, q, _, _) =>  b += s"${quote(tableAlias(q))}.${quote(s"c$pos")}"
     case SimpleLiteral(w)              => b += w
     case _ =>
       Fail(s"Unmatched node `$c` in show block")

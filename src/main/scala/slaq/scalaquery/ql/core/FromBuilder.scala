@@ -59,6 +59,8 @@ trait FromBuilder { self: QueryBuilder with QueryBuilderAction =>
               val name = quote(fk.right.asInstanceOf[NamedColumn[_]].name)
               b += s"(${quote(leftAlias)}.$name = "; show(fk.left, b); b += ')'
             }
+          // left outer join in UNION subquery, pull out NamedColumn pair from delegate
+          case x: WrappedColumn[_] => show(x.nodeDelegate, b)
           case x => show(x, b)
         }
       }
