@@ -46,7 +46,7 @@ sealed abstract class Column[T: TypeMapper] extends ColumnBase[T] {
 
   def in(e: Query[Column[_], _]) = ColumnOps.In(Node(this), Node(e))
   def notIn(e: Query[Column[_], _]) = ColumnOps.Not(Node(ColumnOps.In(Node(this), Node(e))))
-  def count = StdFunction[Int]("count", Node(this))
+  def count = StdFunction[Long]("count", Node(this))
   def isNull = ColumnOps.Is(Node(this), ConstColumn.NULL)
   def isNotNull = ColumnOps.Not(Node(ColumnOps.Is(Node(this), ConstColumn.NULL)))
   def countDistinct = ColumnOps.CountDistinct(Node(this))

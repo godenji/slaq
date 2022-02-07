@@ -144,7 +144,7 @@ class UnionTest(tdb: TestDB) extends DBTest(tdb) {
       )
       l <- Locations leftJoin (_.id is m.locId)
       _ <- Query groupBy(m.id) if forCount
-    } yield (if forCount then m.id.count else ConstColumn(0), m.*, e.*, l.*)
+    } yield (if forCount then m.id.count else ConstColumn(0L), m.*, e.*, l.*)
 
     val q4 = for (cnt, m, e, l) <- fn(true) union fn(false) yield (cnt, m, e, l)
     println("Star projection: " + q4.selectStatement)
