@@ -111,6 +111,9 @@ class MySQLDDLBuilder(table: Table[_], profile: MySQLDriver) extends DDLBuilder(
   override protected def dropForeignKey(fk: ForeignKey[_ <: Table[_], _]) = {
     "ALTER TABLE " + table.tableName + " DROP FOREIGN KEY " + fk.name
   }
+  override protected def dropPrimaryKey(pk: PrimaryKey) = {
+    "ALTER TABLE " + table.tableName + " DROP PRIMARY KEY"
+  }
 }
 
 class MySQLSequenceDDLBuilder[T](seq: Sequence[T], profile: MySQLDriver) extends SequenceDDLBuilder(seq, profile) {
