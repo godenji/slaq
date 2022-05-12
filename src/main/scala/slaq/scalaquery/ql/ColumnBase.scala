@@ -120,7 +120,7 @@ case class AsColumnOf[T: TypeMapper](child: Node, typeName: Option[String])
 /**
  * A WrappedColumn can be used to change a column's nullValue.
  */
-class WrappedColumn[T: TypeMapper](parent: ColumnBase[_]) extends Column[T] {
+class WrappedColumn[T: TypeMapper](val parent: ColumnBase[_]) extends Column[T] {
   override def nodeDelegate = if (op eq null) Node(parent) else op.nodeDelegate
   def nodeChildren = nodeDelegate :: Nil
 }
