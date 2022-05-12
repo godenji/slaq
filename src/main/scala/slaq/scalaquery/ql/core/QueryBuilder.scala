@@ -191,6 +191,11 @@ abstract class QueryBuilder(
         case n          => b += " ELSE "; expr(n, b)
       }
       b += " END)"
+
+    // handle bizarre edge case where more than 1 If condition in a Case When statement
+    // *that uses String equality* results in a WrappedColumn (with parent as OperatorColumn)
+    // rather than the OperatorColumn itself
+    case x: WrappedColumn[_] if x.parent.isInstanceOf[OperatorColumn[_]] => show(x.parent, b)
     case _: OperatorColumn[_] | _: WrappedColumn[_] =>
   }
 }
