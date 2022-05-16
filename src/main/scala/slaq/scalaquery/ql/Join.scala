@@ -5,7 +5,8 @@ import slaq.util.{Node, BinaryNode}
 case class Join(
   left: Node,
   right: Node,
-  on: Node, joinType: JoinType
+  on: Node,
+  joinType: JoinType
 ) extends BinaryNode {
 
   /**
