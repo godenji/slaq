@@ -87,7 +87,7 @@ abstract class QueryBuilder(
     case t: Table[_]                   => expr(Node(t.*), b)
     case ta @ Table.Alias(t: Table[_]) => expr(t.mapOp(_ => ta), b)
     case Table.Alias(ta: Table.Alias)  => expr(ta, b) // Union
-    case sq @ Subquery(_, _)           => b += s"${quote(tableAlias(sq))}.*"
+    case sq @ Subquery(_, _, _)        => b += s"${quote(tableAlias(sq))}.*"
     case SubqueryColumn(pos, q, _, _) =>  b += s"${quote(tableAlias(q))}.${quote(s"c$pos")}"
     case SimpleLiteral(w)              => b += w
     case _ =>

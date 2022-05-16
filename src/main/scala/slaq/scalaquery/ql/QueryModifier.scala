@@ -2,8 +2,10 @@ package slaq.ql
 
 import scala.reflect.ClassTag
 import slaq.util.{Node, NullaryNode}
+import slaq.util.RefId
 
 sealed trait QueryModifier extends Node
+
 sealed abstract class Ordering extends QueryModifier {
   val by: Node
   val nullOrdering: Ordering.NullOrdering
@@ -39,6 +41,11 @@ object Ordering {
 final case class Grouping(val by: Node) extends QueryModifier {
   def nodeChildren = by :: Nil
   override def toString = "Grouping"
+}
+
+final case class Lateral(ref: RefId[Query[_, _]], on: Node) extends QueryModifier {
+  def nodeChildren = Nil
+  override def toString = "Lateral ON"
 }
 
 /*

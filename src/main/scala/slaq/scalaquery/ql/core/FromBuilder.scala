@@ -34,7 +34,12 @@ trait FromBuilder { self: QueryBuilder with QueryBuilderAction =>
             if (isFirst) fromSlot += " FROM "
             tr.tableJoin.map(createJoin(_, isFirst, numAliases)(using fromSlot)).
               getOrElse {
-                if (!isFirst) fromSlot += ','
+                if (!isFirst) {
+                  tr.table match
+                    case Subquery(_, _, Some(joinType)) =>
+                      fromSlot += s" ${joinType.sqlName} JOIN LATERAL "
+                    case _ => fromSlot += ','
+                }
                 tableLabel(tr.table, alias)(using fromSlot)
               }
             declaredTables += alias
@@ -74,11 +79,17 @@ trait FromBuilder { self: QueryBuilder with QueryBuilderAction =>
       table match {
         case Table.Alias(t: Table[_]) => show(t)
         case t: Table[_]              => show(t)
-        case Subquery(q: Query[_, _], rename) =>
+        case Subquery(q: Query[_, _], rename, _) =>
           b += "("
           subQueryBuilder(q).Select.build(b, rename)
           b += s") ${quote(alias)}"
-        case Subquery(Union(all, sqs), rename) =>
+          queryModifiers[Lateral]
+            .find(_.ref == RefId(q))
+            .foreach(x =>
+              b += " ON "
+              self.show(x.on, b)
+            )
+        case Subquery(Union(all, sqs), rename, _) =>
           b += s"($lp"
           var first = true
           for (sq <- sqs) {

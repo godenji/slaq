@@ -8,6 +8,7 @@ import slaq.ql.driver.SQLiteDriver
 import slaq.session._
 import slaq.test.util._
 import slaq.test.util.TestDB._
+import slaq.ql.driver.H2Driver
 
 object JoinTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem, SQLiteMem)
 
@@ -112,5 +113,30 @@ class JoinTest(tdb: TestDB) extends DBTest(tdb) {
     println("Foreign key join: " + q6.selectStatement)
     q6.foreach(x => println("  " + x))
     assertEquals(Set(1, 2, 3, 4), q6.to[Set]().map(_.id))
+
+    val q7 = for {
+      (c, p) <- Categories join Posts on (_.id is _.category)
+      (p2, name) <- ((
+        for (c, p) <- Categories join Posts on (_.id is _.category)
+        yield (p.id, c.name)
+      ) lateral) on (x => x._1 =~ p.id)
+      _ <- Query orderBy p.id
+    } yield p.id ~ c.id ~ p2 ~ name
+
+    // Lateral join functionality not supported by H2 and SqLite
+    if (tdb.driver != H2Driver && tdb.driver != SQLiteDriver) {
+      println("Lateral join: " + q7.selectStatement)
+      q7.foreach(x => println("  " + x))
+      assertEquals(
+        List(
+          (2, 1, "Scala"),
+          (3, 2, "ScalaQuery"),
+          (4, 3, "Windows"),
+          (5, 2, "ScalaQuery")
+        ), 
+        q7.map(p => p._1 ~ p._2 ~ p._4).list()
+      )
+    }
+
   }
 }

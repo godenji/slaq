@@ -2,6 +2,7 @@ package slaq.ql
 
 import slaq.util.{Node, ValueLinearizer}
 import slaq.ql.{JoinType => jt}
+import slaq.util.RefId
 
 sealed abstract class Query[+P, +U] extends Node {
   override def toString = "Query"
@@ -13,6 +14,7 @@ sealed abstract class Query[+P, +U] extends Node {
   def modifiers: List[QueryModifier]
 
   def nodeChildren = reified :: cond.map(Node.apply) ::: modifiers
+
   override def nodeNamedChildren =
     (reified, "select") :: cond.map((_, "where")) ::: modifiers.map((_, "modifier"))
 
@@ -51,7 +53,7 @@ sealed abstract class Query[+P, +U] extends Node {
   }
 
   def subquery[U2 >: U, R](using reify: Reify[P, R]) = {
-    Subquery.query(this)(unpackable, reify)
+    Subquery.query(this, None)(unpackable, reify)
   }
 
   def union[P2 >: P, U2 >: U, R](right: Query[P2, U2])(using Reify[P2, R]): Query[R, U] = union(right, false)
@@ -88,10 +90,22 @@ sealed abstract class Query[+P, +U] extends Node {
   def rightJoin[C <: Column[_]: Queryable](on: P => C) = joinOne(on, jt.Right)
   def outerJoin[C <: Column[_]: Queryable](on: P => C) = joinOne(on, jt.Outer)
 
+  def lateral[U2 >: U, R](using reify: Reify[P, R]) = _lateral(jt.Inner)
+  def lateralLeft[U2 >: U, R](using reify: Reify[P, R]) = _lateral(jt.Left)
+  def lateralRight[U2 >: U, R](using reify: Reify[P, R]) = _lateral(jt.Right)
+  def lateralOuter[U2 >: U, R](using reify: Reify[P, R]) = _lateral(jt.Outer)
+
+  private def _lateral[U2 >: U, R](jt: JoinType)(using reify: Reify[P, R]) = {
+    LateralQuery[R, U](
+      Subquery.query(this, Some(jt))(unpackable, reify),
+      this
+    )
+  }
+
   private def joinPair[P2, U2](right: Query[P2, U2], joinType: JoinType) = {
     val (u1, u2) = (unpackable, right.unpackable)
     val unpack = u1.zip(u2).asInstanceOf[Unpackable[(P, P2), (U, U2)]]
-    new JoinQuery(unpack)(this, right, joinType)
+    JoinQuery(unpack)(this, right, joinType)
   }
 
   private def joinOne(on: P => Node, joinType: JoinType): Query[P, U] = {
@@ -103,7 +117,23 @@ sealed abstract class Query[+P, +U] extends Node {
   }
 }
 
-class JoinQuery[+P, P2, +U, U2](override val unpackable: Unpackable[_ <: (P, P2), _ <: (U, U2)])(left: Query[P, U], right: Query[P2, U2], joinType: JoinType)
+class LateralQuery[+P, +U](subQ: Query[P, U], parentQ: Query[_, _])
+  extends QueryWrap[P, U](subQ.unpackable, Nil, Nil) { self =>
+
+  def on[C <: Column[_]: Queryable](f: P => C): Query[P, U] = {
+    new QueryWrap[P, U](
+      unpackable,
+      cond,
+      modifiers ::: List(
+        Lateral(RefId(parentQ), f(unpackable.value))
+      )
+    )
+  }
+} 
+
+class JoinQuery[+P, P2, +U, U2]
+  (override val unpackable: Unpackable[_ <: (P, P2), _ <: (U, U2)])
+  (left: Query[P, U], right: Query[P2, U2], joinType: JoinType)
   extends QueryWrap[(P, P2), (U, U2)](unpackable, Nil, Nil) {
 
   /**
@@ -135,8 +165,8 @@ class QueryWrap[+P, +U](
   val unpackable: Unpackable[_ <: P, _ <: U],
   val cond: List[Column[_]],
   val modifiers: List[QueryModifier]
-) extends Query[P, U] {
-
+  ) extends Query[P, U] {
+    
   lazy val reified = unpackable.reifiedNode
   lazy val linearizer = unpackable.linearizer
 }
