@@ -1,6 +1,6 @@
 package slaq.ql
 
-import slaq.util.Node
+import slaq.util.{Node, ProductNode}
 import slaq.Fail
 
 case class Subquery
@@ -19,6 +19,12 @@ case class SubqueryColumn(
   def nodeChildren = subquery :: Nil
   override def nodeNamedChildren = (subquery, "subquery") :: Nil
   override def toString = s"SubqueryColumn c$pos"
+}
+
+case class SubqueryTable(cols: List[SubqueryColumn]) extends Node {
+  def nodeChildren = cols
+  override def nodeNamedChildren = (this, "subquery table") :: Nil
+  override def toString = s"SubqueryTable $cols"
 }
 
 case class Union(all: Boolean, queries: List[Query[_, _]]) extends Node {
@@ -53,6 +59,15 @@ object Subquery {
             n match
               case t: MappedProjection[_, _] =>
                 t.mapOp(_ => SubqueryColumn(pos, p, null, Some(t)))
+              case t: Table[_] =>
+                val xs = t.*.nodeChildren.collect {
+                  case pn: ProductNode =>
+                    pn.nodeChildren.zipWithIndex.map((n2, i) =>
+                      if i != 0 then pos += 1
+                      SubqueryColumn(pos, p, mapper(n2))
+                    )
+                }.flatten
+                t.mapOp(_ => SubqueryTable(xs))
               case _ =>
                 SubqueryColumn(pos, p, mapper(n))
           }
