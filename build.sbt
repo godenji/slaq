@@ -1,6 +1,6 @@
 import ApplicationBuild._
 
-val scala3Version = "3.1.1-RC1"
+val scala3Version = "3.2.2-RC1"
 
 lazy val root = (project in file(".")).
   settings(publishSettings("slaq")).
@@ -10,7 +10,7 @@ lazy val root = (project in file(".")).
     description := "A type-safe database API for Scala",
     organization := "io.github.godenji",
     ThisBuild / sonatypeProfileName := organization.value,
-    version := "0.10.10",
+    version := "1.0.0-M1",
     scalaVersion := scala3Version,
     scalacOptions ++= Seq(
       "-unchecked",
