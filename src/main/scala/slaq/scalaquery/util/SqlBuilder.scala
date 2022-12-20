@@ -9,6 +9,8 @@ final class SqlBuilder extends SqlBuilder.Segment { self =>
   private val segments = new ArrayBuffer[Segment]
   private var currentStringSegment: StringSegment = null
 
+  def lastSegment: Option[StringSegment] = Option(currentStringSegment)
+
   private def ss = {
     if (currentStringSegment eq null) {
       if (segments.isEmpty || segments.last.isInstanceOf[SqlBuilder]) {

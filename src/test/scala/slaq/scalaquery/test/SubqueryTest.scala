@@ -55,12 +55,44 @@ class SubqueryTest(tdb: TestDB) extends DBTest(tdb) with SubqueryModel {
       ("A ScalaQuery Update", 2, 4)
     )
 
+    val sqJoin = for
+      (max, c, p, p2) <- (
+        for
+          (c, p) <- Categories join Posts on (_.id is _.id)
+          p2 <- Posts leftJoin (_.id is p.id)
+          _ <- Query groupBy c.id orderBy p.id
+        yield (c.id.max, c, p, p2)
+      ).subquery if max =~ ConstColumn(4)
+    yield (max, c, p, p2)
+    println(sqJoin.pretty)
+    sqJoin.foreach(x => println("  " + x))
+    assertEquals(
+      Some(4),
+      sqJoin.list().headOption.flatMap(_._1)
+    )
+
+    val sqCross = for
+      (max, c, p) <- (
+        for
+          c <- Categories
+          p <- Posts if p.id is c.id
+          _ <- Query groupBy c.id orderBy p.id
+        yield (c.id.max, c, p)
+      ).subquery if max =~ ConstColumn(4)
+    yield (max, c, p)
+    println(sqCross.pretty)
+    sqCross.foreach(x => println("  " + x))
+    assertEquals(
+      Some(4),
+      sqCross.list().headOption.flatMap(_._1)
+    )
+
     def qbase = for {
       c <- Categories.clone
       p <- Posts.clone leftJoin (_.id is c.id)
     } yield (c, p)
 
-    val q = for {
+    val whereIn = for {
       (c, p) <- qbase
       if c.id in (
         for {
@@ -70,8 +102,11 @@ class SubqueryTest(tdb: TestDB) extends DBTest(tdb) with SubqueryModel {
       )
       _ <- Query groupBy c.id orderBy p.id
     } yield (c, p, (c.id.sum, p.id.sum))
-    println(q.pretty)
-    q.foreach(x => println("  " + x))
-    assertEquals(Some((Some(4), Some(4))), q.list().reverse.headOption.map(_._3))
+    println(whereIn.pretty)
+    whereIn.foreach(x => println("  " + x))
+    assertEquals(
+      Some((Some(4), Some(4))),
+      whereIn.list().reverse.headOption.map(_._3)
+    )
   }
 }

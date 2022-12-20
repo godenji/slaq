@@ -34,9 +34,19 @@ abstract class QueryBuilder(
   protected val scalarFrom: Option[String] = None
   protected val concatOperator: Option[String] = None
   private val NullColumn = ConstColumn.NULL
+  private val intReg = "[0-9]+".r
 
   protected def expr(node: Node, b: SqlBuilder, rename: Boolean): Unit = {
-    var pos = 0
+
+    def subqueryPos() = {
+      // extract last subquery column position (e.g. 2 from 't1."name" as "c2", ')
+      val str = b.lastSegment.map(_.sb.reverse.take(5).toString()).mkString
+      intReg.findFirstIn(str).map(
+        // re-reverse string to get correct position (e.g. c12 => 21c => 12)
+        _.reverse.toInt
+      )
+    }
+    var pos = if !rename then 0 else subqueryPos() getOrElse 0
     def alias(as: => String, outer: Boolean) = {
       if (rename) b += as
       if (outer) pos = 1
@@ -58,10 +68,17 @@ abstract class QueryBuilder(
           case Some(q) => b += s"${quote(tableAlias(q))}.*"
           case None =>
             xs.zipWithIndex.foreach {
+              // following two cases yield full table from subquery
+              case (ta @ Table.Alias(t: Table[_]), _) if rename =>
+                show(ta, b, true)
+              case (j: Join, i) if rename =>
+                show(p.product.productElement(i).asInstanceOf[Table[_]], b, true)
               case (_: Join, i) =>
                 delimit( // delegate is Join, show parent Table
                   show(p.product.productElement(i).asInstanceOf[Table[_]], b)
                 )
+              case (n, i) if rename && pos != 0 =>
+                delimit(expr(n, b, true))
               case (n: ProductNode, _) =>
                 n.nodeChildren.foreach { x =>
                   delimit(expr(x, b))
@@ -74,20 +91,28 @@ abstract class QueryBuilder(
         show(
           j.extractNode(t.tableName, forTableAlias = false), b
         )
+      // handle subquery implicit join case (i.e. "select * from tableA a, tableB b")
+      case t: Table[_] if rename => show(t, b, true)
       case n => show(n, b)
     }
     if (pos == 0) alias(s" as ${quote("c1")}", outer = true)
   }
   def expr(c: Node, b: SqlBuilder): Unit = expr(c, b, false)
 
-  protected def show(c: Node, b: SqlBuilder): Unit = c match {
+  protected def show(c: Node, b: SqlBuilder): Unit = show(c, b, false)
+
+  protected def show(c: Node, b: SqlBuilder, rename: Boolean): Unit = c match {
     case c: Query[_, _]                => show(c, b)
     case c: OperatorColumn[_]          => show(c, b)
     case c: Column[_]                  => show(c, b)
-    case t: Table[_]                   => expr(Node(t.*), b)
-    case ta @ Table.Alias(t: Table[_]) => expr(t.mapOp(_ => ta), b)
-    case Table.Alias(ta: Table.Alias)  => expr(ta, b) // Union
+    case t: Table[_]                   => expr(Node(t.*), b, rename)
+    case ta @ Table.Alias(t: Table[_]) => expr(t.mapOp(_ => ta), b, rename)
+    case Table.Alias(ta: Table.Alias)  => expr(ta, b, rename) // Union
     case sq @ Subquery(_, _, _)        => b += s"${quote(tableAlias(sq))}.*"
+    case SubqueryTable(xs)             => xs.zipWithIndex.foreach((x, i) =>
+      show(x, b)
+      if i != xs.size -1 then b += ','
+    )
     case SubqueryColumn(pos, q, _, _) =>  b += s"${quote(tableAlias(q))}.${quote(s"c$pos")}"
     case SimpleLiteral(w)              => b += w
     case _ =>
