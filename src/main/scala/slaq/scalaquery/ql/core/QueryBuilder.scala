@@ -60,32 +60,25 @@ abstract class QueryBuilder(
     node match {
       case p: ProductNode =>
         val xs = p.nodeChildren
-        val hasProjection = xs.collect {
-          case SubqueryColumn(_, q, _, Some(projection)) => q
-        }
-        hasProjection.headOption match
-          // hack in star projection for union that yields MappedProjections
-          case Some(q) => b += s"${quote(tableAlias(q))}.*"
-          case None =>
-            xs.zipWithIndex.foreach {
-              // following two cases yield full table from subquery
-              case (ta @ Table.Alias(t: Table[_]), _) if rename =>
-                show(ta, b, true)
-              case (j: Join, i) if rename =>
-                show(p.product.productElement(i).asInstanceOf[Table[_]], b, true)
-              case (_: Join, i) =>
-                delimit( // delegate is Join, show parent Table
-                  show(p.product.productElement(i).asInstanceOf[Table[_]], b)
-                )
-              case (n, i) if rename && pos != 0 =>
-                delimit(expr(n, b, true))
-              case (n: ProductNode, _) =>
-                n.nodeChildren.foreach { x =>
-                  delimit(expr(x, b))
-                }
-              case (n, _) =>
-                delimit(expr(n, b))
+        xs.zipWithIndex.foreach {
+          // following two cases yield full table from subquery
+          case (ta @ Table.Alias(t: Table[_]), _) if rename =>
+            show(ta, b, true)
+          case (j: Join, i) if rename =>
+            show(p.product.productElement(i).asInstanceOf[Table[_]], b, true)
+          case (_: Join, i) =>
+            delimit( // delegate is Join, show parent Table
+              show(p.product.productElement(i).asInstanceOf[Table[_]], b)
+            )
+          case (n, i) if rename && pos != 0 =>
+            delimit(expr(n, b, true))
+          case (n: ProductNode, _) =>
+            n.nodeChildren.foreach { x =>
+              delimit(expr(x, b))
             }
+          case (n, _) =>
+            delimit(expr(n, b))
+        }
       case j: Join => // query yields a single table (i.e. non-product/projection)
         val t = query.unpackable.value.asInstanceOf[Table[_]]
         show(
@@ -113,7 +106,7 @@ abstract class QueryBuilder(
       show(x, b)
       if i != xs.size -1 then b += ','
     )
-    case SubqueryColumn(pos, q, _, _) =>  b += s"${quote(tableAlias(q))}.${quote(s"c$pos")}"
+    case SubqueryColumn(pos, q, _) =>  b += s"${quote(tableAlias(q))}.${quote(s"c$pos")}"
     case SimpleLiteral(w)              => b += w
     case _ =>
       Fail(s"Unmatched node `$c` in show block")

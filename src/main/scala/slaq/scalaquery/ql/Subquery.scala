@@ -11,10 +11,8 @@ case class Subquery
   override def isNamedTable = true
 }
 
-case class SubqueryColumn(
-  pos: Int, subquery: Subquery, typeMapper: TypeMapper[_],
-  underlying: Option[MappedProjection[_, _]] = None
-) extends Node {
+case class SubqueryColumn(pos: Int, subquery: Subquery, typeMapper: TypeMapper[_])
+  extends Node {
 
   def nodeChildren = subquery :: Nil
   override def nodeNamedChildren = (subquery, "subquery") :: Nil
@@ -57,8 +55,6 @@ object Subquery {
           unpackable.mapOp { n =>
             pos += 1
             n match
-              case t: MappedProjection[_, _] =>
-                t.mapOp(_ => SubqueryColumn(pos, p, null, Some(t)))
               case t: Table[_] =>
                 val xs = t.*.nodeChildren.collect {
                   case pn: ProductNode =>
@@ -77,9 +73,9 @@ object Subquery {
 
   private def mapper(n: Node) = n match {
     case c: Column[_] => c.typeMapper
-    case SubqueryColumn(_, _, tm, _) => tm
+    case SubqueryColumn(_, _, tm) => tm
     case x => Fail(s"""
-Expected Column or SubqueryColumn but got $x, maybe you forgot t.* projection?
+Expected Column, SubqueryColumn, or Table but got $x -- maybe you tried to yield `t.*`?
 See UnionTest.scala for detailed example of union queries with table projections.
     """
     )
