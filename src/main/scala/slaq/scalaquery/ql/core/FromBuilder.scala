@@ -34,13 +34,19 @@ trait FromBuilder { self: QueryBuilder with QueryBuilderAction =>
             if (isFirst) fromSlot += " FROM "
             tr.tableJoin.map(createJoin(_, isFirst, numAliases)(using fromSlot)).
               getOrElse {
-                if (!isFirst) {
-                  tr.table match
-                    case Subquery(_, _, Some(joinType)) =>
-                      fromSlot += s" ${joinType.sqlName} JOIN LATERAL "
-                    case _ => fromSlot += ','
-                }
-                tableLabel(tr.table, alias)(using fromSlot)
+                tr.table match
+                  // no-op if referencing subquery column in outer expression
+                  // i.e. all subquery columns reference a single table `tN`
+                  // (e.g. "select t1.c1, t1.c2, ... from (...) t1")
+                  case NamedColumn(n, _, _) if n.isInstanceOf[SubqueryTable] => ()
+                  case t =>
+                    if (!isFirst) {
+                      t match
+                        case Subquery(_, _, Some(joinType)) =>
+                          fromSlot += s" ${joinType.sqlName} JOIN LATERAL "
+                        case _ => fromSlot += ','
+                    }
+                    tableLabel(t, alias)(using fromSlot)
               }
             declaredTables += alias
           }

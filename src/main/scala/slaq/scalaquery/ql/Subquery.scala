@@ -11,8 +11,12 @@ case class Subquery
   override def isNamedTable = true
 }
 
-case class SubqueryColumn(pos: Int, subquery: Subquery, typeMapper: TypeMapper[_])
-  extends Node {
+case class SubqueryColumn(
+  pos: Int,
+  subquery: Subquery,
+  typeMapper: TypeMapper[_],
+  maybeNamed: Option[NamedColumn[_]]
+) extends Node {
 
   def nodeChildren = subquery :: Nil
   override def nodeNamedChildren = (subquery, "subquery") :: Nil
@@ -58,14 +62,14 @@ object Subquery {
               case t: Table[_] =>
                 val xs = t.*.nodeChildren.collect {
                   case pn: ProductNode =>
-                    pn.nodeChildren.zipWithIndex.map((n2, i) =>
+                    pn.nodeChildren.zipWithIndex.collect { case (n2: NamedColumn[_], i) =>
                       if i != 0 then pos += 1
-                      SubqueryColumn(pos, p, mapper(n2))
-                    )
+                      SubqueryColumn(pos, p, mapper(n2), Some(n2))
+                    }
                 }.flatten
                 t.mapOp(_ => SubqueryTable(xs))
               case _ =>
-                SubqueryColumn(pos, p, mapper(n))
+                SubqueryColumn(pos, p, mapper(n), None)
           }
       }, unpackable.unpack
     )
@@ -73,7 +77,7 @@ object Subquery {
 
   private def mapper(n: Node) = n match {
     case c: Column[_] => c.typeMapper
-    case SubqueryColumn(_, _, tm) => tm
+    case SubqueryColumn(_, _, tm, _) => tm
     case x => Fail(s"""
 Expected Column, SubqueryColumn, or Table but got $x -- maybe you tried to yield `t.*`?
 See UnionTest.scala for detailed example of union queries with table projections.

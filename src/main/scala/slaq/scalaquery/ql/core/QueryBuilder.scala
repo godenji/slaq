@@ -106,7 +106,7 @@ abstract class QueryBuilder(
       show(x, b)
       if i != xs.size -1 then b += ','
     )
-    case SubqueryColumn(pos, q, _) =>  b += s"${quote(tableAlias(q))}.${quote(s"c$pos")}"
+    case SubqueryColumn(pos, q, _, _) =>  b += s"${quote(tableAlias(q))}.${quote(s"c$pos")}"
     case SimpleLiteral(w)              => b += w
     case _ =>
       Fail(s"Unmatched node `$c` in show block")
@@ -176,6 +176,13 @@ abstract class QueryBuilder(
    * Column show
    */
   private final def show[T](c: Column[T], b: SqlBuilder): Unit = c match {
+    case n @ NamedColumn(t: SubqueryTable, name, _) =>
+      t.cols
+        .collect {
+          case SubqueryColumn(pos, subquery, _, Some(col)) if col.name == name =>
+            s"${quote(tableAlias(subquery))}.${quote(s"c$pos")}"
+          }
+        .foreach(b += _)
     case n: NamedColumn[_] =>
       // must pass self (not n.table) to tableAlias for Join check
       b += s"${quote(tableAlias(n))}.${quote(n.name)}"

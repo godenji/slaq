@@ -62,7 +62,7 @@ class SubqueryTest(tdb: TestDB) extends DBTest(tdb) with SubqueryModel {
           p2 <- Posts leftJoin (_.id is p.id)
           _ <- Query groupBy c.id orderBy p.id
         yield (c.id.max, c, p, p2)
-      ).subquery if max =~ ConstColumn(4)
+      ).subquery if max =~ ConstColumn(4) & c.id =~ p.id
     yield (max, c, p, p2)
     println(sqJoin.pretty)
     sqJoin.foreach(x => println("  " + x))
