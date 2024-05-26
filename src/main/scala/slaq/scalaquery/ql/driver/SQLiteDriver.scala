@@ -33,8 +33,8 @@ class SQLiteDriver extends Profile { self =>
 
   val typeMapperDelegates = new SQLiteTypeMapperDelegates
 
-  override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new SQLiteQueryBuilder(query, nc, None, this)
-  override def buildTableDDL(table: Table[_]): DDL = new SQLiteDDLBuilder(table, this).buildDDL
+  override def createQueryBuilder(query: Query[?, ?], nc: NamingContext) = new SQLiteQueryBuilder(query, nc, None, this)
+  override def buildTableDDL(table: Table[?]): DDL = new SQLiteDDLBuilder(table, this).buildDDL
 }
 
 object SQLiteDriver extends SQLiteDriver
@@ -72,10 +72,10 @@ object SQLiteTypeMapperDelegates {
   }
 }
 
-class SQLiteDDLBuilder(table: Table[_], profile: SQLiteDriver)
+class SQLiteDDLBuilder(table: Table[?], profile: SQLiteDriver)
   extends DDLBuilder(table, profile) {
 
-  protected class SQLiteColumnDDLBuilder(column: NamedColumn[_]) extends ColumnDDLBuilder(column) {
+  protected class SQLiteColumnDDLBuilder(column: NamedColumn[?]) extends ColumnDDLBuilder(column) {
     override protected def appendOptions(sb: StringBuilder): Unit = {
       if (defaultLiteral ne null) sb append " DEFAULT " append defaultLiteral
       if (autoIncrement) sb append " PRIMARY KEY AUTOINCREMENT"
@@ -84,7 +84,7 @@ class SQLiteDDLBuilder(table: Table[_], profile: SQLiteDriver)
     }
   }
 
-  override protected def createColumnDDLBuilder(c: NamedColumn[_]) = new SQLiteColumnDDLBuilder(c)
+  override protected def createColumnDDLBuilder(c: NamedColumn[?]) = new SQLiteColumnDDLBuilder(c)
 
   override def buildDDL: DDL = {
     val b = new StringBuilder append "CREATE TABLE " append table.tableName append " ("
@@ -115,13 +115,13 @@ class SQLiteDDLBuilder(table: Table[_], profile: SQLiteDriver)
   }
 }
 
-class SQLiteQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: SQLiteDriver)
+class SQLiteQueryBuilder(_query: Query[?, ?], _nc: NamingContext, parent: Option[QueryBuilder], profile: SQLiteDriver)
   extends QueryBuilder(_query, _nc, parent, profile) {
 
   override type Self = SQLiteQueryBuilder
   override protected val concatOperator = Some("||")
 
-  protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
+  protected def createSubQueryBuilder(query: Query[?, ?], nc: NamingContext) =
     new SQLiteQueryBuilder(query, nc, Some(this), profile)
 
   override protected def appendOrdering(o: Ordering, b: SqlBuilder): Unit = {

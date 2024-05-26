@@ -3,12 +3,12 @@ package slaq.ql.core
 import slaq.ql._
 import slaq.util._
 
-trait SelectBuilder { self: QueryBuilder with QueryBuilderAction =>
+trait SelectBuilder { self: QueryBuilder & QueryBuilderAction =>
 
   object Select {
 
     /** build select statement for a query result set */
-    def build: (SqlBuilder.Result, ValueLinearizer[_]) = {
+    def build: (SqlBuilder.Result, ValueLinearizer[?]) = {
       val b = new SqlBuilder
       build(b)
       (b.build, query.linearizer)

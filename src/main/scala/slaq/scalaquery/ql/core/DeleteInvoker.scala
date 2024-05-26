@@ -5,7 +5,7 @@ import slaq.session.{PositionedParameters, Session}
 import slaq.util.NamingContext
 
 final class DeleteInvoker[T](
-  query: Query[_ <: Table[T], T], profile: Profile
+  query: Query[? <: Table[T], T], profile: Profile
 ) {
 
   final protected lazy val built =

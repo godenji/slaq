@@ -31,31 +31,31 @@ sealed abstract class Column[T: TypeMapper] extends ColumnBase[T] {
 
   final def setParameter(profile: Profile, ps: PositionedParameters, value: Option[T]): Unit = typeMapper(profile).setOption(value, ps)
 
-  def getOr[U](n: => U)(using Option[U] =:= T): Column[U] =
-    new WrappedColumn[U](this)(typeMapper.getBaseTypeMapper) {
+  infix def getOr[U](n: => U)(using Option[U] =:= T): Column[U] =
+    new WrappedColumn[U](this)(using typeMapper.getBaseTypeMapper) {
       override def getResult(profile: Profile, rs: PositionedResult): U =
         typeMapper(profile).nextValueOrElse(n, rs)
     }
-  def get[U](using Option[U] =:= T): Column[U] = getOr[U] {
+  infix def get[U](using Option[U] =:= T): Column[U] = getOr[U] {
     Fail(s"Read NULL value for column $this")
   }
   final def ~[U](b: Column[U]) = new Projection2[T, U](this, b)
   def ? : Column[Option[T]] = new WrappedColumn(this)(
-    typeMapper.createOptionTypeMapper
+    using typeMapper.createOptionTypeMapper
   )
 
-  def in(e: Query[Column[_], _]) = ColumnOps.In(Node(this), Node(e))
-  def notIn(e: Query[Column[_], _]) = ColumnOps.Not(Node(ColumnOps.In(Node(this), Node(e))))
-  def count = StdFunction[Long]("count", Node(this))
-  def isNull = ColumnOps.Is(Node(this), ConstColumn.NULL)
-  def isNotNull = ColumnOps.Not(Node(ColumnOps.Is(Node(this), ConstColumn.NULL)))
-  def countDistinct = ColumnOps.CountDistinct(Node(this))
-  def asColumnOf[U: TypeMapper]: Column[U] = AsColumnOf[U](Node(this), None)
-  def asColumnOfType[U: TypeMapper](typeName: String): Column[U] =
+  infix def in(e: Query[Column[?], ?]) = ColumnOps.In(Node(this), Node(e))
+  infix def notIn(e: Query[Column[?], ?]) = ColumnOps.Not(Node(ColumnOps.In(Node(this), Node(e))))
+  infix def count = StdFunction[Long]("count", Node(this))
+  infix def isNull = ColumnOps.Is(Node(this), ConstColumn.NULL)
+  infix def isNotNull = ColumnOps.Not(Node(ColumnOps.Is(Node(this), ConstColumn.NULL)))
+  infix def countDistinct = ColumnOps.CountDistinct(Node(this))
+  infix def asColumnOf[U: TypeMapper]: Column[U] = AsColumnOf[U](Node(this), None)
+  infix def asColumnOfType[U: TypeMapper](typeName: String): Column[U] =
     AsColumnOf[U](Node(this), Some(typeName))
 
-  def asc = new Ordering.Asc(Node(this))
-  def desc = new Ordering.Desc(Node(this))
+  infix def asc = new Ordering.Asc(Node(this))
+  infix def desc = new Ordering.Desc(Node(this))
 }
 
 /**
@@ -67,7 +67,7 @@ case class ConstColumn[T: TypeMapper](value: T) extends Column[T] {
   def bind = new BindColumn(value)
 }
 object ConstColumn {
-  def NULL = new ConstColumn[Null](null)(TypeMapper.NullTypeMapper)
+  def NULL = new ConstColumn[Null](null)(using TypeMapper.NullTypeMapper)
 }
 
 /**
@@ -90,13 +90,13 @@ case class ParameterColumn[T: TypeMapper](idx: Int) extends Column[T] {
  * A column which gets created as the result of applying an operator.
  */
 abstract class OperatorColumn[T: TypeMapper] extends Column[T] {
-  protected[this] val leftOperand: Node = Node(this)
+  protected val leftOperand: Node = Node(this)
 }
 
 /**
  * A column representing a group by having clause
  */
-case class HavingColumn[T: TypeMapper](val c: Column[_]) extends Column[T] {
+case class HavingColumn[T: TypeMapper](val c: Column[?]) extends Column[T] {
   def nodeChildren = Nil
   override def toString = s"Having $c"
 }
@@ -120,7 +120,7 @@ case class AsColumnOf[T: TypeMapper](child: Node, typeName: Option[String])
 /**
  * A WrappedColumn can be used to change a column's nullValue.
  */
-class WrappedColumn[T: TypeMapper](val parent: ColumnBase[_]) extends Column[T] {
+class WrappedColumn[T: TypeMapper](val parent: ColumnBase[?]) extends Column[T] {
   override def nodeDelegate = if (op eq null) Node(parent) else op.nodeDelegate
   def nodeChildren = nodeDelegate :: Nil
 }
@@ -131,7 +131,7 @@ class WrappedColumn[T: TypeMapper](val parent: ColumnBase[_]) extends Column[T] 
 final class NamedColumn[T: TypeMapper](
   val table: Node,
   val name: String,
-  val options: core.ColumnOption[T, _]*
+  val options: core.ColumnOption[T, ?]*
 ) extends Column[T] {
 
   def nodeChildren = table :: Nil

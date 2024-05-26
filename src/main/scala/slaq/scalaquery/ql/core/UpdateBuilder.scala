@@ -4,7 +4,7 @@ import slaq.Fail
 import slaq.ql._
 import slaq.util._
 
-trait UpdateBuilder { self: QueryBuilder with QueryBuilderAction =>
+trait UpdateBuilder { self: QueryBuilder & QueryBuilderAction =>
   import profile.sqlUtils._
 
   object Update {
@@ -15,7 +15,7 @@ trait UpdateBuilder { self: QueryBuilder with QueryBuilderAction =>
       var table: Node = null
       var tableName: String = null
 
-      def setColumn(node: NamedColumn[_]): Unit = {
+      def setColumn(node: NamedColumn[?]): Unit = {
         val (t, tn, colName) = node match {
           case NamedColumn(t @ Table(tn), cn, _)               => (t, tn, cn)
           case NamedColumn(ta @ Table.Alias(Table(tn)), cn, _) => (ta, tn, cn)
@@ -27,7 +27,7 @@ trait UpdateBuilder { self: QueryBuilder with QueryBuilderAction =>
         b += quote(colName) += "=?"
       }
       def apply(node: Node): Unit = {
-        def project(table: Node, name: String, columns: ColumnBase[_]) = {
+        def project(table: Node, name: String, columns: ColumnBase[?]) = {
           overrideAlias(table, name)
           apply(Node(columns))
         }

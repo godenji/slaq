@@ -16,14 +16,24 @@ object TablesInObjectTest {
     def * = id
   }
 
-  /* This needs to be a val instead of an object with a singleton type
-   * because scalac assumes that the object is a singleton and pulls the
-   * wrong "this" reference into the closure -- where "category" is
-   * referenced -- when it is used in a clone()d Posts instance.
+  trait PostLike {
+    def category: Column[Int]
+    def categoryJoin: Query[Categories.type, Nothing]
+  }
+  /* Table definition needs to be a val instead of an object here
+   * due to scalac referencing the wrong "this" in `categoryJoin` filter, which then
+   * generates an extraneous `posts` table alias.
+   *
+   * Could probably also remove this test since the functionality here is non-idiomatic,
+   * and even if one wanted to use this approach there's a fair bit of boilerplate due to
+   * restricted implicit conversion capabilities in Scala 3 vs. Scala 2.
+   *
+   * Will leave it for now, odd as it is it's yet another way to define table mappings.
    */
-  object Posts extends Table[Int]("posts") {
+  val Posts = new Table[Int]("posts") with PostLike {
     def category = column[Int]("category")
     def * = category
+
     def categoryJoin = Categories.filter(_.id =~ category)
   }
 }

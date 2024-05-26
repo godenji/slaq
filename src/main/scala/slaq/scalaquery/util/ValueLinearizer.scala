@@ -2,6 +2,7 @@ package slaq.util
 
 import slaq.ql.core.Profile
 import slaq.session.{PositionedParameters, PositionedResult}
+import scala.collection.immutable.IndexedSeq
 
 /**
  * Converts between unpacked (e.g. in query results) and linearized (a
@@ -15,7 +16,7 @@ trait ValueLinearizer[T] {
   def getLinearizedNodes: IndexedSeq[Node]
 }
 
-final class ProductLinearizer(sub: IndexedSeq[ValueLinearizer[_]]) extends ValueLinearizer[Product] {
+final class ProductLinearizer(sub: IndexedSeq[ValueLinearizer[?]]) extends ValueLinearizer[Product] {
 
   def getLinearizedNodes: IndexedSeq[Node] =
     (0 until sub.length).flatMap(i => sub(i).

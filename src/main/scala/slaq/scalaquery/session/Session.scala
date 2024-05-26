@@ -81,7 +81,7 @@ trait Session extends java.io.Closeable { self =>
     try f(st) finally st.close()
   }
 
-  def close(): Unit
+  infix def close(): Unit
 
   /**
    * Call this method within a <em>withTransaction</em> call to roll back
@@ -109,7 +109,7 @@ trait Session extends java.io.Closeable { self =>
     def conn = self.conn
     def metaData = self.metaData
     def capabilities = self.capabilities
-    def close() = self.close()
+    infix def close() = self.close()
     def rollback() = self.rollback()
     def withTransaction[T](f: => T) = self.withTransaction(f)
   }
@@ -134,7 +134,7 @@ class BaseSession private[session] (db: Database) extends Session {
     }
   }
 
-  def close(): Unit = {
+  infix def close(): Unit = {
     if (open) conn.close()
   }
 

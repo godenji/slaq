@@ -5,7 +5,7 @@ import slaq.Fail
 import slaq.ql._
 import slaq.util._
 
-trait FromBuilder { self: QueryBuilder with QueryBuilderAction =>
+trait FromBuilder { self: QueryBuilder & QueryBuilderAction =>
   import profile.sqlUtils._
 
   private val declaredTables = new LinkedHashSet[String]
@@ -67,7 +67,7 @@ trait FromBuilder { self: QueryBuilder with QueryBuilderAction =>
         j.on match {
           case q: ForeignKeyQuery[_, _] =>
             q.fks.foreach { fk => // handle alias mismatch (fk table not same instance)
-              val name = quote(fk.right.asInstanceOf[NamedColumn[_]].name)
+              val name = quote(fk.right.asInstanceOf[NamedColumn[?]].name)
               b += s"(${quote(leftAlias)}.$name = "; show(fk.left, b); b += ')'
             }
           // left outer join in UNION subquery, pull out NamedColumn pair from delegate
@@ -78,7 +78,7 @@ trait FromBuilder { self: QueryBuilder with QueryBuilderAction =>
     }
 
     private def tableLabel(table: Node, alias: String)(using b: SqlBuilder): Unit = {
-      def show(t: Table[_]) = {
+      def show(t: Table[?]) = {
         t.schemaName.foreach(b += quote(_) += '.')
         b += s"${quote(t.tableName)} ${quote(alias)}"
       }

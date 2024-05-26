@@ -22,7 +22,7 @@ class MutateTest(tdb: TestDB) extends DBTest(tdb) {
       def first = column[String]("first")
       def last = column[String]("last")
       def * = id ~ first ~ last <> (
-        User.apply _,
+        User.apply,
         x => Tuple.fromProductTyped(x)
       )
     }

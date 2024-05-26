@@ -12,11 +12,11 @@ class Sequence[T] private[Sequence] (
   val _cycle: Boolean
 )(using val typeMapper: TypeMapper[T], val integral: Integral[T]) { seq =>
 
-  def min(v: T) = new Sequence[T](name, Some(v), _maxValue, _increment, _start, _cycle)
-  def max(v: T) = new Sequence[T](name, _minValue, Some(v), _increment, _start, _cycle)
-  def inc(v: T) = new Sequence[T](name, _minValue, _maxValue, Some(v), _start, _cycle)
-  def start(v: T) = new Sequence[T](name, _minValue, _maxValue, _increment, Some(v), _cycle)
-  def cycle = new Sequence[T](name, _minValue, _maxValue, _increment, _start, true)
+  infix def min(v: T) = new Sequence[T](name, Some(v), _maxValue, _increment, _start, _cycle)
+  infix def max(v: T) = new Sequence[T](name, _minValue, Some(v), _increment, _start, _cycle)
+  infix def inc(v: T) = new Sequence[T](name, _minValue, _maxValue, Some(v), _start, _cycle)
+  infix def start(v: T) = new Sequence[T](name, _minValue, _maxValue, _increment, Some(v), _cycle)
+  infix def cycle = new Sequence[T](name, _minValue, _maxValue, _increment, _start, true)
 
   final def next = Sequence.Nextval(this)
 
@@ -30,11 +30,11 @@ object Sequence {
 
   final case class Nextval[T: TypeMapper](seq: Sequence[T]) extends OperatorColumn[T] with SimpleFunction with UnaryNode {
     val name = "nextval"
-    val child = ConstColumn(seq.name)(TypeMapper.StringTypeMapper)
+    val child = ConstColumn(seq.name)(using TypeMapper.StringTypeMapper)
   }
 
   final case class Currval[T: TypeMapper](seq: Sequence[T]) extends OperatorColumn[T] with SimpleFunction with UnaryNode {
     val name = "currval"
-    val child = ConstColumn(seq.name)(TypeMapper.StringTypeMapper)
+    val child = ConstColumn(seq.name)(using TypeMapper.StringTypeMapper)
   }
 }

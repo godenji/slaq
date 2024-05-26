@@ -9,7 +9,7 @@ import slaq.ql.{ColumnOps => Cols}
  * generic query builder (benchmarking and statement verification)
  */
 final class GenericQueryBuilder[T](
-  _query: Query[_, _],
+  _query: Query[?, ?],
   _nc: NamingContext,
   _parent: Option[QueryBuilder],
   _profile: T
@@ -17,12 +17,12 @@ final class GenericQueryBuilder[T](
   extends QueryBuilder(_query, _nc, _parent, _profile.asInstanceOf[Profile]) {
 
   type Self = QueryBuilder
-  protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
+  protected def createSubQueryBuilder(query: Query[?, ?], nc: NamingContext) =
     new GenericQueryBuilder(query, nc, Some(this), profile)
 }
 
 abstract class QueryBuilder(
-  val query: Query[_, _],
+  val query: Query[?, ?],
   protected val namingContext: NamingContext,
   val parent: Option[QueryBuilder],
   val profile: Profile
@@ -65,10 +65,10 @@ abstract class QueryBuilder(
           case (ta @ Table.Alias(t: Table[_]), _) if rename =>
             show(ta, b, true)
           case (j: Join, i) if rename =>
-            show(p.product.productElement(i).asInstanceOf[Table[_]], b, true)
+            show(p.product.productElement(i).asInstanceOf[Table[?]], b, true)
           case (_: Join, i) =>
             delimit( // delegate is Join, show parent Table
-              show(p.product.productElement(i).asInstanceOf[Table[_]], b)
+              show(p.product.productElement(i).asInstanceOf[Table[?]], b)
             )
           case (n, i) if rename && pos != 0 =>
             delimit(expr(n, b, true))
@@ -80,7 +80,7 @@ abstract class QueryBuilder(
             delimit(expr(n, b))
         }
       case j: Join => // query yields a single table (i.e. non-product/projection)
-        val t = query.unpackable.value.asInstanceOf[Table[_]]
+        val t = query.unpackable.value.asInstanceOf[Table[?]]
         show(
           j.extractNode(t.tableName, forTableAlias = false), b
         )
@@ -115,7 +115,7 @@ abstract class QueryBuilder(
   /*
    * Query show
    */
-  private final def show(c: Query[_, _], b: SqlBuilder): Unit = c match {
+  private final def show(c: Query[?, ?], b: SqlBuilder): Unit = c match {
     case q: ForeignKeyQuery[_, _] => q.fks.foreach(show(_, b))
     case q =>
       b += '('; subQueryBuilder(q).Select.build(b, false); b += ')'
@@ -220,7 +220,7 @@ abstract class QueryBuilder(
     // handle bizarre edge case where more than 1 If condition in a Case When statement
     // *that uses String equality* results in a WrappedColumn (with parent as OperatorColumn)
     // rather than the OperatorColumn itself
-    case x: WrappedColumn[_] if x.parent.isInstanceOf[OperatorColumn[_]] => show(x.parent, b)
+    case x: WrappedColumn[_] if x.parent.isInstanceOf[OperatorColumn[?]] => show(x.parent, b)
     case _: OperatorColumn[_] | _: WrappedColumn[_] =>
   }
 }

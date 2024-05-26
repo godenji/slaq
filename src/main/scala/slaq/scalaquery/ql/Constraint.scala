@@ -1,6 +1,7 @@
 package slaq.ql
 
 import slaq.util.{Node, BinaryNode}
+import scala.collection.immutable.IndexedSeq
 
 sealed trait Constraint
 
@@ -13,12 +14,12 @@ enum ForeignKeyAction(val action: String):
   case SetNull extends ForeignKeyAction("SET NULL")
   case SetDefault extends ForeignKeyAction("SET DEFAULT")
 
-class ForeignKey[TT <: Table[_], P](
+class ForeignKey[TT <: Table[?], P](
   val name: String,
   val sourceTable: Node,
-  val targetTableUnpackable: Unpackable[TT, _],
+  val targetTableUnpackable: Unpackable[TT, ?],
   originalTargetTable: TT,
-  unpackp: Unpack[P, _],
+  unpackp: Unpack[P, ?],
   originalSourceColumns: P,
   originalTargetColumns: TT => P,
   val onUpdate: ForeignKeyAction,
@@ -42,15 +43,15 @@ class ForeignKey[TT <: Table[_], P](
       originalTargetColumns(originalTargetTable)
     ).getLinearizedNodes
 
-  def withTargetTableUnpackable(targetTableUnpackable: Unpackable[TT, _]) =
+  def withTargetTableUnpackable(targetTableUnpackable: Unpackable[TT, ?]) =
     new ForeignKey[TT, P](
       name, sourceTable, targetTableUnpackable, originalTargetTable,
       unpackp, originalSourceColumns, originalTargetColumns, onUpdate, onDelete
     )
 }
 
-class ForeignKeyQuery[TT <: Table[_], U](
-  val fks: List[ForeignKey[TT, _]],
+class ForeignKeyQuery[TT <: Table[?], U](
+  val fks: List[ForeignKey[TT, ?]],
   override val unpackable: Unpackable[TT, U]
 )
   extends QueryWrap[TT, U](unpackable, fks, Nil) with Constraint {

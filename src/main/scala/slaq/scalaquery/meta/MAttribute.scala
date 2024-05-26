@@ -13,7 +13,7 @@ case class MAttribute(typeName: MQName, attrName: String, sqlType: Int, attrType
   ordinalPosition: Int, isNullable: Option[Boolean], scope: Option[MQName], sourceSqlType: Option[Int]) {
 
   def sqlTypeName = TypeMapperDelegate.typeNames.get(sqlType)
-  def sourceSqlTypeName = sourceSqlType.map(TypeMapperDelegate.typeNames.get _)
+  def sourceSqlTypeName = sourceSqlType.map(TypeMapperDelegate.typeNames.get)
 }
 
 object MAttribute {

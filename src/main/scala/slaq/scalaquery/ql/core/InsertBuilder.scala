@@ -12,7 +12,7 @@ class InsertBuilder(val column: Any, val profile: Profile) {
     s"INSERT INTO ${quote(table)} ($cols) VALUES ($vals)"
   }
 
-  def buildInsert(query: Query[_, _]): SqlBuilder.Result = {
+  def buildInsert(query: Query[?, ?]): SqlBuilder.Result = {
     val (table, cols, _) = buildParts
     val b = new SqlBuilder
     b += s"INSERT INTO ${quote(table)} (${cols.toString}) "
@@ -30,7 +30,7 @@ class InsertBuilder(val column: Any, val profile: Profile) {
       }
       case t: Table[_] => f(Node(t.*))
       case n: NamedColumn[_] =>
-        val tmpTable = n.table.asInstanceOf[Table[_]].tableName
+        val tmpTable = n.table.asInstanceOf[Table[?]].tableName
         if (table eq null) table = tmpTable
         else if (table != tmpTable) Fail(
           "Inserts must all be to the same table"
@@ -46,7 +46,7 @@ class InsertBuilder(val column: Any, val profile: Profile) {
   }
 
   protected def appendNamedColumn(
-    n: NamedColumn[_], cols: StringBuilder, vals: StringBuilder
+    n: NamedColumn[?], cols: StringBuilder, vals: StringBuilder
   ): Unit = {
 
     if (!cols.isEmpty) {

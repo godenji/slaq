@@ -43,7 +43,7 @@ final case class Grouping(val by: Node) extends QueryModifier {
   override def toString = "Grouping"
 }
 
-final case class Lateral(ref: RefId[Query[_, _]], on: Node) extends QueryModifier {
+final case class Lateral(ref: RefId[Query[?, ?]], on: Node) extends QueryModifier {
   def nodeChildren = Nil
   override def toString = "Lateral ON"
 }

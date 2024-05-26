@@ -17,8 +17,8 @@ class PostgresDriver extends Profile { self =>
 
   val typeMapperDelegates = new PostgresTypeMapperDelegates
 
-  override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new PostgresQueryBuilder(query, nc, None, this)
-  override def buildTableDDL(table: Table[_]): DDL = new PostgresDDLBuilder(table, this).buildDDL
+  override def createQueryBuilder(query: Query[?, ?], nc: NamingContext) = new PostgresQueryBuilder(query, nc, None, this)
+  override def buildTableDDL(table: Table[?]): DDL = new PostgresDDLBuilder(table, this).buildDDL
 }
 
 object PostgresDriver extends PostgresDriver
@@ -43,13 +43,13 @@ class PostgresTypeMapperDelegates extends TypeMapperDelegates {
   }
 }
 
-class PostgresQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: PostgresDriver)
+class PostgresQueryBuilder(_query: Query[?, ?], _nc: NamingContext, parent: Option[QueryBuilder], profile: PostgresDriver)
   extends QueryBuilder(_query, _nc, parent, profile) {
 
   override type Self = PostgresQueryBuilder
   override protected val concatOperator = Some("||")
 
-  protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
+  protected def createSubQueryBuilder(query: Query[?, ?], nc: NamingContext) =
     new PostgresQueryBuilder(query, nc, Some(this), profile)
 
   override protected def show(c: Node, b: SqlBuilder): Unit = c match {
@@ -111,7 +111,7 @@ class PostgresQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Opti
     node: Node, groupCols: List[String]
   )(b: SqlBuilder): Unit = {
 
-    def matchColumn(n: NamedColumn[_]) = {
+    def matchColumn(n: NamedColumn[?]) = {
       if ( // append if is PK and not already exist in groupCols
       n.options.exists(_ == ColumnOption.PrimaryKey) &&
         !groupCols.exists(_ == n.name)) { b += ","; expr(n, b, false) }
@@ -144,10 +144,10 @@ class PostgresQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Opti
   }
 }
 
-class PostgresDDLBuilder(table: Table[_], profile: PostgresDriver) extends DDLBuilder(table, profile) {
+class PostgresDDLBuilder(table: Table[?], profile: PostgresDriver) extends DDLBuilder(table, profile) {
   import profile.sqlUtils._
 
-  protected class PostgresColumnDDLBuilder(column: NamedColumn[_]) extends ColumnDDLBuilder(column) {
+  protected class PostgresColumnDDLBuilder(column: NamedColumn[?]) extends ColumnDDLBuilder(column) {
     override def appendColumn(sb: StringBuilder): Unit = {
       sb append quote(column.name) append ' '
       if (autoIncrement) {
@@ -159,5 +159,5 @@ class PostgresDDLBuilder(table: Table[_], profile: PostgresDriver) extends DDLBu
     }
   }
 
-  override protected def createColumnDDLBuilder(c: NamedColumn[_]) = new PostgresColumnDDLBuilder(c)
+  override protected def createColumnDDLBuilder(c: NamedColumn[?]) = new PostgresColumnDDLBuilder(c)
 }

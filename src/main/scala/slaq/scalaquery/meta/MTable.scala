@@ -1,6 +1,7 @@
 package slaq.meta
 
 import slaq.{ResultSetInvoker, UnitInvoker}
+import scala.collection.immutable.Seq
 
 /**
  * A wrapper for a row in the ResultSet returned by DatabaseMetaData.getTables().

@@ -11,7 +11,7 @@ import org.junit.runners.Parameterized.Parameters
 abstract class DBTest(testDB: TestDB) {
   println("[Using test database " + testDB + "]")
   lazy val db = testDB.createDB()
-  private[this] var sessionCreated = false
+  private var sessionCreated = false
   lazy val session = { sessionCreated = true; db.createSession() }
   @Before def beforeDBTest = testDB.cleanUpBefore()
   @After def afterDBTest = {

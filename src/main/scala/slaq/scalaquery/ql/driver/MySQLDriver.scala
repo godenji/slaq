@@ -17,9 +17,9 @@ class MySQLDriver extends Profile { self =>
   val typeMapperDelegates = new MySQLTypeMapperDelegates
   override val sqlUtils = new MySQLSQLUtils
 
-  override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new MySQLQueryBuilder(query, nc, None, this)
-  override def buildTableDDL(table: Table[_]): DDL = new MySQLDDLBuilder(table, this).buildDDL
-  override def buildSequenceDDL(seq: Sequence[_]): DDL = new MySQLSequenceDDLBuilder(seq, this).buildDDL
+  override def createQueryBuilder(query: Query[?, ?], nc: NamingContext) = new MySQLQueryBuilder(query, nc, None, this)
+  override def buildTableDDL(table: Table[?]): DDL = new MySQLDDLBuilder(table, this).buildDDL
+  override def buildSequenceDDL(seq: Sequence[?]): DDL = new MySQLSequenceDDLBuilder(seq, this).buildDDL
 }
 
 object MySQLDriver extends MySQLDriver
@@ -56,7 +56,7 @@ class MySQLTypeMapperDelegates extends TypeMapperDelegates {
   }
 }
 
-class MySQLQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: MySQLDriver)
+class MySQLQueryBuilder(_query: Query[?, ?], _nc: NamingContext, parent: Option[QueryBuilder], profile: MySQLDriver)
   extends QueryBuilder(_query, _nc, parent, profile) {
 
   import profile.sqlUtils._
@@ -64,7 +64,7 @@ class MySQLQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[
   override type Self = MySQLQueryBuilder
   override protected val scalarFrom = Some("DUAL")
 
-  protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
+  protected def createSubQueryBuilder(query: Query[?, ?], nc: NamingContext) =
     new MySQLQueryBuilder(query, nc, Some(this), profile)
 
   override protected def show(c: Node, b: SqlBuilder): Unit = c match {
@@ -107,8 +107,8 @@ class MySQLQueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[
   }
 }
 
-class MySQLDDLBuilder(table: Table[_], profile: MySQLDriver) extends DDLBuilder(table, profile) {
-  override protected def dropForeignKey(fk: ForeignKey[_ <: Table[_], _]) = {
+class MySQLDDLBuilder(table: Table[?], profile: MySQLDriver) extends DDLBuilder(table, profile) {
+  override protected def dropForeignKey(fk: ForeignKey[? <: Table[?], ?]) = {
     "ALTER TABLE " + table.tableName + " DROP FOREIGN KEY " + fk.name
   }
   override protected def dropPrimaryKey(pk: PrimaryKey) = {

@@ -4,7 +4,7 @@ import slaq.Fail
 import slaq.ql._
 import slaq.util._
 
-trait DeleteBuilder { self: QueryBuilder with QueryBuilderAction =>
+trait DeleteBuilder { self: QueryBuilder & QueryBuilderAction =>
   import profile.sqlUtils._
 
   object Delete {

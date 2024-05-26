@@ -10,21 +10,21 @@ trait QueryBuilderAction
   with UpdateBuilder
   with DeleteBuilder { self: QueryBuilder =>
 
-  private val subQueries = new LinkedHashMap[RefId[Query[_, _]], Self]
+  private val subQueries = new LinkedHashMap[RefId[Query[?, ?]], Self]
   protected val tableAliases = new LinkedHashMap[String, Table.Ref]
-  protected var selectSlot: SqlBuilder = _
-  protected var fromSlot: SqlBuilder = _
+  protected var selectSlot: SqlBuilder = scala.compiletime.uninitialized
+  protected var fromSlot: SqlBuilder = scala.compiletime.uninitialized
   protected var nc: NamingContext = namingContext
 
-  protected def createSubQueryBuilder(q: Query[_, _], nc: NamingContext): Self
+  protected def createSubQueryBuilder(q: Query[?, ?], nc: NamingContext): Self
 
   final def buildSelect(b: SqlBuilder): Unit = Select.build(b)
-  final def buildSelect: (SqlBuilder.Result, ValueLinearizer[_]) = Select.build
+  final def buildSelect: (SqlBuilder.Result, ValueLinearizer[?]) = Select.build
 
   final def buildUpdate = Update.build
   final def buildDelete = Delete.build
 
-  final protected def subQueryBuilder(q: Query[_, _]): Self =
+  final protected def subQueryBuilder(q: Query[?, ?]): Self =
     subQueries.getOrElseUpdate(
       RefId(q), createSubQueryBuilder(q, namingContext)
     )
@@ -36,7 +36,7 @@ trait QueryBuilderAction
     nc = nc.overrideName(table, name)
   }
 
-  protected[this] final def tableAlias(node: Node): String = {
+  protected final def tableAlias(node: Node): String = {
     val (node2, maybeJoin) = node match {
       case NamedColumn(t: Table[_], _, _) =>
         (t.maybeJoin.map {

@@ -10,7 +10,7 @@ class SQLUtils {
     s append '"' toString
   }
 
-  def mapTypeName(tmd: TypeMapperDelegate[_]): String =
+  def mapTypeName(tmd: TypeMapperDelegate[?]): String =
     tmd.sqlType match {
       case VARCHAR => "VARCHAR(254)"
       case _       => tmd.sqlTypeName

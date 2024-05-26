@@ -2,7 +2,7 @@ package slaq.ql.core
 
 import slaq.ql._
 
-class SequenceDDLBuilder(seq: Sequence[_], val profile: Profile) {
+class SequenceDDLBuilder(seq: Sequence[?], val profile: Profile) {
   import profile.sqlUtils._
 
   def buildDDL: DDL = {

@@ -25,37 +25,37 @@ sealed trait Unpack[-P,U] {
   def reify(from: Packed): Any = from
 
   // must return an Unpack for the reified type
-  def reifiedUnpack: Unpack[_, Unpacked] = this
+  def reifiedUnpack: Unpack[?, Unpacked] = this
 
-  def linearizer(from: Packed): ValueLinearizer[_]
+  def linearizer(from: Packed): ValueLinearizer[?]
 
   def mapOp(x: Packed, f: Node => Node): Any // really returns x.type
 }
 
 object Unpack extends UnpackLowPriority {
-  def unpackTable[T <: Table[_], U]: Unpack[T, U] = {
+  def unpackTable[T <: Table[?], U]: Unpack[T, U] = {
     new Unpack[T, U] {
-      def linearizer(from: Packed): ValueLinearizer[_] = from
+      def linearizer(from: Packed): ValueLinearizer[?] = from
       def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
     }
   }
 }
 
 trait UnpackLowPriority extends UnpackLowPriority2 {
-  inline given unpackColumnBase[T]: Unpack[ColumnBase[T], T] = {
+  given unpackColumnBase[T]: Unpack[ColumnBase[T], T] = {
     new Unpack[ColumnBase[T], T] {
-      def linearizer(from: Packed): ValueLinearizer[_] = from
+      def linearizer(from: Packed): ValueLinearizer[?] = from
       def mapOp(from: Packed, f: Node => Node) = from.mapOp(f)
     }
   }
 
-  inline given unpackPrimitive[T]
+  given unpackPrimitive[T]
     (using TypeMapper[T]): Unpack[T, T] = {
 
     new Unpack[T, T] {
       override def reify(from: Packed) = ConstColumn(from)
       override def reifiedUnpack = unpackColumnBase[T]
-      def linearizer(from: Packed): ValueLinearizer[_] = ConstColumn(from)
+      def linearizer(from: Packed): ValueLinearizer[?] = ConstColumn(from)
       def mapOp(from: Packed, f: Node => Node) = from
     }
   }
@@ -66,7 +66,7 @@ trait UnpackLowPriority2 {
   given unpackTuple${i}[<#list 1..i as j>T${j}<#if i != j>,</#if></#list>, <#list 1..i as j>U${j}<#if i != j>,</#if></#list>, <#list 1..i as j>R${j}<#if i != j>,</#if></#list>](using <#list 1..i as j>u${j}: Unpack[T${j}, U${j}]<#if i != j>, </#if></#list>): Unpack[(<#list 1..i as j>T${j}<#if i != j>,</#if></#list>), (<#list 1..i as j>U${j}<#if i != j>,</#if></#list>)] = new Unpack[(<#list 1..i as j>T${j}<#if i != j>,</#if></#list>), (<#list 1..i as j>U${j}<#if i != j>,</#if></#list>)] {
     override def reify(from: Packed) =
       (<#list 1..i as j>u${j}.reify(from._${j})<#if i != j>, </#if></#list>)
-    override def reifiedUnpack: Unpack[_, Unpacked] =
+    override def reifiedUnpack: Unpack[?, Unpacked] =
       unpackTuple${i}(using <#list 1..i as j>u${j}.reifiedUnpack<#if i != j>, </#if></#list>)
     def linearizer(from: Packed) = {
       val sub = Vector(<#list 1..i as j>u${j}.linearizer(from._${j})<#if i != j>, </#if></#list>)
@@ -94,7 +94,7 @@ trait UnpackLowPriority2 {
 sealed trait Reify[-P,R]
 
 object Reify extends ReifyLowPriority {
-  inline given [T <: ColumnBase[_]]: Reify[T, T] = null
+  inline given [T <: ColumnBase[?]]: Reify[T, T] = null
 }
 
 trait ReifyLowPriority {

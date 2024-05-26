@@ -114,7 +114,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
         q4.list().toSet
       )
 
-      def maxOfPer[T <: Table[_]](c: T, m: (T => Column[Int]), p: (T => Column[Int])) =
+      def maxOfPer[T <: Table[?]](c: T, m: (T => Column[Int]), p: (T => Column[Int])) =
         c filter { o => m(o) in (for { o2 <- c if p(o) is p(o2) } yield m(o2).max) }
 
       val q4b = for (

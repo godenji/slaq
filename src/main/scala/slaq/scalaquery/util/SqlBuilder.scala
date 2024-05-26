@@ -1,6 +1,7 @@
 package slaq.util
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.immutable.Seq
 import slaq.session.PositionedParameters
 
 final class SqlBuilder extends SqlBuilder.Segment { self =>

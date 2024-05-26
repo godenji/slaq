@@ -3,6 +3,7 @@ package slaq.util
 import java.io.{PrintWriter, OutputStreamWriter}
 import slaq.Fail
 import slaq.ql.ConstColumn
+import scala.collection.immutable.Seq
 
 /**
  * A node in the query AST

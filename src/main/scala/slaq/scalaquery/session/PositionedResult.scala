@@ -12,8 +12,8 @@ import collection.Factory
 sealed abstract class PositionedResult(val rs: ResultSet)
   extends Closeable { outer =>
 
-  protected[this] var pos = Int.MaxValue
-  protected[this] val startPos = 0
+  protected var pos = Int.MaxValue
+  protected val startPos = 0
 
   lazy val numColumns = rs.getMetaData().getColumnCount()
 
@@ -48,24 +48,24 @@ sealed abstract class PositionedResult(val rs: ResultSet)
     if (hasMoreColumns) this.<< else None
 
   final def nextBigDecimal() = {
-    val r = apply(rs.getBigDecimal _)
+    val r = apply(rs.getBigDecimal)
     if (r eq null) null else BigDecimal(r)
   }
-  final def nextBlob() = apply(rs.getBlob _)
-  final def nextBoolean() = apply(rs.getBoolean _)
-  final def nextByte() = apply(rs.getByte _)
-  final def nextBytes() = apply(rs.getBytes _)
-  final def nextClob() = apply(rs.getClob _)
-  final def nextDate() = apply(rs.getDate _)
-  final def nextDouble() = apply(rs.getDouble _)
-  final def nextFloat() = apply(rs.getFloat _)
-  final def nextInt() = apply(rs.getInt _)
-  final def nextLong() = apply(rs.getLong _)
-  final def nextObject() = apply(rs.getObject _)
-  final def nextShort() = apply(rs.getShort _)
-  final def nextString() = apply(rs.getString _)
-  final def nextTime() = apply(rs.getTime _)
-  final def nextTimestamp() = apply(rs.getTimestamp _)
+  final def nextBlob() = apply(rs.getBlob)
+  final def nextBoolean() = apply(rs.getBoolean)
+  final def nextByte() = apply(rs.getByte)
+  final def nextBytes() = apply(rs.getBytes)
+  final def nextClob() = apply(rs.getClob)
+  final def nextDate() = apply(rs.getDate)
+  final def nextDouble() = apply(rs.getDouble)
+  final def nextFloat() = apply(rs.getFloat)
+  final def nextInt() = apply(rs.getInt)
+  final def nextLong() = apply(rs.getLong)
+  final def nextObject() = apply(rs.getObject)
+  final def nextShort() = apply(rs.getShort)
+  final def nextString() = apply(rs.getString)
+  final def nextTime() = apply(rs.getTime)
+  final def nextTimestamp() = apply(rs.getTimestamp)
 
   final def nextBigDecimalOption() = option(nextBigDecimal())
   final def nextBlobOption() = option(nextBlob())
@@ -103,28 +103,28 @@ sealed abstract class PositionedResult(val rs: ResultSet)
   final def updateTime(v: Time) = apply(rs.updateTime(_, v))
   final def updateTimestamp(v: Timestamp) = apply(rs.updateTimestamp(_, v))
 
-  final def updateBigDecimalOption(v: Option[BigDecimal]) = apply(updateBigDecimal _, v)
-  final def updateBlobOption(v: Option[Blob]) = apply(updateBlob _, v)
-  final def updateBooleanOption(v: Option[Boolean]) = apply(updateBoolean _, v)
-  final def updateByteOption(v: Option[Byte]) = apply(updateByte _, v)
-  final def updateBytesOption(v: Option[Array[Byte]]) = apply(updateBytes _, v)
-  final def updateClobOption(v: Option[Clob]) = apply(updateClob _, v)
-  final def updateDateOption(v: Option[Date]) = apply(updateDate _, v)
-  final def updateDoubleOption(v: Option[Double]) = apply(updateDouble _, v)
-  final def updateFloatOption(v: Option[Float]) = apply(updateFloat _, v)
-  final def updateIntOption(v: Option[Int]) = apply(updateInt _, v)
-  final def updateLongOption(v: Option[Long]) = apply(updateLong _, v)
-  final def updateObjectOption(v: Option[AnyRef]) = apply(updateObject _, v)
-  final def updateShortOption(v: Option[Short]) = apply(updateShort _, v)
-  final def updateStringOption(v: Option[String]) = apply(updateString _, v)
-  final def updateTimeOption(v: Option[Time]) = apply(updateTime _, v)
-  final def updateTimestampOption(v: Option[Timestamp]) = apply(updateTimestamp _, v)
+  final def updateBigDecimalOption(v: Option[BigDecimal]) = apply(updateBigDecimal, v)
+  final def updateBlobOption(v: Option[Blob]) = apply(updateBlob, v)
+  final def updateBooleanOption(v: Option[Boolean]) = apply(updateBoolean, v)
+  final def updateByteOption(v: Option[Byte]) = apply(updateByte, v)
+  final def updateBytesOption(v: Option[Array[Byte]]) = apply(updateBytes, v)
+  final def updateClobOption(v: Option[Clob]) = apply(updateClob, v)
+  final def updateDateOption(v: Option[Date]) = apply(updateDate, v)
+  final def updateDoubleOption(v: Option[Double]) = apply(updateDouble, v)
+  final def updateFloatOption(v: Option[Float]) = apply(updateFloat, v)
+  final def updateIntOption(v: Option[Int]) = apply(updateInt, v)
+  final def updateLongOption(v: Option[Long]) = apply(updateLong, v)
+  final def updateObjectOption(v: Option[AnyRef]) = apply(updateObject, v)
+  final def updateShortOption(v: Option[Short]) = apply(updateShort, v)
+  final def updateStringOption(v: Option[String]) = apply(updateString, v)
+  final def updateTimeOption(v: Option[Time]) = apply(updateTime, v)
+  final def updateTimestampOption(v: Option[Timestamp]) = apply(updateTimestamp, v)
   final def updateNull() = apply(rs.updateNull(_))
 
   /**
    * Close the ResultSet and the statement which created it.
    */
-  def close(): Unit
+  infix def close(): Unit
 
   final def build[C[_], R](gr: GetResult[R])(using canBuildFrom: Factory[R, C[R]]): C[R] = {
     val b = canBuildFrom.newBuilder
@@ -146,9 +146,9 @@ sealed abstract class PositionedResult(val rs: ResultSet)
 abstract class PositionedResultIterator[+T](_rs: ResultSet, maxRows: Int)
   extends PositionedResult(_rs) with CloseableIterator[T] {
 
-  private[this] var done = false
-  private[this] var count = 0
-  private[this] var closed = false
+  private var done = false
+  private var count = 0
+  private var closed = false
 
   final override def nextRow = {
     if (pos == Int.MinValue) super.nextRow else {
@@ -180,7 +180,7 @@ abstract class PositionedResultIterator[+T](_rs: ResultSet, maxRows: Int)
     }
   }
 
-  final def close(): Unit = {
+  infix final def close(): Unit = {
     if (!closed) {
       closeUnderlying()
       closed = true

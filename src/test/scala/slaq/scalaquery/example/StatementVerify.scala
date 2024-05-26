@@ -22,7 +22,7 @@ object StatementVerify {
       def * = userID ~ orderID
     }
 
-    def dump(n: String, q: Query[ColumnBase[_], _]): Unit = {
+    def dump(n: String, q: Query[ColumnBase[?], ?]): Unit = {
       val nc = NamingContext()
       q.dump(n + ": ", nc)
       println(Driver.buildSelect(q, nc))

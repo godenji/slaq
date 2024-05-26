@@ -23,7 +23,7 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
       def first = column[String]("first")
       def last = column[String]("last")
       def * = id.? ~ first ~ last <> (
-        User.apply _,
+        User.apply,
         x => Tuple.fromProductTyped(x)
       )
       def forInsert = first ~ last <>
@@ -69,7 +69,7 @@ class MapperTest(tdb: TestDB) extends DBTest(tdb) {
       def a = column[Int]("A")
       def b = column[Int]("B")
       def * = a ~ b <> (
-        Data.apply _,
+        Data.apply,
         x => Tuple.fromProductTyped(x)  
       )
     }

@@ -2,6 +2,7 @@ package slaq.meta
 
 import slaq.ResultSetInvoker
 import slaq.ql.TypeMapperDelegate
+import scala.collection.immutable.Seq
 
 /**
  * A wrapper for a row in the ResultSet returned by DatabaseMetaData.getUDTs().

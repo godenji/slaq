@@ -33,10 +33,10 @@ abstract class Table[T](
       case j: Join  => j.extractNode(tableName, forTableAlias = false)
       case delegate => delegate
     }
-    new NamedColumn[C](node, name, options: _*)
+    new NamedColumn[C](node, name, options*)
   }
 
-  def create_* : Iterable[NamedColumn[_]] = {
+  def create_* : Iterable[NamedColumn[?]] = {
     def createTableError(msg: String) = Fail(
       s"Cannot use $msg in ${tableName}.* CREATE TABLE statement"
     )
@@ -51,7 +51,7 @@ abstract class Table[T](
     }
   }
 
-  def foreignKey[P, PU, TT <: Table[_], U](name: String, sourceColumns: P, targetTable: TT)(
+  def foreignKey[P, PU, TT <: Table[?], U](name: String, sourceColumns: P, targetTable: TT)(
     targetColumns: TT => P,
     onUpdate: ForeignKeyAction = ForeignKeyAction.NoAction,
     onDelete: ForeignKeyAction = ForeignKeyAction.NoAction
@@ -66,7 +66,7 @@ abstract class Table[T](
     new ForeignKeyQuery(List(fk), targetUnpackable)
   }
 
-  def primaryKey[TT](name: String, sourceColumns: TT)(using unpack: Unpack[TT, _]): PrimaryKey =
+  def primaryKey[TT](name: String, sourceColumns: TT)(using unpack: Unpack[TT, ?]): PrimaryKey =
     PrimaryKey(name, unpack.linearizer(sourceColumns).getLinearizedNodes)
 
   def tableConstraints: Iterator[Constraint] =
@@ -78,7 +78,7 @@ abstract class Table[T](
       m.invoke(this).asInstanceOf[Constraint]
     }
 
-  final def foreignKeys: Iterable[ForeignKey[_ <: Table[_], _]] =
+  final def foreignKeys: Iterable[ForeignKey[? <: Table[?], ?]] =
     tableConstraints.collect {
       case q: ForeignKeyQuery[_, _] => q.fks
     }.toIndexedSeq.flatten
@@ -86,7 +86,7 @@ abstract class Table[T](
   final def primaryKeys: Iterable[PrimaryKey] =
     tableConstraints.collect { case k: PrimaryKey => k }.toIndexedSeq
 
-  def index[TT](name: String, on: TT, unique: Boolean = false)(using unpack: Unpack[TT, _]) = new Index(
+  def index[TT](name: String, on: TT, unique: Boolean = false)(using unpack: Unpack[TT, ?]) = new Index(
     name, this, unpack.linearizer(on).getLinearizedNodes, unique
   )
 

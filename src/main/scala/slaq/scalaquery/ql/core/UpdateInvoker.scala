@@ -5,7 +5,7 @@ import slaq.session.{Session, PositionedParameters}
 import slaq.util.NamingContext
 
 final class UpdateInvoker[T](
-  query: Query[_ <: ColumnBase[T], T], profile: Profile
+  query: Query[? <: ColumnBase[T], T], profile: Profile
 ) {
 
   final protected lazy val built =
@@ -14,7 +14,7 @@ final class UpdateInvoker[T](
   inline final protected def getStatement = built.sql
   def updateStatement = getStatement
 
-  def update(value: T)(using session: Session): Int =
+  infix def update(value: T)(using session: Session): Int =
     session.withPreparedStatement(updateStatement) { st =>
       st.clearParameters
       val pp = new PositionedParameters(st)

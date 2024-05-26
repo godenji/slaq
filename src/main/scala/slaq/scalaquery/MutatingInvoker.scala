@@ -38,7 +38,7 @@ trait MutatingStatementInvoker[-P, R]
   extends StatementInvoker[P, R]
   with MutatingInvoker[P, R] {
 
-  protected def query: Query[_, R]
+  protected def query: Query[?, R]
   protected def profile: Profile
   final private lazy val (built, lin) = profile.buildSelect(
     query, NamingContext()

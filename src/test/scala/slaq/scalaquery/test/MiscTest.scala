@@ -28,17 +28,17 @@ class MiscTest(tdb: TestDB) extends DBTest(tdb) {
 
       val q1 = for (t <- T if t.a =~ "1" | t.a =~ "2") yield t
       println("q1: " + q1.selectStatement)
-      q1.foreach(println _)
+      q1.foreach(println)
       assertEquals(q1.to[Set](), Set(("1", "a"), ("2", "a")))
 
       val q2 = for (t <- T if (t.a =~ "1") | (t.b =~ "a")) yield t
       println("q2: " + q2.selectStatement)
-      q2.foreach(println _)
+      q2.foreach(println)
       assertEquals(q2.to[Set](), Set(("1", "a"), ("2", "a")))
 
       val q3 = for (t <- T if t.a =! "1" | t.b =! "a") yield t
       println("q3: " + q3.selectStatement)
-      q3.foreach(println _)
+      q3.foreach(println)
       assertEquals(q3.to[Set](), Set(("2", "a"), ("3", "b")))
     }
   }

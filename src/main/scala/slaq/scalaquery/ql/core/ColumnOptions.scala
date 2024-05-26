@@ -5,8 +5,8 @@ class ColumnOptions {
   val Nullable = ColumnOption.Nullable
   val PrimaryKey = ColumnOption.PrimaryKey
   val AutoInc = ColumnOption.AutoInc
-  def Default[T](defaultValue: T) = ColumnOption.Default[T](defaultValue)
-  def DBType(dbType: String) = ColumnOption.DBType(dbType)
+  infix def Default[T](defaultValue: T) = ColumnOption.Default[T](defaultValue)
+  infix def DBType(dbType: String) = ColumnOption.DBType(dbType)
 }
 object ColumnOptions extends ColumnOptions
 

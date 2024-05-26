@@ -7,7 +7,7 @@ import slaq.{
 }
 import slaq.ql.Query
 
-final class QueryInvoker[P, R](val query: Query[_, R], val profile: Profile)
+final class QueryInvoker[P, R](val query: Query[?, R], val profile: Profile)
   extends MutatingStatementInvoker[Unit, R]
   with UnitInvokerMixin[R]
   with MutatingUnitInvoker[R] {

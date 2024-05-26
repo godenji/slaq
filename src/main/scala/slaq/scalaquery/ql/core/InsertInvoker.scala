@@ -5,6 +5,7 @@ import java.sql.Statement
 import slaq.Fail
 import slaq.ql.{Query, Unpackable, Unpack}
 import slaq.session.{Session, PositionedParameters}
+import scala.collection.immutable.IndexedSeq
 
 final class InsertInvoker[T, U](unpackable: Unpackable[T, U], profile: Profile) {
 
@@ -22,7 +23,7 @@ final class InsertInvoker[T, U](unpackable: Unpackable[T, U], profile: Profile) 
   /**
    * Insert a single row.
    */
-  def insert[V, TT](value: V)(using ev: PackedUnpackedUnion[TT, U, V], session: Session): Int =
+  infix def insert[V, TT](value: V)(using ev: PackedUnpackedUnion[TT, U, V], session: Session): Int =
     ev.fold(
       u =>
         insertValue(u),
@@ -47,9 +48,9 @@ final class InsertInvoker[T, U](unpackable: Unpackable[T, U], profile: Profile) 
    * returned no row count for some part of the batch. If any part of the
    * batch fails, an exception is thrown.
    */
-  def insertAll(values: U*)(using session: Session): Option[Int] = {
+  infix def insertAll(values: U*)(using session: Session): Option[Int] = {
     if (!useBatchUpdates || (
-      values.isInstanceOf[IndexedSeq[_]] && values.length < 2
+      values.isInstanceOf[IndexedSeq[?]] && values.length < 2
     )) Some(
       values.foldLeft(0) { _ + insertValue(_) }
     )
@@ -75,7 +76,7 @@ final class InsertInvoker[T, U](unpackable: Unpackable[T, U], profile: Profile) 
     }
   }
 
-  def insert[TT](query: Query[TT, U])(using session: Session): Int = {
+  infix def insert[TT](query: Query[TT, U])(using session: Session): Int = {
     val sbr = profile.buildInsert(unpackable.value, query)
     session.withPreparedStatement(insertStatementFor(query)) { st =>
       st.clearParameters()
@@ -98,15 +99,14 @@ trait PackedUnpackedUnion[P, U, T] {
 }
 
 object PackedUnpackedUnion extends PackedUnpackedUnionLowPriority {
-  inline given packedUnpackedUnionTypeU[P, U, T <: U]: PackedUnpackedUnion[P, U, T] =
+  given packedUnpackedUnionTypeU[P, U, T <: U]: PackedUnpackedUnion[P, U, T] =
     new PackedUnpackedUnion[P, U, T] {
       def fold[R](f: U => R, g: (P, Unpack[P, U]) => R)(v: T): R = f(v)
     }
 }
 
 class PackedUnpackedUnionLowPriority {
-  inline given packedUnpackedUnionTypeP[P, U, T <: P](using ev: Unpack[P, U]): PackedUnpackedUnion[P, U, T] =
-
+  given packedUnpackedUnionTypeP[P, U, T <: P](using ev: Unpack[P, U]): PackedUnpackedUnion[P, U, T] =
     new PackedUnpackedUnion[P, U, T] {
       def fold[R](f: U => R, g: (P, Unpack[P, U]) => R)(v: T): R = g(v, ev)
     }

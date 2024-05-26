@@ -25,7 +25,7 @@ class PagingTest(tdb: TestDB) extends DBTest(tdb) {
     db withSession { implicit ss: Session =>
 
       IDs.ddl.create;
-      IDs.insertAll((1 to 10): _*)
+      IDs.insertAll((1 to 10)*)
 
       val q1 = for (i <- IDs; _ <- Query orderBy i.id) yield i
       println("q1: " + q1.selectStatement)

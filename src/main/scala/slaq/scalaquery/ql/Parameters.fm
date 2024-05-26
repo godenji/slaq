@@ -4,7 +4,7 @@ import slaq.Fail
 import slaq.ql.core.{Profile,QueryTemplate}
 
 final class Params[P, C](c: C) {
-  def flatMap[F](f: C => Query[_, F])(using profile: Profile): QueryTemplate[P, F] =
+  def flatMap[F](f: C => Query[?, F])(using profile: Profile): QueryTemplate[P, F] =
     profile.createQueryTemplate[P, F](f(c))
 
   def map[F](f: C => ColumnBase[F])(using profile: Profile): QueryTemplate[P, F] =

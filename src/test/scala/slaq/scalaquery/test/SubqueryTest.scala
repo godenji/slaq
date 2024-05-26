@@ -16,7 +16,7 @@ trait SubqueryModel {
     def id = column[Int]("id", O PrimaryKey)
     def name = column[String]("name")
     def * = id ~ name <> (
-      Categories.apply _,
+      Categories.apply,
       x => Tuple.fromProductTyped(x)
     )
   }
@@ -28,7 +28,7 @@ trait SubqueryModel {
     def category2 = column[Int]("category2")
     def catsFk = foreignKey("catsFk", category2, Categories)(_.id)
     def * = id ~ title ~ category ~ category2 <> (
-      Posts.apply _,
+      Posts.apply,
       x => Tuple.fromProductTyped(x)
     )
   }

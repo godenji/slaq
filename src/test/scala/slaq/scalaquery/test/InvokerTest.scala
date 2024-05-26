@@ -2,6 +2,7 @@ package slaq.test
 
 import scala.language.reflectiveCalls
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.immutable.IndexedSeq
 import org.junit.Test
 import org.junit.Assert._
 import slaq.ql._
@@ -86,7 +87,7 @@ class InvokerTest(tdb: TestDB) extends DBTest(tdb) {
     def setUp(using Session): Unit = {
       T.ddl.create
       for (g <- 1 to 1000 grouped 100)
-        T.insertAll(g: _*)
+        T.insertAll(g*)
     }
 
     def f() = CloseableIterator close db.createSession() after { implicit session =>

@@ -3,6 +3,7 @@ package slaq.ql
 import slaq.ql.core.Profile
 import slaq.session.{PositionedResult, PositionedParameters}
 import slaq.util.{Node, UnaryNode, ProductNode}
+import scala.collection.immutable.IndexedSeq
 
 sealed trait Projection[T <: Product] 
   extends ColumnBase[T] with ProductNode with Product {
@@ -25,8 +26,8 @@ sealed trait Projection[T <: Product]
   }
 
   final def getAllColumnTypeMappers = 
-    0.until(productArity).flatMap[TypeMapper[_]](
-      i => productElement(i).asInstanceOf[Column[_]].getAllColumnTypeMappers
+    0.until(productArity).flatMap[TypeMapper[?]](
+      i => productElement(i).asInstanceOf[Column[?]].getAllColumnTypeMappers
     ).to(IndexedSeq)
 
   final def getLinearizedNodes: IndexedSeq[Node] =

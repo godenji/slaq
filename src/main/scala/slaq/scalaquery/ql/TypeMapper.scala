@@ -212,7 +212,7 @@ abstract class MappedTypeMapper[T, U](using tm: TypeMapper[U])
     def sqlType = self.sqlType.getOrElse(tmd.sqlType)
     override def sqlTypeName = self.sqlTypeName.getOrElse(tmd.sqlTypeName)
     def setValue(v: T, p: PositionedParameters) = tmd.setValue(map(v), p)
-    def setOption(v: Option[T], p: PositionedParameters) = tmd.setOption(v.map(map _), p)
+    def setOption(v: Option[T], p: PositionedParameters) = tmd.setOption(v.map(map), p)
     def nextValue(r: PositionedResult) = comap(tmd.nextValue(r))
     def updateValue(v: T, r: PositionedResult) = tmd.updateValue(map(v), r)
     override def value2SQLLiteral(value: T) =
@@ -222,7 +222,7 @@ abstract class MappedTypeMapper[T, U](using tm: TypeMapper[U])
 }
 
 object MappedTypeMapper {
-  inline def base[T, U](to: T => U, from: U => T)(using TypeMapper[U]): BaseTypeMapper[T] =
+  def base[T, U](to: T => U, from: U => T)(using TypeMapper[U]): BaseTypeMapper[T] =
     new MappedTypeMapper[T, U] with BaseTypeMapper[T] {
       def map(t: T) = to(t)
       def comap(u: U) = from(u)

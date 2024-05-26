@@ -9,7 +9,7 @@ import slaq.{ResultSetInvoker, UnitInvoker}
 case class MClientInfoProperty(name: String, maxLen: Int, defaultValue: String, description: String)
 
 object MClientInfoProperty {
-  private[this] val m = try { classOf[DatabaseMetaData].getMethod("getClientInfoProperties") }
+  private val m = try { classOf[DatabaseMetaData].getMethod("getClientInfoProperties") }
   catch { case _: NoSuchMethodException => null }
 
   def getClientInfoProperties: UnitInvoker[MClientInfoProperty] = {

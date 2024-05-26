@@ -12,7 +12,7 @@ case class MFunction(name: MQName, remarks: String, returnsTable: Option[Boolean
 }
 
 object MFunction {
-  private[this] val m = classOf[DatabaseMetaData].getMethod(
+  private val m = classOf[DatabaseMetaData].getMethod(
     "getFunctions", classOf[String], classOf[String], classOf[String]
   )
 

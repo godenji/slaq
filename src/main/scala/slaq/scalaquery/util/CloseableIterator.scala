@@ -12,7 +12,7 @@ trait CloseableIterator[+T] extends Iterator[T] with Closeable { self =>
    * Close the underlying data source. The behaviour of any methods of this
    * object after closing it is undefined.
    */
-  override def close(): Unit
+  infix override def close(): Unit
 
   override def map[B](f: T => B): CloseableIterator[B] = new CloseableIterator[B] {
     def hasNext = self.hasNext
@@ -66,7 +66,7 @@ object CloseableIterator {
    * itself gets closed. If the function terminates abnormally, the resource is
    * closed immediately.
    */
-  def close[C <: Closeable](makeC: => C) = new Close[C](makeC)
+  infix def close[C <: Closeable](makeC: => C) = new Close[C](makeC)
 
   final class Close[C <: Closeable](makeC: => C) {
     def after[T](f: C => CloseableIterator[T]) = {
@@ -75,7 +75,7 @@ object CloseableIterator {
         case e: Throwable =>
           try c.close() catch { case _: Throwable => }
           throw e
-      }) thenClose c
+      }) `thenClose` c
     }
   }
 }

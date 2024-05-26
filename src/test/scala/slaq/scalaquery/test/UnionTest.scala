@@ -106,20 +106,20 @@ class UnionTest(tdb: TestDB) extends DBTest(tdb) {
       def id = column[Int]("id")
       def name = column[String]("name")
       def locId = column[Option[Int]]("locId")
-      def * = id ~ name ~ locId <> (Managers.apply _, x => Tuple.fromProductTyped(x))
+      def * = id ~ name ~ locId <> (Managers.apply, x => Tuple.fromProductTyped(x))
     }
 
     object Employees extends Table[Employees]("employees") {
       def id = column[Int]("id")
       def name = column[String]("name")
       def locId = column[Option[Int]]("locId")
-      def * = id ~ name ~ locId <> (Employees.apply _, x => Tuple.fromProductTyped(x))
+      def * = id ~ name ~ locId <> (Employees.apply, x => Tuple.fromProductTyped(x))
     }
 
     object Locations extends Table[Locations]("locations") {
       def id = column[Int]("id")
       def name = column[String]("name")
-      def * = id ~ name <> (Locations.apply _, x => Tuple.fromProductTyped(x))
+      def * = id ~ name <> (Locations.apply, x => Tuple.fromProductTyped(x))
     }
 
     (Managers.ddl ++ Employees.ddl ++ Locations.ddl) create

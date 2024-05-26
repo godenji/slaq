@@ -3,11 +3,12 @@ package slaq.ql.core
 import slaq.Fail
 import slaq.ql._
 import slaq.util.Node
+import scala.collection.immutable.IndexedSeq
 
-class DDLBuilder(val table: Table[_], val profile: Profile) {
+class DDLBuilder(val table: Table[?], val profile: Profile) {
   import profile.sqlUtils._
 
-  protected class ColumnDDLBuilder(protected val column: NamedColumn[_]) {
+  protected class ColumnDDLBuilder(protected val column: NamedColumn[?]) {
 
     protected val tmDelegate = column.typeMapper(profile)
     protected var sqlType: String = null
@@ -22,7 +23,7 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
       if (sqlType eq null) sqlType = mapTypeName(tmDelegate)
     }
 
-    protected def handleColumnOption(o: ColumnOption[_, _]): Unit = o match {
+    protected def handleColumnOption(o: ColumnOption[?, ?]): Unit = o match {
       case ColumnOption.DBType(s)  => sqlType = s
       case ColumnOption.NotNull    => notNull = true
       case ColumnOption.Nullable   => notNull = false
@@ -30,7 +31,6 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
       case ColumnOption.Default(v) => defaultLiteral =
         column.asInstanceOf[NamedColumn[Any]].typeMapper(profile).value2SQLLiteral(v)
       case ColumnOption.AutoInc => autoIncrement = true
-      case _                    =>
     }
 
     def appendColumn(sb: StringBuilder): Unit = {
@@ -47,7 +47,7 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
     }
   }
 
-  protected def createColumnDDLBuilder(c: NamedColumn[_]) = new ColumnDDLBuilder(c)
+  protected def createColumnDDLBuilder(c: NamedColumn[?]) = new ColumnDDLBuilder(c)
 
   def buildDDL: DDL = {
     val createTable = {
@@ -83,13 +83,13 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
     b.toString
   }
 
-  protected def createForeignKey(fk: ForeignKey[_ <: Table[_], _]) = {
+  protected def createForeignKey(fk: ForeignKey[? <: Table[?], ?]) = {
     val sb = new StringBuilder append "ALTER TABLE " append quote(table.tableName) append " ADD "
     addForeignKey(fk, sb)
     sb.toString
   }
 
-  protected def addForeignKey(fk: ForeignKey[_ <: Table[_], _], sb: StringBuilder): Unit = {
+  protected def addForeignKey(fk: ForeignKey[? <: Table[?], ?], sb: StringBuilder): Unit = {
     sb append "CONSTRAINT " append quote(fk.name) append " FOREIGN KEY("
     addForeignKeyColumnList(fk.linearizedSourceColumns, sb, table.tableName)
     sb append ") REFERENCES " append quote(fk.targetTable.tableName) append "("
@@ -110,7 +110,7 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
     sb append ")"
   }
 
-  protected def dropForeignKey(fk: ForeignKey[_ <: Table[_], _]) = {
+  protected def dropForeignKey(fk: ForeignKey[? <: Table[?], ?]) = {
     "ALTER TABLE " + quote(table.tableName) + " DROP CONSTRAINT " + quote(fk.name)
   }
 
@@ -134,7 +134,7 @@ class DDLBuilder(val table: Table[_], val profile: Profile) {
         if (first) first = false
         else sb append ","
         sb append quote(n.name)
-        if (requiredTableName != n.table.asInstanceOf[Table[_]].tableName)
+        if (requiredTableName != n.table.asInstanceOf[Table[?]].tableName)
           Fail("All columns in " + typeInfo + " must belong to table " + requiredTableName)
       case _ => Fail("Cannot use column " + c +
         " in " + typeInfo + " (only named columns are allowed)")

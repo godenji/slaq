@@ -52,12 +52,12 @@ abstract class TestDB(val confName: String) {
   def cleanUp(): Unit = {}
   def deleteDBFiles(prefix: String): Unit = {
     def deleteRec(f: File): Boolean = {
-      if (f.isDirectory()) f.listFiles.forall(deleteRec _) && f.delete()
+      if (f.isDirectory()) f.listFiles.forall(deleteRec) && f.delete()
       else f.delete()
     }
     val dir = new File(TestDBOptions.testDBDir)
     if (!dir.isDirectory) throw new IOException("Directory " + TestDBOptions.testDBDir + " not found")
-    for (f <- dir.listFiles if f.getName startsWith prefix) {
+    for (f <- dir.listFiles if f.getName.startsWith(prefix)) {
       val p = TestDBOptions.testDBDir + "/" + f.getName
       if (deleteRec(f)) println("[Deleted database file " + p + "]")
       else throw new IOException("Couldn't delete database file " + p)

@@ -16,18 +16,18 @@ class H2Driver extends Profile { self =>
   val typeMapperDelegates = new TypeMapperDelegates {}
   override val sqlUtils = new H2SQLUtils
 
-  override def createQueryBuilder(query: Query[_, _], nc: NamingContext) = new H2QueryBuilder(query, nc, None, this)
+  override def createQueryBuilder(query: Query[?, ?], nc: NamingContext) = new H2QueryBuilder(query, nc, None, this)
 }
 
 object H2Driver extends H2Driver
 
-class H2QueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[QueryBuilder], profile: H2Driver)
+class H2QueryBuilder(_query: Query[?, ?], _nc: NamingContext, parent: Option[QueryBuilder], profile: H2Driver)
   extends QueryBuilder(_query, _nc, parent, profile) {
 
   override type Self = H2QueryBuilder
   override protected val concatOperator = Some("||")
 
-  protected def createSubQueryBuilder(query: Query[_, _], nc: NamingContext) =
+  protected def createSubQueryBuilder(query: Query[?, ?], nc: NamingContext) =
     new H2QueryBuilder(query, nc, Some(this), profile)
 
   override protected def show(c: Node, b: SqlBuilder): Unit = c match {
@@ -55,7 +55,7 @@ class H2QueryBuilder(_query: Query[_, _], _nc: NamingContext, parent: Option[Que
 }
 
 class H2SQLUtils extends SQLUtils {
-  override def mapTypeName(tmd: TypeMapperDelegate[_]): String = tmd.sqlType match {
+  override def mapTypeName(tmd: TypeMapperDelegate[?]): String = tmd.sqlType match {
     case java.sql.Types.VARCHAR => "VARCHAR"
     case _ => super.mapTypeName(tmd)
   }
