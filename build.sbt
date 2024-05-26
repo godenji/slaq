@@ -1,6 +1,6 @@
 import ApplicationBuild._
 
-val scala3Version = "3.2.2-RC1"
+val scala3Version = "3.5.0-RC1"
 
 lazy val root = (project in file(".")).
   settings(publishSettings("slaq")).
@@ -20,11 +20,9 @@ lazy val root = (project in file(".")).
       "-language:postfixOps",
       "-language:higherKinds",
       "-language:existentials",
-      //
-      //"-rewrite", "-source", "3.0-migration",
       //"-Wconf:unused:error",
       "-Xmigration",
-      "-Yno-generic-signatures",
+      "-Xno-generic-signatures",
       "-Yno-kind-polymorphism"
     ),
     libraryDependencies ++= appDeps,
