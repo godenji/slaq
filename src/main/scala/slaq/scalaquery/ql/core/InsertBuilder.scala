@@ -7,30 +7,36 @@ import slaq.util._
 class InsertBuilder(val column: Any, val profile: Profile) {
   import profile.sqlUtils._
 
+  private def prefixSchema(t: Table[?]): String = {
+    t.schemaName
+      .map(schema => s"${quote(schema)}.")
+      .getOrElse("")
+  }
+
   def buildInsert: String = {
-    val (table, cols, vals) = buildParts
-    s"INSERT INTO ${quote(table)} ($cols) VALUES ($vals)"
+    val (t, cols, vals) = buildParts
+    s"INSERT INTO ${prefixSchema(t)}${quote(t.tableName)} ($cols) VALUES ($vals)"
   }
 
   def buildInsert(query: Query[?, ?]): SqlBuilder.Result = {
-    val (table, cols, _) = buildParts
+    val (t, cols, _) = buildParts
     val b = new SqlBuilder
-    b += s"INSERT INTO ${quote(table)} (${cols.toString}) "
+    b += s"INSERT INTO ${prefixSchema(t)}${quote(t.tableName)} (${cols.toString}) "
     val qb = profile.createQueryBuilder(query, NamingContext())
     qb.buildSelect(b)
     b.build
   }
 
-  protected def buildParts: (String, StringBuilder, StringBuilder) = {
+  private def buildParts: (Table[?], StringBuilder, StringBuilder) = {
     val (cols, vals) = (new StringBuilder, new StringBuilder)
-    var table: String = null
+    var table: Table[?] = null
     def f(c: Any): Unit = c match {
       case p: Projection[_] => for (i <- 0 until p.productArity) {
         f(Node(p.productElement(i)))
       }
       case t: Table[_] => f(Node(t.*))
       case n: NamedColumn[_] =>
-        val tmpTable = n.table.asInstanceOf[Table[?]].tableName
+        val tmpTable = n.table.asInstanceOf[Table[?]]//.tableName
         if (table eq null) table = tmpTable
         else if (table != tmpTable) Fail(
           "Inserts must all be to the same table"
