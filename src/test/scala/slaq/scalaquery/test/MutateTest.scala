@@ -14,27 +14,29 @@ object MutateTest extends DBTestObject(H2Mem, Postgres, MySQL, HsqldbMem)
 class MutateTest(tdb: TestDB) extends DBTest(tdb) {
   import tdb.driver.Implicit.{given, *}
 
-  @Test def test(): Unit = {
+  case class User(id: Int, first: String, last: String)
+  object Users extends Table[User]("users") {
+    def id = column[Int]("id", O PrimaryKey, O AutoInc)
+    def first = column[String]("first")
+    def last = column[String]("last")
+    def * = id ~ first ~ last <> (
+      User.apply,
+      x => Tuple.fromProductTyped(x)
+    )
+  }
 
-    case class User(id: Int, first: String, last: String)
-    object Users extends Table[User]("users") {
-      def id = column[Int]("id", O PrimaryKey, O AutoInc)
-      def first = column[String]("first")
-      def last = column[String]("last")
-      def * = id ~ first ~ last <> (
-        User.apply,
-        x => Tuple.fromProductTyped(x)
-      )
-    }
+  private def setup()(using Session) =
+    Users.ddl.create
+    Users.insertAll(
+      User(1, "Marge", "Bouvier"),
+      User(2, "Homer", "Simpson"),
+      User(3, "Bart", "Simpson"),
+      User(4, "Carl", "Carlson")
+    )
 
+  @Test def mutate(): Unit = {
     db withSession { implicit ss: Session =>
-      Users.ddl.create
-      Users.insertAll(
-        User(1, "Marge", "Bouvier"),
-        User(2, "Homer", "Simpson"),
-        User(3, "Bart", "Simpson"),
-        User(4, "Carl", "Carlson")
-      )
+      setup()
 
       println("Before mutating:")
       Query(Users).foreach(u => println("  " + u))
@@ -54,6 +56,28 @@ class MutateTest(tdb: TestDB) extends DBTest(tdb) {
         Set("Marge Simpson", "Bart Simpson", "Lisa Simpson", "Carl Carlson"),
         (for (u <- Users) yield u.first ++ " " ++ u.last).list().toSet
       )
+    }
+  }
+
+  @Test def lockFreeMutate(): Unit = {
+    val byId = Users.createFinderBy(_.id)
+    val queryTemplate = byId(1)
+    val updatedUser = User(1, "Marge", "Simpson")
+
+    db withSession { implicit ss: Session =>
+      setup()
+
+      println("update statement")
+      println(queryTemplate.updateStatement)
+
+      queryTemplate.update(updatedUser)
+      assertEquals(Some(updatedUser), queryTemplate.firstOption)
+
+      println("delete statement")
+      println(queryTemplate.deleteStatement)
+
+      queryTemplate.delete
+      assertEquals(None, queryTemplate.firstOption)
     }
   }
 }
