@@ -1,7 +1,7 @@
 package slaq
 
 import java.sql.PreparedStatement
-import slaq.session._
+import slaq.session.{Session, ResultSetConcurrency, ResultSetType}
 import slaq.ql.Query
 import slaq.ql.core.Profile
 import slaq.util.{ValueLinearizer, NamingContext}
