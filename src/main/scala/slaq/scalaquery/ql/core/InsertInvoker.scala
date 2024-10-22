@@ -49,6 +49,9 @@ final class InsertInvoker[T, U](unpackable: Unpackable[T, U], profile: Profile) 
    * batch fails, an exception is thrown.
    */
   infix def insertAll(values: U*)(using session: Session): Option[Int] = {
+    var unknown = false
+    var count = 0
+    var hasError = false
     session.withTransaction {
       session.withPreparedStatement(insertStatement) { st =>
         st.clearParameters()
@@ -58,17 +61,19 @@ final class InsertInvoker[T, U](unpackable: Unpackable[T, U], profile: Profile) 
           )
           st.addBatch()
         }
-        var unknown = false
-        var count = 0
         for ((res, idx) <- st.executeBatch().zipWithIndex) res match {
           case Statement.SUCCESS_NO_INFO => unknown = true
-          case Statement.EXECUTE_FAILED =>
-            Fail("Failed to insert row #" + (idx + 1))
+          case Statement.EXECUTE_FAILED => hasError = true
           case i => count += i
         }
-        if (unknown) None else Some(count)
       }
     }
+    if (hasError) {
+      session.rollback() // rollback transaction
+      Fail("Failed to insert row in batch")
+    }
+    if unknown then None
+    else Some(count)
   }
 
   infix def insert[TT](query: Query[TT, U])(using session: Session): Int = {
