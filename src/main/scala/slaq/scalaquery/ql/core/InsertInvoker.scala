@@ -49,12 +49,7 @@ final class InsertInvoker[T, U](unpackable: Unpackable[T, U], profile: Profile) 
    * batch fails, an exception is thrown.
    */
   infix def insertAll(values: U*)(using session: Session): Option[Int] = {
-    if (!useBatchUpdates || (
-      values.isInstanceOf[IndexedSeq[?]] && values.length < 2
-    )) Some(
-      values.foldLeft(0) { _ + insertValue(_) }
-    )
-    else session.withTransaction {
+    session.withTransaction {
       session.withPreparedStatement(insertStatement) { st =>
         st.clearParameters()
         for (value <- values) {
