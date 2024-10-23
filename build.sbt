@@ -1,6 +1,6 @@
 import ApplicationBuild._
 
-val scala3Version = "3.5.0-RC1"
+val scala3Version = "3.5.2"
 
 lazy val root = (project in file(".")).
   settings(publishSettings("slaq")).
