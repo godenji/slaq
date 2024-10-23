@@ -71,6 +71,14 @@ trait Session extends java.io.Closeable { self =>
     try f(st) finally st.close()
   }
 
+  final def withPreparedStatement[T]
+    (sql: String, withGeneratedKeys: Boolean)
+    (f: PreparedStatement => T): T = {
+
+    val st = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+    try f(st) finally st.close()
+  }
+
   final def withStatement[T](
     cursor: ResultSetType = ForwardOnly,
     concurrency: Concurrency = ReadOnly,

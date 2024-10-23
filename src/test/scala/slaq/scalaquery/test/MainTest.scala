@@ -47,7 +47,7 @@ class MainTest(tdb: TestDB) extends DBTest(tdb) {
         ("Carl", Some("Carlson")), ("Lenny", Some("Leonard"))
       )
       val ins3 = Users.first.insertAll("Santa's Little Helper", "Snowball")
-      val total = for (i2 <- ins2; i3 <- ins3) yield ins1 + i2 + i3
+      val total = for (i2 <- ins2.affectedRows; i3 <- ins3.affectedRows) yield ins1 + i2 + i3
       println("Inserted " + total.getOrElse("<unknown>") + " users")
       /* All test DBs seem to report the actual number of rows.
        * None would also be an acceptable result here. */

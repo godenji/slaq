@@ -1,10 +1,11 @@
 package slaq.ql.core
 
 import annotation.implicitNotFound
-import java.sql.Statement
+import java.sql.{PreparedStatement, Statement}
 import slaq.Fail
 import slaq.ql.{Query, Unpackable, Unpack}
 import slaq.session.{Session, PositionedParameters}
+import slaq.util.BatchResult
 import scala.collection.immutable.IndexedSeq
 
 final class InsertInvoker[T, U](unpackable: Unpackable[T, U], profile: Profile) {
@@ -43,17 +44,34 @@ final class InsertInvoker[T, U](unpackable: Unpackable[T, U], profile: Profile) 
     insert(Query(c))
 
   /**
-   * Insert multiple rows. Uses JDBC's batch update feature if supported by
-   * the JDBC driver. Returns Some(rowsAffected), or None if the database
+   * Insert multiple rows using JDBC's batch update feature.
+   * Returns `BatchResult` with Some(rowsAffected), or None if the database
    * returned no row count for some part of the batch. If any part of the
    * batch fails, an exception is thrown.
    */
-  infix def insertAll(values: U*)(using session: Session): Option[Int] = {
-    var unknown = false
-    var count = 0
-    var hasError = false
+  infix def insertAll(values: U*)(using session: Session): BatchResult =
+    insertAll(values*)(withGeneratedKeys = false)
+
+  /**
+   * Insert multiple rows using JDBC's batch update feature.
+   * If `withGeneratedKeys` is `true`, returns `BatchResult` with List of generated keys;
+   * otherwise, returns `BatchResult` with Some(rowsAffected), or None if the database
+   * returned no row count for some part of the batch. If any part of the
+   * batch fails, an exception is thrown.
+   */
+  infix def insertAll
+    (values: U*)
+    (withGeneratedKeys: Boolean)
+    (using session: Session): BatchResult = {
+
     session.withTransaction {
-      session.withPreparedStatement(insertStatement) { st =>
+      val withStatement =
+        if (!withGeneratedKeys)
+          session.withPreparedStatement[BatchResult](insertStatement)
+        else
+          session.withPreparedStatement[BatchResult](insertStatement, withGeneratedKeys)
+
+      withStatement { st =>
         st.clearParameters()
         for (value <- values) {
           unpackable.linearizer.setParameter(
@@ -61,19 +79,27 @@ final class InsertInvoker[T, U](unpackable: Unpackable[T, U], profile: Profile) 
           )
           st.addBatch()
         }
+
+        var unknown = false
+        var count = 0
         for ((res, idx) <- st.executeBatch().zipWithIndex) res match {
           case Statement.SUCCESS_NO_INFO => unknown = true
-          case Statement.EXECUTE_FAILED => hasError = true
+          case Statement.EXECUTE_FAILED => Fail(s"Failed to insert row #${idx + 1}")
           case i => count += i
         }
+        if (withGeneratedKeys) {
+          var xs = List.empty[Long]
+          val rs = st.getGeneratedKeys()
+          while (rs.next()) {
+            xs = xs ++ List(rs.getLong(1))
+          }
+          if (xs.size != values.size) Fail(s"Generated keyset size != entities size")
+          BatchResult(generatedKeys = xs)
+        }
+        else if (unknown) BatchResult()
+        else BatchResult(affectedRows = Some(count))
       }
     }
-    if (hasError) {
-      session.rollback() // rollback transaction
-      Fail("Failed to insert row in batch")
-    }
-    if unknown then None
-    else Some(count)
   }
 
   infix def insert[TT](query: Query[TT, U])(using session: Session): Int = {
