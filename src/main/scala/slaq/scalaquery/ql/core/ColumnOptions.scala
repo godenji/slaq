@@ -10,7 +10,7 @@ class ColumnOptions {
 }
 object ColumnOptions extends ColumnOptions
 
-enum ColumnOption[+T, -P]:
+enum ColumnOption[+T, -P] derives CanEqual:
   case NotNull extends ColumnOption[Nothing, Profile]
   case Nullable extends ColumnOption[Nothing, Profile]
   case PrimaryKey extends ColumnOption[Nothing, Profile]
