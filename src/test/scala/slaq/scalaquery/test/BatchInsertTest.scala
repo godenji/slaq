@@ -23,17 +23,28 @@ class BatchInsertTest(tdb: TestDB) extends DBTest(tdb) {
     def * = id ~ first ~ last
   }
 
-  @Test def test(): Unit = {
+  @Test def insertMany(): Unit = {
     db withSession { implicit ss: Session =>
 
       val ddl = Users.ddl
       ddl.create
-      val ins = (Users.first ~ Users.last).insertAll(
+      val res = (Users.first ~ Users.last).insertAll(
         ("Marge", Some("Simpson")), ("Apu", Some("Nahasapeemapetilon")),
         ("Carl", Some("Carlson")), ("Lenny", Some("Leonard"))
-      )(withGeneratedKeys = true)
-      println(s"Generated keys ${ins.generatedKeys}")
-      assert(ins.generatedKeys == List(1, 2, 3, 4))
+      )
+      assert(res.generatedKeys == List(1, 2, 3, 4))
+    }
+  }
+
+  @Test def insertManyEmpty(): Unit = {
+    db withSession { implicit ss: Session =>
+
+      val ddl = Users.ddl
+      ddl.create
+
+      val model = List()
+      val res = (Users.first ~ Users.last).insertAll(model*)
+      assert(res.generatedKeys == List.empty)
     }
   }
 }
