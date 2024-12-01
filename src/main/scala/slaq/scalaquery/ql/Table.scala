@@ -69,7 +69,7 @@ abstract class Table[T](
   def primaryKey[TT](name: String, sourceColumns: TT)(using unpack: Unpack[TT, ?]): PrimaryKey =
     PrimaryKey(name, unpack.linearizer(sourceColumns).getLinearizedNodes)
 
-  def tableConstraints: Iterator[Constraint] =
+  private def tableConstraints: Iterator[Constraint] =
     getClass().getMethods.iterator.filter( m =>
       m.getParameterTypes.length == 0 &&
       classOf[Constraint].isAssignableFrom(m.getReturnType)

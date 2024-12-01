@@ -32,6 +32,7 @@ class HsqldbDriver extends Profile { self =>
   val typeMapperDelegates = new HsqldbTypeMapperDelegates
 
   override def createQueryBuilder(query: Query[?, ?], nc: NamingContext) = new HsqldbQueryBuilder(query, nc, None, this)
+  override def createUpsertBuilder(cb: Any) = new HsqldbUpsertBuilder(cb, this)
   override def buildTableDDL(table: Table[?]): DDL = new HsqldbDDLBuilder(table, this).buildDDL
   override def buildSequenceDDL(seq: Sequence[?]): DDL = new HsqldbSequenceDDLBuilder(seq, this).buildDDL
 }
@@ -120,6 +121,30 @@ class HsqldbQueryBuilder(_query: Query[?, ?], _nc: NamingContext, parent: Option
     case TakeDrop(Some(t), None, _) => appendLimitValue(b += " LIMIT ", t)
     case TakeDrop(None, Some(d), _) => appendLimitValue(b += " OFFSET ", d)
     case _ =>
+  }
+}
+
+class HsqldbUpsertBuilder(override val column: Any, override val profile: Profile)
+  extends InsertBuilder(column, profile) {
+
+  import profile.sqlUtils._
+
+  override def buildInsert: String = {
+    val (t, cols, vals) = buildParts
+    val colList = cols.toString.split(",").map(_.trim)
+
+    val start = s"MERGE INTO ${quote(t.tableName)} t USING ("
+    val select = s"VALUES ${colList.map(_ => "?").mkString(",")}"
+    val pkeys =
+      t.primaryKeys.flatMap(_.columns).collect {
+        case n: NamedColumn[_] => n.name
+      }
+    val where = pkeys.map(quote).map(c => s"t.$c=o.$c").mkString(" AND ")
+    val updateCols = s"WHEN MATCHED THEN UPDATE SET ${colList.map(c => s"t.$c=o.$c").mkString(",")}"
+    val insertCols = colList.mkString(",")
+    val insertVals = colList.map(c => s"o.$c").mkString(",")
+    val end = s") o ($insertCols) ON ($where) $updateCols WHEN NOT MATCHED THEN INSERT ($insertCols) VALUES ($insertVals)"
+    s"$start $select $end"
   }
 }
 

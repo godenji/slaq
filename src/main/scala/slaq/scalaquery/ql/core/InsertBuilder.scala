@@ -7,7 +7,7 @@ import slaq.util._
 class InsertBuilder(val column: Any, val profile: Profile) {
   import profile.sqlUtils._
 
-  private def prefixSchema(t: Table[?]): String = {
+  protected def prefixSchema(t: Table[?]): String = {
     t.schemaName
       .map(schema => s"${quote(schema)}.")
       .getOrElse("")
@@ -27,16 +27,17 @@ class InsertBuilder(val column: Any, val profile: Profile) {
     b.build
   }
 
-  private def buildParts: (Table[?], StringBuilder, StringBuilder) = {
+  protected def buildParts: (Table[?], StringBuilder, StringBuilder) = {
     val (cols, vals) = (new StringBuilder, new StringBuilder)
     var table: Table[?] = null
     def f(c: Any): Unit = c match {
-      case p: Projection[_] => for (i <- 0 until p.productArity) {
-        f(Node(p.productElement(i)))
-      }
+      case p: Projection[_] =>
+        for (i <- 0 until p.productArity) {
+          f(Node(p.productElement(i)))
+        }
       case t: Table[_] => f(Node(t.*))
       case n: NamedColumn[_] =>
-        val tmpTable = n.table.asInstanceOf[Table[?]]//.tableName
+        val tmpTable = n.table.asInstanceOf[Table[?]]
         if (table eq null) table = tmpTable
         else if (table != tmpTable) Fail(
           "Inserts must all be to the same table"

@@ -17,6 +17,7 @@ class H2Driver extends Profile { self =>
   override val sqlUtils = new H2SQLUtils
 
   override def createQueryBuilder(query: Query[?, ?], nc: NamingContext) = new H2QueryBuilder(query, nc, None, this)
+  override def createUpsertBuilder(cb: Any) = new H2UpsertBuilder(cb, this)
 }
 
 object H2Driver extends H2Driver
@@ -51,6 +52,27 @@ class H2QueryBuilder(_query: Query[?, ?], _nc: NamingContext, parent: Option[Que
 
     case TakeDrop(Some(t), None, _) => appendLimitValue(b += " LIMIT ", t)
     case _ =>
+  }
+}
+
+class H2UpsertBuilder(override val column: Any, override val profile: Profile)
+  extends InsertBuilder(column, profile) {
+
+  import profile.sqlUtils._
+
+  override def buildInsert: String = {
+    val (t, cols, vals) = buildParts
+
+    val insertOrReplace =
+      cols
+        .toString
+        .split(",")
+        .map(_.trim)
+        .mkString(
+          s"MERGE INTO ${prefixSchema(t)}${quote(t.tableName)} (", ",", ") "
+        )
+
+    s"${insertOrReplace} VALUES ($vals)"
   }
 }
 

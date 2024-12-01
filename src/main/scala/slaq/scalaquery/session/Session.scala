@@ -75,8 +75,10 @@ trait Session extends java.io.Closeable { self =>
     (sql: String, withGeneratedKeys: Boolean)
     (f: PreparedStatement => T): T = {
 
-    val st = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
-    try f(st) finally st.close()
+    if (!withGeneratedKeys) withPreparedStatement(sql)(f)
+    else
+      val st = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+      try f(st) finally st.close()
   }
 
   final def withStatement[T](

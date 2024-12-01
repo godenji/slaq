@@ -18,6 +18,7 @@ class PostgresDriver extends Profile { self =>
   val typeMapperDelegates = new PostgresTypeMapperDelegates
 
   override def createQueryBuilder(query: Query[?, ?], nc: NamingContext) = new PostgresQueryBuilder(query, nc, None, this)
+  override def createUpsertBuilder(cb: Any) = new PostgresUpsertBuilder(cb, this)
   override def buildTableDDL(table: Table[?]): DDL = new PostgresDDLBuilder(table, this).buildDDL
 }
 
@@ -141,6 +142,33 @@ class PostgresQueryBuilder(_query: Query[?, ?], _nc: NamingContext, parent: Opti
       case _: Table[_] | _: Table.Alias => matchTable(node)
       case _ => //println(s"outer fallback $node")
     }
+  }
+}
+
+class PostgresUpsertBuilder(override val column: Any, override val profile: Profile)
+  extends InsertBuilder(column, profile) {
+
+  import profile.sqlUtils._
+
+  override def buildInsert: String = {
+    val (t, cols, vals) = buildParts
+    val pks =
+      t.primaryKeys.map(_.columns).flatten.collect {
+        case n: NamedColumn[_] => n.name
+      }.mkString(",")
+
+    val updateCols = cols.toString.split(",").map(_.trim)
+    val updateStmt =
+      updateCols.zip(vals)
+        .map((c, v) => s"$c=$v")
+        .mkString(",")
+
+    s"""
+    |INSERT INTO ${prefixSchema(t)}${quote(t.tableName)} ($cols)
+    |VALUES ($vals)
+    |ON CONFLICT($pks)
+    |DO UPDATE SET $updateStmt
+    """.stripMargin
   }
 }
 

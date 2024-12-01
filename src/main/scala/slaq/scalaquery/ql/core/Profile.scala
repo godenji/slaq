@@ -15,6 +15,8 @@ trait Profile {
 
   def createQueryBuilder(query: Query[?, ?], nc: NamingContext): QueryBuilder = new GenericQueryBuilder(query, nc, None, this)
 
+  def createUpsertBuilder(cb: Any): InsertBuilder = new UpsertBuilder(cb, this)
+
   val Implicit: ImplicitT
   val typeMapperDelegates: TypeMapperDelegatesT
   val sqlUtils = new SQLUtils
@@ -28,6 +30,8 @@ trait Profile {
 
   def buildInsert(cb: Any): String = new InsertBuilder(cb, this).buildInsert
   def buildInsert(cb: Any, q: Query[?, ?]): SqlBuilder.Result = new InsertBuilder(cb, this).buildInsert(q)
+
+  def buildUpsert(cb: Any): String = createUpsertBuilder(cb).buildInsert
 
   def buildTableDDL(table: Table[?]): DDL =
     new DDLBuilder(table, this).buildDDL

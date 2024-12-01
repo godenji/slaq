@@ -34,6 +34,7 @@ class SQLiteDriver extends Profile { self =>
   val typeMapperDelegates = new SQLiteTypeMapperDelegates
 
   override def createQueryBuilder(query: Query[?, ?], nc: NamingContext) = new SQLiteQueryBuilder(query, nc, None, this)
+  override def createUpsertBuilder(cb: Any) = new SQLiteUpsertBuilder(cb, this)
   override def buildTableDDL(table: Table[?]): DDL = new SQLiteDDLBuilder(table, this).buildDDL
 }
 
@@ -180,5 +181,26 @@ class SQLiteQueryBuilder(_query: Query[?, ?], _nc: NamingContext, parent: Option
       b.sep(s.nodeChildren, ",")(expr(_, b))
       b += ')'
     case _ => super.show(c, b)
+  }
+}
+
+class SQLiteUpsertBuilder(override val column: Any, override val profile: Profile)
+  extends InsertBuilder(column, profile) {
+
+  import profile.sqlUtils._
+
+  override def buildInsert: String = {
+    val (t, cols, vals) = buildParts
+
+    val insertOrReplace =
+      cols
+        .toString
+        .split(",")
+        .map(_.trim)
+        .mkString(
+          s"INSERT OR REPLACE INTO ${prefixSchema(t)}${quote(t.tableName)} (", ",", ") "
+        )
+
+    s"${insertOrReplace} VALUES ($vals)"
   }
 }

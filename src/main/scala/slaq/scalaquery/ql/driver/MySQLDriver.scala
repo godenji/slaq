@@ -18,6 +18,7 @@ class MySQLDriver extends Profile { self =>
   override val sqlUtils = new MySQLSQLUtils
 
   override def createQueryBuilder(query: Query[?, ?], nc: NamingContext) = new MySQLQueryBuilder(query, nc, None, this)
+  override def createUpsertBuilder(cb: Any) = new MySQLUpsertBuilder(cb, this)
   override def buildTableDDL(table: Table[?]): DDL = new MySQLDDLBuilder(table, this).buildDDL
   override def buildSequenceDDL(seq: Sequence[?]): DDL = new MySQLSequenceDDLBuilder(seq, this).buildDDL
 }
@@ -104,6 +105,31 @@ class MySQLQueryBuilder(_query: Query[?, ?], _nc: NamingContext, parent: Option[
     }
     expr(o.by, b)
     if (desc) b += " desc"
+  }
+}
+
+class MySQLUpsertBuilder(override val column: Any, override val profile: Profile)
+  extends InsertBuilder(column, profile) {
+
+  import profile.sqlUtils._
+
+  override def buildInsert: String = {
+    val (t, cols, vals) = buildParts
+    val updateColumns =
+      cols
+        .toString
+        .split(",")
+        .map(_.trim)
+        .map(c =>
+          s"$c=t.$c"
+        )
+        .mkString(",")
+
+    s"""
+    |INSERT INTO ${prefixSchema(t)}${quote(t.tableName)} ($cols)
+    |VALUES ($vals) as t
+    |ON DUPLICATE KEY UPDATE $updateColumns
+    """.stripMargin
   }
 }
 
