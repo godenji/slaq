@@ -44,14 +44,16 @@ trait UpdateBuilder { self: QueryBuilder & QueryBuilderAction =>
           case n: NamedColumn[_]                 => setColumn(n)
           case n =>
             Fail(s"""
-		        	Cannot create UPDATE statement from $n; 
-							A single named column, or a projection of named columns,
-							from the same table is required""")
+              Cannot create UPDATE statement from $n;
+              A single named column, or a projection of named columns,
+              from the same table is required""")
         }
       }
       apply(query.reified)
       overrideAlias(table, tableName) // update statement does not support aliasing
-      tableNameSlot += quote(tableName)
+
+      val schemaPrefix = extractSchemaPrefix(table)
+      tableNameSlot += s"${schemaPrefix}${quote(tableName)}"
       appendConditions(b)
       if (tableAliases.size > 1) Fail(
         "An UPDATE statement must not use more than one table at the top level"
@@ -59,4 +61,13 @@ trait UpdateBuilder { self: QueryBuilder & QueryBuilderAction =>
       b.build
     }
   }
+
+  private def extractSchemaPrefix(n: Node): String =
+    n match
+      case t: Table[?] =>
+        t.schemaName
+          .map(schema => s"${quote(schema)}.")
+          .getOrElse("")
+      case t @ Table.Alias(child) => extractSchemaPrefix(child)
+      case _ => ""
 }
