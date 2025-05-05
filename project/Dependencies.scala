@@ -3,7 +3,7 @@ import Keys._
 
 trait Dependencies {
   val appDeps = Seq(
-    "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4",
+    "org.scala-lang.modules" %% "scala-parallel-collections" % "1.2.0",
     "com.h2database" % "h2" % "1.4.200" % "test",
     "org.xerial" % "sqlite-jdbc" % "3.36.0.3" % "test",
     "org.hsqldb" % "hsqldb" % "2.7.3" % "test",
